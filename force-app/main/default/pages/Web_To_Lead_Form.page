@@ -1,0 +1,1476 @@
+<apex:page showHeader="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link
+            rel="shortcut icon"
+            href="{!$Resource.SiteFavicon}"
+            type="image/x-icon"
+        />
+        <title>BookSmart Contact Form</title>
+        <style>
+            body {
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                line-height: 1.4;
+                margin: 2rem 0 0 0;
+                display: flex;
+                flex-direction: column;
+                background: url("https://i.postimg.cc/3N2751xX/booksmart-background-resized.png")
+                    center center / cover no-repeat;
+                color: #333;
+            }
+
+            .main {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex: 1;
+                min-height: 80vh;
+            }
+
+            form {
+                background: rgba(255, 255, 255, 0.75);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                max-width: 800px;
+                min-width: 600px;
+                padding: 1.5rem;
+                border-radius: 10px;
+                box-shadow: 0 6px 18px rgba(33, 53, 90, 0.12);
+                border: 1px solid rgba(226, 230, 238, 0.6);
+                transition:
+                    background 0.5s ease,
+                    height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            h1 {
+                text-align: center;
+                font-size: 2.5rem;
+                margin-bottom: 1.5rem;
+                color: #1f2a44;
+                font-weight: 700;
+            }
+
+            img {
+                display: block;
+                max-width: 300px;
+                height: auto;
+                margin: 0 auto 1.5rem;
+            }
+
+            label {
+                display: block;
+                margin-bottom: 0.35rem;
+                font-weight: 600;
+                color: #1f2a44;
+            }
+
+            .form-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.9rem 1.1rem;
+            }
+
+            .form-grid .field {
+                display: flex;
+                flex-direction: column;
+            }
+
+            @media (max-width: 768px) {
+                .form-grid {
+                    grid-template-columns: 1fr;
+                }
+                form {
+                    max-width: 90%;
+                    min-width: auto;
+                    padding: 1.2rem;
+                }
+                h1 {
+                    font-size: 2.2rem;
+                }
+                body {
+                    margin: 1.5rem 0 0 0;
+                }
+            }
+
+            @media (max-width: 480px) {
+                form {
+                    max-width: 95%;
+                    padding: 1rem;
+                }
+                h1 {
+                    font-size: 1.8rem;
+                }
+                body {
+                    margin: 1rem 0 0 0;
+                }
+                .info-message {
+                    font-size: 0.85rem;
+                }
+                .footer {
+                    padding: 0.5rem 0;
+                    font-size: 0.8rem;
+                }
+                .form-grid {
+                    gap: 0.7rem 0.8rem;
+                }
+                .field {
+                    margin-bottom: 0.8rem;
+                }
+                input[type="text"],
+                input[type="tel"],
+                input[type="email"],
+                select {
+                    padding: 0.5rem 0.6rem;
+                    margin-bottom: 0.7rem;
+                }
+                .field label {
+                    top: 0.5rem;
+                    left: 0.6rem;
+                }
+                .checkmark {
+                    right: 0.6rem;
+                    top: 0.5rem;
+                }
+                .form-actions button {
+                    padding: 0.5rem 0.8rem;
+                }
+            }
+
+            input[type="text"],
+            input[type="tel"],
+            input[type="email"],
+            select {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 0.55rem 0.65rem;
+                margin-bottom: 0.9rem;
+                border: 1px solid #c7d0e2;
+                border-radius: 5px;
+                background: #fff;
+            }
+
+            .errmsg {
+                display: none;
+                align-items: center;
+                gap: 5px;
+                font-size: 12px;
+                font-weight: 500;
+                color: var(--red);
+                margin-top: 5px;
+            }
+            .errmsg.show {
+                display: flex;
+            }
+            .errmsg svg {
+                flex-shrink: 0;
+            }
+
+            input[type="text"]:focus,
+            input[type="tel"]:focus,
+            input[type="email"]:focus,
+            select:focus {
+                outline: none;
+                border-color: #5586f6;
+                box-shadow: 0 0 0 2px rgba(85, 134, 246, 0.15);
+            }
+
+            button.btn {
+                background: #2e67e6;
+                color: #fff;
+                border: none;
+                border-radius: 6px;
+                padding: 0.7rem 1.1rem;
+                cursor: pointer;
+                transition: background 0.2s ease;
+                font-weight: 700;
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+
+            .btn:disabled {
+                background: #93c5fd;
+                cursor: not-allowed;
+                box-shadow: none;
+            }
+
+            input[type="submit"]:hover {
+                background: #254fbe;
+            }
+
+            .required::after {
+                content: " *";
+                color: #dc3545;
+                font-weight: 700;
+            }
+
+            input[required]:invalid,
+            select[required]:invalid {
+                border-color: #dc3545 !important;
+            }
+
+            .footer {
+                position: fixed;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0.8rem 0;
+                text-align: center;
+                color: #334155;
+                font-size: 0.9rem;
+                background: rgba(255, 255, 255, 0.72);
+                backdrop-filter: blur(10px);
+                border-top: 1px solid rgba(226, 230, 238, 0.6);
+                z-index: 10;
+            }
+
+            .info-message {
+                text-align: center;
+                margin: 1rem 0;
+                font-size: 0.9rem;
+                color: #6f7a8a;
+            }
+
+            .progress-container {
+                width: 100%;
+                height: 8px;
+                background: #e2e6ee;
+                border-radius: 4px;
+                margin: 1rem 0;
+                overflow: hidden;
+            }
+
+            .progress-bar {
+                height: 100%;
+                background: linear-gradient(to right, #2e67e6, #5586f6);
+                width: 0%;
+                transition: width 0.3s ease;
+            }
+
+            /* Step-by-Step Wizard - Flashcard Flip */
+            .steps-wrapper {
+                position: relative;
+                perspective: 1500px; /* Creates the 3D depth */
+                transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            form[data-step="1"] {
+                background: rgba(255, 255, 255, 0.35);
+            }
+            form[data-step="2"] {
+                background: rgba(244, 248, 255, 0.4);
+            }
+            form[data-step="3"] {
+                background: rgba(245, 255, 245, 0.4);
+            }
+
+            .step {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                opacity: 0;
+                transform-origin: center; /* Pivots cleanly in the middle */
+                transform: rotateY(90deg) scale(0.95); /* Starts folded sideways and slightly smaller */
+                transition:
+                    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.3s ease;
+                pointer-events: none;
+                z-index: 1;
+            }
+
+            .step.active {
+                opacity: 1;
+                transform: rotateY(0deg) scale(1); /* Unfolds completely flat */
+                pointer-events: auto;
+                z-index: 2;
+                transition-delay: 0.15s; /* Waits a split second for the old page to get out of the way */
+            }
+
+            .step.leaving {
+                opacity: 0;
+                transform: rotateY(-90deg) scale(0.95); /* Folds away to the other side */
+                z-index: 1;
+            }
+
+            .step.entering {
+                z-index: 2;
+            }
+            .step-indicator {
+                display: flex;
+                justify-content: center;
+                gap: 1rem;
+                margin: 1rem 0;
+            }
+            .step-circle {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: #e2e6ee;
+                color: #6f7a8a;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                transition: all 0.3s ease;
+            }
+            .step-circle.active {
+                background: #2e67e6;
+                color: #fff;
+            }
+            .step-circle.completed {
+                background: #28a745;
+                color: #fff;
+            }
+            .form-actions {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 1rem;
+            }
+            .form-actions button {
+                padding: 0.5rem 1rem;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: 600;
+            }
+            #prev-btn {
+                background: #6c757d;
+                color: #fff;
+            }
+            #prev-btn:disabled {
+                background: #adb5bd;
+                cursor: not-allowed;
+            }
+            #next-btn {
+                background: #2e67e6;
+                color: #fff;
+            }
+            #submit-btn {
+                background: #28a745;
+                color: #fff;
+                display: none;
+            }
+
+            /* Micro-Interactions: Floating Labels */
+            .field {
+                position: relative;
+                margin-bottom: 1rem;
+            }
+            .field label {
+                position: absolute;
+                top: 0.55rem;
+                left: 0.65rem;
+                background: #fff;
+                padding: 0 0.2rem;
+                transition: all 0.2s ease;
+                pointer-events: none;
+                color: #6f7a8a;
+            }
+            .field input:focus + label,
+            .field input:not([value=""]) + label,
+            .field select:focus + label,
+            .field select:not([value=""]) + label {
+                top: -0.5rem;
+                font-size: 0.8rem;
+                color: #5586f6;
+            }
+            .field input:focus,
+            .field select:focus {
+                border-color: #5586f6;
+                box-shadow: 0 0 0 2px rgba(85, 134, 246, 0.15);
+            }
+
+            /* Success Checkmarks */
+            .checkmark {
+                position: absolute;
+                right: 0.65rem;
+                top: 0.55rem;
+                color: #28a745;
+                font-size: 1.2rem;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .field.is-valid .checkmark {
+                opacity: 1;
+            }
+
+            /* Error Shake */
+            .shake {
+                animation: shake 0.5s ease-in-out;
+            }
+            @keyframes shake {
+                0%,
+                100% {
+                    transform: translateX(0);
+                }
+                25% {
+                    transform: translateX(-5px);
+                }
+                75% {
+                    transform: translateX(5px);
+                }
+            }
+
+            /* Confetti */
+            .confetti {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                z-index: 1000;
+            }
+            .confetti-piece {
+                position: absolute;
+                width: 10px;
+                height: 10px;
+                background: #ff6b6b;
+                animation: fall 3s linear infinite;
+            }
+            .confetti-piece:nth-child(2n) {
+                background: #4ecdc4;
+            }
+            .confetti-piece:nth-child(3n) {
+                background: #45b7d1;
+            }
+            .confetti-piece:nth-child(4n) {
+                background: #f9ca24;
+            }
+            @keyframes fall {
+                to {
+                    transform: translateY(100vh) rotate(360deg);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="main">
+            <form
+                action="https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8&orgId=00DgK00000LeBju"
+                method="POST"
+                id="wtl"
+                novalidate="novalidate"
+            >
+                <input type="hidden" name="oid" value="00DgK00000LeBju" />
+                <input
+                    type="hidden"
+                    name="retURL"
+                    value="https://orgfarm-7480321aec-dev-ed.develop.my.salesforce-sites.com/form/thankyou"
+                />
+                <input
+                    type="hidden"
+                    id="lead_source"
+                    name="lead_source"
+                    value="Web"
+                />
+
+                <img src="{!$Resource.BookSmartHeader}" alt="BookSmart Header" />
+
+                <p class="info-message">
+                    We'd love to work with you! Fill out the form below and our
+                    team will get back to you as soon as possible.
+                </p>
+
+                <div class="step-indicator">
+                    <div class="step-circle active" data-step="1">1</div>
+                    <div class="step-circle" data-step="2">2</div>
+                    <div class="step-circle" data-step="3">3</div>
+                </div>
+
+                <div class="steps-wrapper">
+                    <div class="step active" id="step1">
+                        <div class="form-grid">
+                            <div class="field">
+                                <input
+                                    id="first_name"
+                                    maxlength="40"
+                                    name="first_name"
+                                    size="20"
+                                    type="text"
+                                    required="required"
+                                    title="Enter your first name (letters only)"
+                                />
+                                <label for="first_name" class="required"
+                                    >First Name</label
+                                >
+                                <span class="checkmark">✓</span>
+                                <div class="errmsg" id="e-first_name">
+                                    <svg
+                                        width="13"
+                                        height="13"
+                                        viewBox="0 0 13 13"
+                                        fill="none"
+                                    >
+                                        <circle
+                                            cx="6.5"
+                                            cy="6.5"
+                                            r="5.5"
+                                            stroke="#DC2626"
+                                            stroke-width="1.2"
+                                        />
+                                        <line
+                                            x1="6.5"
+                                            y1="4"
+                                            x2="6.5"
+                                            y2="7"
+                                            stroke="#DC2626"
+                                            stroke-width="1.4"
+                                            stroke-linecap="round"
+                                        />
+                                        <circle
+                                            cx="6.5"
+                                            cy="9.5"
+                                            r=".7"
+                                            fill="#DC2626"
+                                        />
+                                    </svg>
+                                    <span id="e-first_name-txt"
+                                        >First name is required (min. 2
+                                        characters)</span
+                                    >
+                                </div>
+                            </div>
+                            <div class="field">
+                                <input
+                                    id="last_name"
+                                    maxlength="80"
+                                    name="last_name"
+                                    size="20"
+                                    type="text"
+                                    required="required"
+                                    title="Enter your last name (letters only)"
+                                />
+                                <label for="last_name" class="required"
+                                    >Last Name</label
+                                >
+                                <span class="checkmark">✓</span>
+                                <div class="errmsg" id="e-last_name">
+                                    <svg
+                                        width="13"
+                                        height="13"
+                                        viewBox="0 0 13 13"
+                                        fill="none"
+                                    >
+                                        <circle
+                                            cx="6.5"
+                                            cy="6.5"
+                                            r="5.5"
+                                            stroke="#DC2626"
+                                            stroke-width="1.2"
+                                        />
+                                        <line
+                                            x1="6.5"
+                                            y1="4"
+                                            x2="6.5"
+                                            y2="7"
+                                            stroke="#DC2626"
+                                            stroke-width="1.4"
+                                            stroke-linecap="round"
+                                        />
+                                        <circle
+                                            cx="6.5"
+                                            cy="9.5"
+                                            r=".7"
+                                            fill="#DC2626"
+                                        />
+                                    </svg>
+                                    <span id="e-last_name-txt"
+                                        >Last name is required (min. 2
+                                        characters)</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step" id="step2">
+                        <div class="form-grid">
+                            <div class="field">
+                                <input
+                                    id="email"
+                                    maxlength="80"
+                                    name="email"
+                                    size="20"
+                                    type="email"
+                                    required="required"
+                                    title="Pro tip: Use your work email for faster responses!"
+                                />
+                                <label for="email" class="required"
+                                    >Email</label
+                                >
+                                <span class="checkmark">✓</span>
+                                <div class="errmsg" id="e-email">
+                                    <svg
+                                        width="13"
+                                        height="13"
+                                        viewBox="0 0 13 13"
+                                        fill="none"
+                                    >
+                                        <circle
+                                            cx="6.5"
+                                            cy="6.5"
+                                            r="5.5"
+                                            stroke="#DC2626"
+                                            stroke-width="1.2"
+                                        />
+                                        <line
+                                            x1="6.5"
+                                            y1="4"
+                                            x2="6.5"
+                                            y2="7"
+                                            stroke="#DC2626"
+                                            stroke-width="1.4"
+                                            stroke-linecap="round"
+                                        />
+                                        <circle
+                                            cx="6.5"
+                                            cy="9.5"
+                                            r=".7"
+                                            fill="#DC2626"
+                                        />
+                                    </svg>
+                                    <span id="e-email-txt"
+                                        >Email is required and must be
+                                        valid</span
+                                    >
+                                </div>
+                            </div>
+                            <div class="field">
+                                <input
+                                    id="mobile"
+                                    maxlength="40"
+                                    name="mobile"
+                                    size="20"
+                                    type="tel"
+                                    placeholder="+1 234 567 8900"
+                                    pattern="^\+?[1-9][0-9\-\(\)\. \s]{7,18}$"
+                                    title="Enter a valid international phone number"
+                                />
+                                <label for="mobile">Mobile</label>
+                                <span class="checkmark">✓</span>
+                                <div class="errmsg" id="e-mobile">
+                                    <svg
+                                        width="13"
+                                        height="13"
+                                        viewBox="0 0 13 13"
+                                        fill="none"
+                                    >
+                                        <circle
+                                            cx="6.5"
+                                            cy="6.5"
+                                            r="5.5"
+                                            stroke="#DC2626"
+                                            stroke-width="1.2"
+                                        />
+                                        <line
+                                            x1="6.5"
+                                            y1="4"
+                                            x2="6.5"
+                                            y2="7"
+                                            stroke="#DC2626"
+                                            stroke-width="1.4"
+                                            stroke-linecap="round"
+                                        />
+                                        <circle
+                                            cx="6.5"
+                                            cy="9.5"
+                                            r=".7"
+                                            fill="#DC2626"
+                                        />
+                                    </svg>
+                                    <span id="e-mobile-txt"
+                                        >Mobile number must contain 7-20 valid
+                                        digits and symbols</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step" id="step3">
+                        <div class="form-grid">
+                            <div class="field">
+                                <input
+                                    id="company"
+                                    maxlength="40"
+                                    name="company"
+                                    size="20"
+                                    type="text"
+                                    required="required"
+                                    title="Enter your company name"
+                                />
+                                <label for="company" class="required"
+                                    >Company</label
+                                >
+                                <span class="checkmark">✓</span>
+                                <div class="errmsg" id="e-company">
+                                    <svg
+                                        width="13"
+                                        height="13"
+                                        viewBox="0 0 13 13"
+                                        fill="none"
+                                    >
+                                        <circle
+                                            cx="6.5"
+                                            cy="6.5"
+                                            r="5.5"
+                                            stroke="#DC2626"
+                                            stroke-width="1.2"
+                                        />
+                                        <line
+                                            x1="6.5"
+                                            y1="4"
+                                            x2="6.5"
+                                            y2="7"
+                                            stroke="#DC2626"
+                                            stroke-width="1.4"
+                                            stroke-linecap="round"
+                                        />
+                                        <circle
+                                            cx="6.5"
+                                            cy="9.5"
+                                            r=".7"
+                                            fill="#DC2626"
+                                        />
+                                    </svg>
+                                    <span id="e-company-txt"
+                                        >Company is required (min. 2
+                                        characters)</span
+                                    >
+                                </div>
+                            </div>
+                            <div class="field">
+                                <input
+                                    id="city"
+                                    maxlength="40"
+                                    name="city"
+                                    size="20"
+                                    type="text"
+                                    title="Enter your city"
+                                />
+                                <label for="city">City</label>
+                                <span class="checkmark">✓</span>
+                            </div>
+                            <div class="field">
+                                <select
+                                    id="country_code"
+                                    name="country_code"
+                                    title="Select your country"
+                                >
+                                    <option value=" ">--None--</option>
+                                    <option value="AF">Afghanistan</option>
+                                    <option value="AX">Åland Islands</option>
+                                    <option value="AL">Albania</option>
+                                    <option value="DZ">Algeria</option>
+                                    <option value="AD">Andorra</option>
+                                    <option value="AO">Angola</option>
+                                    <option value="AI">Anguilla</option>
+                                    <option value="AQ">Antarctica</option>
+                                    <option value="AG">
+                                        Antigua and Barbuda
+                                    </option>
+                                    <option value="AR">Argentina</option>
+                                    <option value="AM">Armenia</option>
+                                    <option value="AW">Aruba</option>
+                                    <option value="AU">Australia</option>
+                                    <option value="AT">Austria</option>
+                                    <option value="AZ">Azerbaijan</option>
+                                    <option value="BS">Bahamas</option>
+                                    <option value="BH">Bahrain</option>
+                                    <option value="BD">Bangladesh</option>
+                                    <option value="BB">Barbados</option>
+                                    <option value="BY">Belarus</option>
+                                    <option value="BE">Belgium</option>
+                                    <option value="BZ">Belize</option>
+                                    <option value="BJ">Benin</option>
+                                    <option value="BM">Bermuda</option>
+                                    <option value="BT">Bhutan</option>
+                                    <option value="BO">
+                                        Bolivia, Plurinational State of
+                                    </option>
+                                    <option value="BQ">
+                                        Bonaire, Sint Eustatius and Saba
+                                    </option>
+                                    <option value="BA">
+                                        Bosnia and Herzegovina
+                                    </option>
+                                    <option value="BW">Botswana</option>
+                                    <option value="BV">Bouvet Island</option>
+                                    <option value="BR">Brazil</option>
+                                    <option value="IO">
+                                        British Indian Ocean Territory
+                                    </option>
+                                    <option value="BN">
+                                        Brunei Darussalam
+                                    </option>
+                                    <option value="BG">Bulgaria</option>
+                                    <option value="BF">Burkina Faso</option>
+                                    <option value="BI">Burundi</option>
+                                    <option value="KH">Cambodia</option>
+                                    <option value="CM">Cameroon</option>
+                                    <option value="CA">Canada</option>
+                                    <option value="CV">Cabo Verde</option>
+                                    <option value="KY">Cayman Islands</option>
+                                    <option value="CF">
+                                        Central African Republic
+                                    </option>
+                                    <option value="TD">Chad</option>
+                                    <option value="CL">Chile</option>
+                                    <option value="CN">China</option>
+                                    <option value="CX">Christmas Island</option>
+                                    <option value="CC">
+                                        Cocos (Keeling) Islands
+                                    </option>
+                                    <option value="CO">Colombia</option>
+                                    <option value="KM">Comoros</option>
+                                    <option value="CG">Congo</option>
+                                    <option value="CD">
+                                        Congo, Democratic Republic of the
+                                    </option>
+                                    <option value="CK">Cook Islands</option>
+                                    <option value="CR">Costa Rica</option>
+                                    <option value="CI">Côte d'Ivoire</option>
+                                    <option value="HR">Croatia</option>
+                                    <option value="CW">Curaçao</option>
+                                    <option value="CY">Cyprus</option>
+                                    <option value="CZ">Czechia</option>
+                                    <option value="DK">Denmark</option>
+                                    <option value="DJ">Djibouti</option>
+                                    <option value="DM">Dominica</option>
+                                    <option value="DO">
+                                        Dominican Republic
+                                    </option>
+                                    <option value="EC">Ecuador</option>
+                                    <option value="EG">Egypt</option>
+                                    <option value="SV">El Salvador</option>
+                                    <option value="GQ">
+                                        Equatorial Guinea
+                                    </option>
+                                    <option value="ER">Eritrea</option>
+                                    <option value="EE">Estonia</option>
+                                    <option value="SZ">Eswatini</option>
+                                    <option value="ET">Ethiopia</option>
+                                    <option value="FK">
+                                        Falkland Islands (Malvinas)
+                                    </option>
+                                    <option value="FO">Faroe Islands</option>
+                                    <option value="FJ">Fiji</option>
+                                    <option value="FI">Finland</option>
+                                    <option value="FR">France</option>
+                                    <option value="GF">French Guiana</option>
+                                    <option value="PF">French Polynesia</option>
+                                    <option value="TF">
+                                        French Southern Territories
+                                    </option>
+                                    <option value="GA">Gabon</option>
+                                    <option value="GM">Gambia</option>
+                                    <option value="GE">Georgia</option>
+                                    <option value="DE">Germany</option>
+                                    <option value="GH">Ghana</option>
+                                    <option value="GI">Gibraltar</option>
+                                    <option value="GR">Greece</option>
+                                    <option value="GL">Greenland</option>
+                                    <option value="GD">Grenada</option>
+                                    <option value="GP">Guadeloupe</option>
+                                    <option value="GT">Guatemala</option>
+                                    <option value="GG">Guernsey</option>
+                                    <option value="GN">Guinea</option>
+                                    <option value="GW">Guinea-Bissau</option>
+                                    <option value="GY">Guyana</option>
+                                    <option value="HT">Haiti</option>
+                                    <option value="HM">
+                                        Heard Island and McDonald Islands
+                                    </option>
+                                    <option value="VA">Holy See</option>
+                                    <option value="HN">Honduras</option>
+                                    <option value="HU">Hungary</option>
+                                    <option value="IS">Iceland</option>
+                                    <option value="IN">India</option>
+                                    <option value="ID">Indonesia</option>
+                                    <option value="IQ">Iraq</option>
+                                    <option value="IE">Ireland</option>
+                                    <option value="IM">Isle of Man</option>
+                                    <option value="IL">Israel</option>
+                                    <option value="IT">Italy</option>
+                                    <option value="JM">Jamaica</option>
+                                    <option value="JP">Japan</option>
+                                    <option value="JE">Jersey</option>
+                                    <option value="JO">Jordan</option>
+                                    <option value="KZ">Kazakhstan</option>
+                                    <option value="KE">Kenya</option>
+                                    <option value="KI">Kiribati</option>
+                                    <option value="KR">
+                                        Korea, Republic of
+                                    </option>
+                                    <option value="XK">Kosovo</option>
+                                    <option value="KW">Kuwait</option>
+                                    <option value="KG">Kyrgyzstan</option>
+                                    <option value="LA">
+                                        Lao People's Democratic Republic
+                                    </option>
+                                    <option value="LV">Latvia</option>
+                                    <option value="LB">Lebanon</option>
+                                    <option value="LS">Lesotho</option>
+                                    <option value="LR">Liberia</option>
+                                    <option value="LY">Libya</option>
+                                    <option value="LI">Liechtenstein</option>
+                                    <option value="LT">Lithuania</option>
+                                    <option value="LU">Luxembourg</option>
+                                    <option value="MO">Macao</option>
+                                    <option value="MG">Madagascar</option>
+                                    <option value="MW">Malawi</option>
+                                    <option value="MY">Malaysia</option>
+                                    <option value="MV">Maldives</option>
+                                    <option value="ML">Mali</option>
+                                    <option value="MT">Malta</option>
+                                    <option value="MQ">Martinique</option>
+                                    <option value="MR">Mauritania</option>
+                                    <option value="MU">Mauritius</option>
+                                    <option value="YT">Mayotte</option>
+                                    <option value="MX">Mexico</option>
+                                    <option value="MD">
+                                        Moldova, Republic of
+                                    </option>
+                                    <option value="MC">Monaco</option>
+                                    <option value="MN">Mongolia</option>
+                                    <option value="ME">Montenegro</option>
+                                    <option value="MS">Montserrat</option>
+                                    <option value="MA">Morocco</option>
+                                    <option value="MZ">Mozambique</option>
+                                    <option value="MM">Myanmar</option>
+                                    <option value="NA">Namibia</option>
+                                    <option value="NR">Nauru</option>
+                                    <option value="NP">Nepal</option>
+                                    <option value="NL">
+                                        Netherlands, Kingdom of the
+                                    </option>
+                                    <option value="NC">New Caledonia</option>
+                                    <option value="NZ">New Zealand</option>
+                                    <option value="NI">Nicaragua</option>
+                                    <option value="NE">Niger</option>
+                                    <option value="NG">Nigeria</option>
+                                    <option value="NU">Niue</option>
+                                    <option value="NF">Norfolk Island</option>
+                                    <option value="MK">North Macedonia</option>
+                                    <option value="NO">Norway</option>
+                                    <option value="OM">Oman</option>
+                                    <option value="PK">Pakistan</option>
+                                    <option value="PS">
+                                        Palestine, State of
+                                    </option>
+                                    <option value="PA">Panama</option>
+                                    <option value="PG">Papua New Guinea</option>
+                                    <option value="PY">Paraguay</option>
+                                    <option value="PE">Peru</option>
+                                    <option value="PH">Philippines</option>
+                                    <option value="PN">Pitcairn</option>
+                                    <option value="PL">Poland</option>
+                                    <option value="PT">Portugal</option>
+                                    <option value="QA">Qatar</option>
+                                    <option value="RE">Réunion</option>
+                                    <option value="RO">Romania</option>
+                                    <option value="RU">
+                                        Russian Federation
+                                    </option>
+                                    <option value="RW">Rwanda</option>
+                                    <option value="BL">Saint Barthélemy</option>
+                                    <option value="SH">
+                                        Saint Helena, Ascension and Tristan da
+                                        Cunha
+                                    </option>
+                                    <option value="KN">
+                                        Saint Kitts and Nevis
+                                    </option>
+                                    <option value="LC">Saint Lucia</option>
+                                    <option value="MF">
+                                        Saint Martin (French part)
+                                    </option>
+                                    <option value="PM">
+                                        Saint Pierre and Miquelon
+                                    </option>
+                                    <option value="VC">
+                                        Saint Vincent and the Grenadines
+                                    </option>
+                                    <option value="WS">Samoa</option>
+                                    <option value="SM">San Marino</option>
+                                    <option value="ST">
+                                        Sao Tome and Principe
+                                    </option>
+                                    <option value="SA">Saudi Arabia</option>
+                                    <option value="SN">Senegal</option>
+                                    <option value="RS">Serbia</option>
+                                    <option value="SC">Seychelles</option>
+                                    <option value="SL">Sierra Leone</option>
+                                    <option value="SG">Singapore</option>
+                                    <option value="SX">
+                                        Sint Maarten (Dutch part)
+                                    </option>
+                                    <option value="SK">Slovakia</option>
+                                    <option value="SI">Slovenia</option>
+                                    <option value="SB">Solomon Islands</option>
+                                    <option value="SO">Somalia</option>
+                                    <option value="ZA">South Africa</option>
+                                    <option value="GS">
+                                        South Georgia and the South Sandwich
+                                        Islands
+                                    </option>
+                                    <option value="SS">South Sudan</option>
+                                    <option value="ES">Spain</option>
+                                    <option value="LK">Sri Lanka</option>
+                                    <option value="SR">Suriname</option>
+                                    <option value="SJ">
+                                        Svalbard and Jan Mayen
+                                    </option>
+                                    <option value="SE">Sweden</option>
+                                    <option value="CH">Switzerland</option>
+                                    <option value="TW">
+                                        Taiwan, Province of China
+                                    </option>
+                                    <option value="TJ">Tajikistan</option>
+                                    <option value="TZ">
+                                        Tanzania, United Republic of
+                                    </option>
+                                    <option value="TH">Thailand</option>
+                                    <option value="TL">Timor-Leste</option>
+                                    <option value="TG">Togo</option>
+                                    <option value="TK">Tokelau</option>
+                                    <option value="TO">Tonga</option>
+                                    <option value="TT">
+                                        Trinidad and Tobago
+                                    </option>
+                                    <option value="TN">Tunisia</option>
+                                    <option value="TR">Türkiye</option>
+                                    <option value="TM">Turkmenistan</option>
+                                    <option value="TC">
+                                        Turks and Caicos Islands
+                                    </option>
+                                    <option value="TV">Tuvalu</option>
+                                    <option value="UG">Uganda</option>
+                                    <option value="UA">Ukraine</option>
+                                    <option value="AE">
+                                        United Arab Emirates
+                                    </option>
+                                    <option value="GB">
+                                        United Kingdom of Great Britain and
+                                        Northern Ireland
+                                    </option>
+                                    <option value="US">
+                                        United States of America
+                                    </option>
+                                    <option value="UY">Uruguay</option>
+                                    <option value="UZ">Uzbekistan</option>
+                                    <option value="VU">Vanuatu</option>
+                                    <option value="VE">
+                                        Venezuela, Bolivarian Republic of
+                                    </option>
+                                    <option value="VN">Viet Nam</option>
+                                    <option value="VG">
+                                        Virgin Islands (British)
+                                    </option>
+                                    <option value="WF">
+                                        Wallis and Futuna
+                                    </option>
+                                    <option value="EH">Western Sahara</option>
+                                    <option value="YE">Yemen</option>
+                                    <option value="ZM">Zambia</option>
+                                    <option value="ZW">Zimbabwe</option>
+                                </select>
+                                <label for="country_code">Country</label>
+                                <span class="checkmark">✓</span>
+                            </div>
+                            <div class="field">
+                                <input
+                                    id="fax"
+                                    maxlength="40"
+                                    name="fax"
+                                    size="20"
+                                    type="text"
+                                    pattern="^\+?[0-9\s\-\(\)\.]{7,20}$"
+                                    title="Enter a valid fax number"
+                                    placeholder="(555) 123-4567"
+                                />
+                                <label for="fax">Fax</label>
+                                <span class="checkmark">✓</span>
+                                <div class="errmsg" id="e-fax">
+                                    <svg
+                                        width="13"
+                                        height="13"
+                                        viewBox="0 0 13 13"
+                                        fill="none"
+                                    >
+                                        <circle
+                                            cx="6.5"
+                                            cy="6.5"
+                                            r="5.5"
+                                            stroke="#DC2626"
+                                            stroke-width="1.2"
+                                        />
+                                        <line
+                                            x1="6.5"
+                                            y1="4"
+                                            x2="6.5"
+                                            y2="7"
+                                            stroke="#DC2626"
+                                            stroke-width="1.4"
+                                            stroke-linecap="round"
+                                        />
+                                        <circle
+                                            cx="6.5"
+                                            cy="9.5"
+                                            r=".7"
+                                            fill="#DC2626"
+                                        />
+                                    </svg>
+                                    <span id="e-fax-txt"
+                                        >Please enter a valid fax number</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="prog"></div>
+                </div>
+                <div class="form-actions">
+                    <button id="prev-btn" type="button" disabled="disabled">
+                        Previous
+                    </button>
+                    <button id="next-btn" type="button">Next</button>
+                    <button id="submit-btn" type="submit" style="display: none">
+                        <span class="btn-txt">Submit</span>
+                        <div class="spinner"></div>
+                    </button>
+                </div>
+            </form>
+            <footer class="footer">© 2026 BookSmart</footer>
+        </div>
+        <script>
+            // ─── CONSTANTS ────────────────────────────────────────────────────────────────
+            var REQUIRED = ["first_name", "last_name", "email", "company"];
+            var currentStep = 1;
+            var totalSteps = 3;
+            var allFields = [
+                "first_name",
+                "last_name",
+                "email",
+                "mobile",
+                "company",
+                "city",
+                "country_code",
+                "fax",
+            ];
+
+            var VALIDATORS = {
+                first_name: function (v) {
+                    return /^[^\d]{2,40}$/.test(v.trim());
+                },
+                last_name: function (v) {
+                    return /^[^\d]{2,80}$/.test(v.trim());
+                },
+                email: function (v) {
+                    return /^[^\s@]+@[^\s@]+$/.test(v.trim());
+                },
+                company: function (v) {
+                    return v.trim().length >= 2 && v.trim().length <= 40;
+                },
+                city: function (v) {
+                    return /^[^\d]{2,40}$/.test(v.trim());
+                },
+                country_code: function (v) {
+                    return v.trim() !== "";
+                },
+                mobile: function (v) {
+                    return (
+                        v.trim() === "" ||
+                        /^[\d\s\+\-\(\)]{7,20}$/.test(v.trim())
+                    );
+                },
+                fax: function (v) {
+                    return (
+                        v.trim() === "" ||
+                        /^\+?[0-9\s\-\(\)\.]{7,20}$/.test(v.trim())
+                    );
+                },
+            };
+
+            // ─── STEP WIZARD ─────────────────────────────────────────────────────────────
+
+            function setWrapperHeight(step) {
+                var wrapper = document.querySelector(".steps-wrapper");
+                var next = document.getElementById("step" + step);
+                if (wrapper && next) {
+                    wrapper.style.height = next.offsetHeight + "px";
+                }
+            }
+
+            function showStep(step) {
+                var current = document.querySelector(".step.active");
+                var next = document.getElementById("step" + step);
+
+                if (current && current !== next) {
+                    current.classList.remove("active");
+                    current.classList.add("leaving");
+                }
+
+                document.querySelectorAll(".step").forEach((s) => {
+                    s.classList.remove("entering");
+                });
+
+                if (next) {
+                    next.classList.remove("leaving");
+                    next.classList.add("entering");
+                    next.classList.add("active");
+                }
+
+                setWrapperHeight(step);
+
+                window.setTimeout(function () {
+                    document.querySelectorAll(".step.leaving").forEach((s) => {
+                        s.classList.remove("leaving");
+                    });
+                    document.querySelectorAll(".step.entering").forEach((s) => {
+                        s.classList.remove("entering");
+                    });
+                }, 500);
+
+                var form = document.getElementById("wtl");
+                if (form) form.setAttribute("data-step", step);
+
+                document.querySelectorAll(".step-circle").forEach((c) => {
+                    c.classList.remove("active", "completed");
+                    if (parseInt(c.dataset.step) < step)
+                        c.classList.add("completed");
+                    if (parseInt(c.dataset.step) === step)
+                        c.classList.add("active");
+                });
+                document.getElementById("prev-btn").disabled = step === 1;
+                document.getElementById("next-btn").style.display =
+                    step === totalSteps ? "none" : "inline-block";
+                document.getElementById("submit-btn").style.display =
+                    step === totalSteps ? "inline-block" : "none";
+            }
+
+            function getStepFields(step) {
+                if (step === 1) return ["first_name", "last_name"];
+                if (step === 2) return ["email", "mobile"];
+                if (step === 3) return ["company", "fax"];
+                return [];
+            }
+
+            // ─── BLOCK DISALLOWED CHARACTERS IN REAL TIME ─────────────────────────────────
+
+            // First name, Last name, City — letters only (no digits)
+            ["first_name", "last_name", "city"].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener("keypress", function (e) {
+                    if (/\d/.test(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+                el.addEventListener("input", function () {
+                    var sel = this.selectionStart;
+                    var cleaned = this.value.replace(/\d/g, "");
+                    if (cleaned !== this.value) {
+                        this.value = cleaned;
+                        this.setSelectionRange(sel - 1, sel - 1);
+                    }
+                });
+            });
+
+            // Phone — digits, spaces, +, -, (, ) only
+            var mobileEl = document.getElementById("mobile");
+            if (mobileEl) {
+                mobileEl.addEventListener("keypress", function (e) {
+                    if (
+                        !/[\d\s\+\-\(\)]/.test(e.key) &&
+                        e.key !== "Backspace" &&
+                        e.key !== "Delete"
+                    ) {
+                        e.preventDefault();
+                    }
+                });
+                mobileEl.addEventListener("input", function () {
+                    var sel = this.selectionStart;
+                    var cleaned = this.value.replace(/[^\d\s\+\-\(\)]/g, "");
+                    if (cleaned !== this.value) {
+                        this.value = cleaned;
+                        this.setSelectionRange(sel - 1, sel - 1);
+                    }
+                });
+            }
+
+            // Fax — digits, spaces, +, -, (, ), . only
+            var faxEl = document.getElementById("fax");
+            if (faxEl) {
+                faxEl.addEventListener("keypress", function (e) {
+                    if (
+                        !/[\d\s\+\-\(\)\.]/.test(e.key) &&
+                        e.key !== "Backspace" &&
+                        e.key !== "Delete"
+                    ) {
+                        e.preventDefault();
+                    }
+                });
+                faxEl.addEventListener("input", function () {
+                    var sel = this.selectionStart;
+                    var cleaned = this.value.replace(/[^\d\s\+\-\(\)\.]/g, "");
+                    if (cleaned !== this.value) {
+                        this.value = cleaned;
+                        this.setSelectionRange(sel - 1, sel - 1);
+                    }
+                });
+            }
+
+            // ─── FIELD VALIDATION ─────────────────────────────────────────────────────────
+
+            function validateField(id, show) {
+                var el = document.getElementById(id);
+                var err = document.getElementById("e-" + id);
+                if (!el) return true;
+                var val = el.value;
+                var empty = val.trim() === "";
+                var isReq = REQUIRED.indexOf(id) > -1;
+                var fn = VALIDATORS[id];
+                var valid = fn ? fn(val) : true;
+                var ok = isReq ? !empty && valid : empty || valid;
+                el.classList.toggle("is-ok", ok && !empty);
+                el.classList.toggle("is-err", show && !ok);
+                el.parentElement.classList.toggle("is-valid", ok && !empty);
+                if (err) err.classList.toggle("show", show && !ok);
+                if (show && !ok) {
+                    el.classList.add("shake");
+                    setTimeout(() => el.classList.remove("shake"), 500);
+                }
+                return ok;
+            }
+
+            // ─── PROGRESS BAR ─────────────────────────────────────────────────────────────
+
+            function updateProgress() {
+                var validCount = 0;
+                REQUIRED.forEach((id) => {
+                    if (validateField(id, false)) validCount++;
+                });
+                var progress = (validCount / REQUIRED.length) * 100;
+                document.getElementById("prog").style.width =
+                    Math.round(progress) + "%";
+            }
+
+            // ─── FIELD EVENTS ─────────────────────────────────────────────────────────────
+
+            [
+                "first_name",
+                "last_name",
+                "email",
+                "company",
+                "city",
+                "mobile",
+                "fax",
+            ].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener("blur", function () {
+                    validateField(id, true);
+                    updateProgress();
+                });
+                el.addEventListener("input", function () {
+                    validateField(id, true);
+                    updateProgress();
+                });
+            });
+
+            document
+                .getElementById("country_code")
+                .addEventListener("change", function () {
+                    validateField("country_code", true);
+                    updateProgress();
+                });
+
+            // ─── STEP NAVIGATION ─────────────────────────────────────────────────────────
+
+            document
+                .getElementById("next-btn")
+                .addEventListener("click", function () {
+                    var stepFields = getStepFields(currentStep);
+                    var valid = true;
+                    stepFields.forEach((id) => {
+                        if (!validateField(id, true)) valid = false;
+                    });
+                    if (valid) {
+                        currentStep++;
+                        showStep(currentStep);
+                        updateProgress();
+                    }
+                });
+
+            document
+                .getElementById("prev-btn")
+                .addEventListener("click", function () {
+                    currentStep--;
+                    showStep(currentStep);
+                    updateProgress();
+                });
+
+            // ─── CONFETTI ───────────────────────────────────────────────────────────────
+
+            function createConfetti() {
+                const confetti = document.createElement("div");
+                confetti.className = "confetti";
+                for (let i = 0; i < 50; i++) {
+                    const piece = document.createElement("div");
+                    piece.className = "confetti-piece";
+                    piece.style.left = Math.random() * 100 + "%";
+                    piece.style.animationDelay = Math.random() * 3 + "s";
+                    confetti.appendChild(piece);
+                }
+                document.body.appendChild(confetti);
+                setTimeout(() => document.body.removeChild(confetti), 5000);
+            }
+
+            // ─── SUBMIT ───────────────────────────────────────────────────────────────────
+
+            document
+                .getElementById("wtl")
+                .addEventListener("submit", function (e) {
+                    e.preventDefault();
+                    var ok = true;
+                    REQUIRED.forEach(function (id) {
+                        if (!validateField(id, true)) ok = false;
+                    });
+                    if (!validateField("mobile", true)) ok = false;
+                    if (!validateField("fax", true)) ok = false;
+                    if (!ok) {
+                        var first = document.querySelector(".is-err");
+                        if (first)
+                            first.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                            });
+                        return;
+                    }
+                    var btn = document.getElementById("submit-btn");
+                    btn.disabled = true;
+                    btn.style.opacity = "0.65";
+                    btn.style.pointerEvents = "none";
+                    btn.classList.add("loading");
+                    btn.querySelector(".btn-txt").textContent = "Sending...";
+                    createConfetti();
+                    setTimeout(() => {
+                        e.target.submit();
+                    }, 1000);
+                });
+
+            // Initialize
+            showStep(currentStep);
+            setWrapperHeight(currentStep);
+            updateProgress();
+        </script>
+    </body>
+</html>
+</apex:page>
