@@ -11,15 +11,29 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install Salesforce CLI
         run: npm install -g @salesforce/cli
+
+      - name: Install sfdx-git-delta plugin
+        run: echo y | sf plugins install sfdx-git-delta
 
       - name: Authenticate to Salesforce
         run: |
           echo "${{ secrets.SFDX_AUTH_URL }}" > auth_url.txt
           sf org login sfdx-url -f auth_url.txt -a ci-org
-          rm auth_url.txt # Clean up the file for security
+          rm auth_url.txt
+
+      - name: Generate Delta package.xml
+        run: |
+          sf sgd source delta --to "HEAD" --from "origin/${{ github.base_ref }}" --output .
 
       - name: Validate Source
-        run: sf project deploy start --source-dir force-app --target-org ci-org --dry-run --test-level RunLocalTests
+        run: |
+          if grep -q '<types>' package/package.xml; then
+            sf project deploy start --manifest package/package.xml --target-org ci-org --dry-run --test-level RunLocalTests
+          else
+            echo "No Salesforce metadata changes detected. Skipping deployment."
+          fi
