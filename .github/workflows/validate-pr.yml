@@ -22,4 +22,4 @@ jobs:
           rm auth_url.txt # Clean up the file for security
 
       - name: Validate Source
-        run: sf project deploy start --target-org ci-org --dry-run --test-level RunLocalTests
+        run: sf project deploy start --source-dir force-app --target-org ci-org --dry-run --test-level RunLocalTests

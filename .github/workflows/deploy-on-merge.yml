@@ -22,4 +22,4 @@ jobs:
           rm auth_url.txt
 
       - name: Deploy Source
-        run: sf project deploy start --target-org ci-org --test-level RunLocalTests
+        run: sf project deploy start --source-dir force-app --target-org ci-org --test-level RunLocalTests

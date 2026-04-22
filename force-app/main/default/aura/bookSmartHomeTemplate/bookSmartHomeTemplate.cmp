@@ -1,0 +1,16 @@
+<aura:component implements="lightning:homeTemplate" description="Header and One Region (Custom)">
+    
+    <aura:attribute name="header" type="Aura.Component[]" />
+    <aura:attribute name="main" type="Aura.Component[]" />
+
+    <div>
+        <div class="slds-m-bottom_medium">
+            {!v.header}
+        </div>
+        
+        <div>
+            {!v.main}
+        </div>
+    </div>
+
+</aura:component>

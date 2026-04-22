@@ -1,0 +1,162 @@
+<apex:page standardController="Invoice__c" extensions="InvoicePDFExtension" renderAs="pdf" applyBodyTag="false">
+    <head>
+        <style>
+            @page {
+                size: letter;
+                margin: 0.5in;
+            }
+            body {
+                font-family: 'Arial Unicode MS';
+                font-size: 13px;
+                color: #333;
+            }
+            /* Header Styling */
+            .header-table { width: 100%; border-bottom: 3px solid #0056b3; padding-bottom: 15px; margin-bottom: 30px; }
+            .company-name { font-size: 32px; font-weight: bold; color: #0056b3; letter-spacing: 1px; }
+            .invoice-title { font-size: 28px; font-weight: bold; text-align: right; color: #555; }
+            
+            /* Info Boxes Styling */
+            .info-table { width: 100%; margin-bottom: 40px; }
+            .info-table td { vertical-align: top; }
+            .box-title { font-weight: bold; color: #fff; background-color: #0056b3; padding: 6px 10px; font-size: 12px; }
+            .box-content { padding: 10px; border: 1px solid #ccc; border-top: none; min-height: 85px; background-color: #fafafa; line-height: 1.4; }
+            
+            /* Line Items / Totals Styling */
+            .summary-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            .summary-table th { background-color: #f0f0f0; color: #333; padding: 10px; text-align: left; border-bottom: 2px solid #ccc; font-size: 12px; }
+            .summary-table td { padding: 12px 10px; border-bottom: 1px solid #eee; }
+            
+            /* Breakdown Totals Alignment */
+            .totals-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
+            .totals-table td { padding: 8px; }
+            .total-row td { font-weight: bold; font-size: 16px; border-top: 2px solid #ccc; }
+            
+            /* Signature Block Styling */
+            .signature-section { margin-top: 50px; page-break-inside: avoid; }
+            .sig-line { border-top: 1px solid #000; width: 300px; padding-top: 5px; margin-top: 60px; font-size: 12px; color: #555; }
+            
+            .watermark { color: #e0e0e0; font-size: 80px; position: absolute; top: 40%; left: 15%; transform: rotate(-45deg); z-index: -1; opacity: 0.3; }
+        </style>
+    </head>
+    <body>
+
+        <apex:outputPanel rendered="{!Invoice__c.Status__c == 'Draft'}">
+            <div class="watermark">DRAFT</div>
+        </apex:outputPanel>
+
+        <table class="header-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td width="50%">
+                    <div class="company-name">BookSmart</div>
+                    <div style="margin-top: 5px;">123 Library Lane</div>
+                    <div>Metropolis, NY 10001</div>
+                    <div>billing@booksmart.com</div>
+                </td>
+                <td width="50%" style="text-align: right; line-height: 1.5;">
+                    <div class="invoice-title">INVOICE</div>
+                    <div><strong>Invoice #:</strong> {!Invoice__c.Name}</div>
+                    <div><strong>Date:</strong> <apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!TODAY()}"/></apex:outputText></div>
+                    <div>
+                        <strong>Status: </strong> 
+                        <span style="color: {!IF(Invoice__c.Status__c == 'Signed', 'green', 'red')}; font-weight: bold;">
+                            {!Invoice__c.Status__c}
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <table class="info-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td width="48%">
+                    <div class="box-title">BILL TO</div>
+                    <div class="box-content">
+                        <strong style="font-size: 14px;">{!Invoice__c.Order__r.Account.Name}</strong><br/>
+                        {!Invoice__c.Order__r.Account.BillingStreet}<br/>
+                        {!Invoice__c.Order__r.Account.BillingCity}, {!Invoice__c.Order__r.Account.BillingState} {!Invoice__c.Order__r.Account.BillingPostalCode}<br/>
+                        {!Invoice__c.Order__r.Account.BillingCountry}
+                    </div>
+                </td>
+                <td width="4%"></td>
+                <td width="48%">
+                    <div class="box-title">ORDER &amp; CONTRACT DETAILS</div>
+                    <div class="box-content">
+                        <strong>Order Ref:</strong> {!Invoice__c.Order__r.OrderNumber}<br/>
+                        <strong>Contract #:</strong> {!Invoice__c.Order__r.Contract.ContractNumber}<br/><br/>
+                        <strong>Contract Start:</strong> <apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!Invoice__c.Order__r.Contract.StartDate}"/></apex:outputText><br/>
+                        <strong>Contract End:</strong> <apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!Invoice__c.Order__r.Contract.EndDate}"/></apex:outputText>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <table class="summary-table" cellpadding="0" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Product Description</th>
+                    <th style="text-align: center; width: 60px;">Qty</th>
+                    <th style="text-align: right; width: 100px;">Unit Price</th>
+                    <th style="text-align: right; width: 100px;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <apex:repeat value="{!lineItems}" var="item">
+                    <tr>
+                        <td><strong>{!item.Product2.Name}</strong></td>
+                        <td style="text-align: center;">
+                            <apex:outputText value="{0, number, 0}"><apex:param value="{!item.Quantity}"/></apex:outputText>
+                        </td>
+                        <td style="text-align: right;">
+                            <apex:outputText value="{0, number, currency}"><apex:param value="{!item.UnitPrice}"/></apex:outputText>
+                        </td>
+                        <td style="text-align: right;">
+                            <apex:outputText value="{0, number, currency}"><apex:param value="{!item.TotalPrice}"/></apex:outputText>
+                        </td>
+                    </tr>
+                </apex:repeat>
+            </tbody>
+        </table>
+
+        <table class="totals-table">
+            <tr>
+                <td style="width: 55%;"></td>
+                <td style="width: 25%; text-align: right; color: #555;">Subtotal:</td>
+                <td style="width: 20%; text-align: right;">
+                    <apex:outputText value="{0, number, currency}"><apex:param value="{!subtotal}"/></apex:outputText>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 55%;"></td>
+                <td style="width: 25%; text-align: right; color: #555;">Estimated Tax (8.00%):</td>
+                <td style="width: 20%; text-align: right;">
+                    <apex:outputText value="{0, number, currency}"><apex:param value="{!taxAmount}"/></apex:outputText>
+                </td>
+            </tr>
+            <tr class="total-row">
+                <td style="width: 55%;"></td>
+                <td style="width: 25%; text-align: right; padding-top: 15px;">TOTAL DUE:</td>
+                <td style="width: 20%; text-align: right; padding-top: 15px; color: #0056b3;">
+                    <apex:outputText value="{0, number, currency}"><apex:param value="{!grandTotal}"/></apex:outputText>
+                </td>
+            </tr>
+        </table>
+
+        <div class="signature-section">
+            <p style="font-size: 14px; margin-bottom: 20px;"><strong>Authorization &amp; Agreement</strong></p>
+            
+            <apex:outputPanel rendered="{!NOT(ISBLANK($CurrentPage.parameters.sigId))}">
+                <apex:image url="/sfc/servlet.shepherd/version/download/{!$CurrentPage.parameters.sigId}" width="250" height="80"/>
+                <div class="sig-line" style="margin-top: 5px;">
+                    Digitally signed by a BookSmart representative
+                </div>
+            </apex:outputPanel>
+
+            <apex:outputPanel rendered="{!ISBLANK($CurrentPage.parameters.sigId)}">
+                <div class="sig-line">
+                    Authorized Signature (BookSmart Representative)
+                </div>
+            </apex:outputPanel>
+        </div>
+
+    </body>
+</apex:page>

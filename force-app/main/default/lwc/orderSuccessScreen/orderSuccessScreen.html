@@ -1,0 +1,33 @@
+<template>
+    <div class="slds-text-align_center slds-p-vertical_large">
+        <lightning-icon icon-name="action:approval" alternative-text="Success" size="large"></lightning-icon>
+        
+        <h2 class="slds-text-heading_medium slds-m-top_medium">
+            <strong>Records Generated Successfully!</strong>
+        </h2>
+        <p class="slds-text-body_regular slds-m-top_xx-small">
+            The Contract and Order have been finalized for this Opportunity.
+        </p>
+        
+        <template if:true={orderId}>
+            <div class="slds-m-top_large slds-grid slds-grid_align-center">
+                <lightning-button 
+                    variant="base" 
+                    label="View Order Record" 
+                    icon-name="utility:new_window" 
+                    icon-position="right"
+                    onclick={navigateToOrder}>
+                </lightning-button>
+
+                <lightning-button 
+                    class="slds-m-left_large"
+                    variant="base" 
+                    label="View Contract Record" 
+                    icon-name="utility:new_window" 
+                    icon-position="right"
+                    onclick={navigateToContract}>
+                </lightning-button>
+            </div>
+        </template>
+    </div>
+</template>

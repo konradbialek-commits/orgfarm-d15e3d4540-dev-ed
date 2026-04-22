@@ -1,0 +1,44 @@
+<template>
+    <lightning-card title="Contract & Order Generator" icon-name="utility:magicwand">
+        
+        <div class="slds-p-around_medium">
+            
+            <div class="slds-scoped-notification slds-media slds-media_center slds-scoped-notification_light slds-m-bottom_medium" role="status">
+                <div class="slds-media__figure">
+                    <span class="slds-icon_container slds-icon-utility-success" title="Success">
+                        <lightning-icon icon-name="utility:success" alternative-text="Success" variant="success" size="small"></lightning-icon>
+                    </span>
+                </div>
+                <div class="slds-media__body">
+                    <p class="slds-text-heading_small">
+                        <strong>Congratulations on the Closed Won deal!</strong>
+                    </p>
+                    <p class="slds-text-body_regular slds-m-top_xx-small">
+                        Do you want to automatically generate a 12-month Contract and an Order for this Account?
+                    </p>
+                </div>
+            </div>
+
+            <div class="slds-m-top_large slds-grid slds-grid_align-center">
+                <lightning-input type="toggle" 
+                                 label="Create Order and Contract?" 
+                                 message-toggle-active="Yes" 
+                                 message-toggle-inactive="No" 
+                                 checked={isToggled} 
+                                 onchange={handleToggleChange}>
+                </lightning-input>
+            </div>
+
+        </div>
+
+        <div slot="footer">
+            <lightning-button 
+                label={buttonLabel} 
+                variant={buttonVariant} 
+                icon-name={buttonIcon} 
+                onclick={handleNext}>
+            </lightning-button>
+        </div>
+
+    </lightning-card>
+</template>
