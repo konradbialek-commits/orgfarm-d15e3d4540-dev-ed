@@ -3,7 +3,6 @@ import signAndRegenerateInvoice from '@salesforce/apex/InvoiceManager.signAndReg
 import isInvoiceSigned from '@salesforce/apex/InvoiceManager.isInvoiceSigned';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { CloseActionScreenEvent } from 'lightning/actions';
-// RefreshEvent import removed
 
 export default class InvoiceSignaturePad extends LightningElement {
     @api recordId; 
@@ -78,7 +77,6 @@ export default class InvoiceSignaturePad extends LightningElement {
         
         signAndRegenerateInvoice({ orderId: this.recordId, base64Signature: dataURL })
             .then(() => {
-                // Updated toast message instructing the manual refresh
                 this.dispatchEvent(new ShowToastEvent({
                     title: 'Success',
                     message: 'Signature saved! Please refresh the page in a few seconds to view the finalized PDF.',
