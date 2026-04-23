@@ -1,0 +1,97 @@
+<messaging:emailTemplate subject="Your BookSmart Complaint has been logged: {!relatedTo.Name}" recipientType="Contact" relatedToType="Complaint__c">
+    
+    <messaging:htmlEmailBody >
+        <html>
+            <head>
+                <style>
+                    body {
+                        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                        background-color: #f4f5f7;
+                        margin: 0;
+                        padding: 30px;
+                    }
+                    .email-container {
+                        background-color: #ffffff;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        border-radius: 8px;
+                        border-top: 5px solid #0056b3;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+                        overflow: hidden;
+                    }
+                    .header {
+                        background-color: #f9fafc;
+                        padding: 20px 30px;
+                        border-bottom: 1px solid #eeeeee;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        color: #0056b3;
+                        font-size: 24px;
+                    }
+                    .content {
+                        padding: 30px;
+                        color: #333333;
+                        line-height: 1.6;
+                        font-size: 15px;
+                    }
+                    .info-box {
+                        background-color: #f8f9fa;
+                        border-left: 4px solid #0056b3;
+                        padding: 15px 20px;
+                        margin: 25px 0;
+                        border-radius: 0 4px 4px 0;
+                    }
+                    .info-box strong {
+                        display: inline-block;
+                        width: 150px;
+                        color: #555555;
+                    }
+                    .footer {
+                        background-color: #f9fafc;
+                        padding: 15px 30px;
+                        text-align: center;
+                        color: #888888;
+                        font-size: 12px;
+                        border-top: 1px solid #eeeeee;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    
+                    <div class="header">
+                        <h1>BookSmart Support</h1>
+                    </div>
+                    
+                    <div class="content">
+                        <p>Hello {!relatedTo.Customer_Contact__r.FirstName},</p>
+                        
+                        <p>We have officially logged your complaint regarding your recent order (<strong>{!relatedTo.Order__r.OrderNumber}</strong>). We take your feedback seriously and our team is already reviewing the details.</p>
+                        
+                        <div class="info-box">
+                            <div><strong>Complaint Ref:</strong> {!relatedTo.Name}</div>
+                            <div><strong>Priority:</strong> {!relatedTo.Priority__c}</div>
+                            <div><strong>Target Resolution:</strong> 
+                                <apex:outputText value="{0,date,MMMM d, yyyy}">
+                                    <apex:param value="{!relatedTo.Deadline__c}" />
+                                </apex:outputText>
+                            </div>
+                        </div>
+                        
+                        <p>We will respond to you by the target resolution date above. If our team needs any additional information from you before then, we will reach out directly to this email address.</p>
+                        
+                        <p>Thank you for your patience,</p>
+                        <p><strong>The BookSmart Support Team</strong></p>
+                    </div>
+                    
+                    <div class="footer">
+                        &copy; 2026 BookSmart. All rights reserved.
+                    </div>
+                    
+                </div>
+            </body>
+        </html>
+    </messaging:htmlEmailBody>
+    
+</messaging:emailTemplate>
