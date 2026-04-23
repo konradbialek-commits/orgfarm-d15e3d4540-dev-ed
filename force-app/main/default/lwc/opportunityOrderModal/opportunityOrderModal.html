@@ -1,0 +1,49 @@
+<template>
+    <lightning-quick-action-panel title="Create Order">
+        
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </template>
+
+        <template if:false={isSummaryPage}>
+            <div class="slds-m-bottom_medium">
+                <lightning-input type="search" label="Search Products" placeholder="Type a product name..." onchange={handleSearch}></lightning-input>
+            </div>
+            
+            <div style="height: 300px;">
+                <lightning-datatable
+                    key-field="Id"
+                    data={products}
+                    columns={columns}
+                    onrowselection={handleRowSelection}
+                    oncellchange={handleQuantityChange}
+                    draft-values={draftValues}
+                    suppress-bottom-bar>
+                </lightning-datatable>
+            </div>
+            
+            <div slot="footer">
+                <lightning-button label="Next" variant="brand" onclick={goToSummary}></lightning-button>
+            </div>
+        </template>
+
+        <template if:true={isSummaryPage}>
+            <div class="slds-text-heading_small slds-m-bottom_medium">Review Your Order</div>
+            
+            <div style="height: 300px;">
+                <lightning-datatable
+                    key-field="Id"
+                    data={selectedProducts}
+                    columns={columns}
+                    hide-checkbox-column>
+                </lightning-datatable>
+            </div>
+            
+            <div slot="footer">
+                <lightning-button label="Back" onclick={goBack} class="slds-m-right_small"></lightning-button>
+                <lightning-button label="Submit & Create Order" variant="brand" onclick={handleSubmit}></lightning-button>
+            </div>
+        </template>
+
+    </lightning-quick-action-panel>
+</template>
