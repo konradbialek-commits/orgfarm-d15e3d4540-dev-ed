@@ -560,7 +560,7 @@
             <targetReference>Get_Opportunity_Data</targetReference>
         </connector>
     </start>
-    <status>Active</status>
+    <status>Obsolete</status>
     <variables>
         <name>CollectionOfOrderProducts</name>
         <dataType>SObject</dataType>
