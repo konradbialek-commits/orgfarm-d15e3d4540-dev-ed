@@ -20,11 +20,16 @@ jobs:
       - name: Install sfdx-git-delta plugin
         run: echo y | sf plugins install sfdx-git-delta
 
-      - name: Authenticate to Salesforce
+      - name: Authenticate to Salesforce via JWT
         run: |
-          echo "${{ secrets.SFDX_AUTH_URL }}" > auth_url.txt
-          sf org login sfdx-url -f auth_url.txt -a ci-org
-          rm auth_url.txt
+          # 1. Dump the private key secret into a temporary file
+          echo "${{ secrets.SF_JWT_KEY }}" > server.key
+          
+          # 2. Authenticate using the JWT flow
+          sf org login jwt --client-id ${{ secrets.SF_CLIENT_ID }} --jwt-key-file server.key --username ${{ secrets.SF_USERNAME }} --alias ci-org --set-default
+          
+          # 3. Clean up the key file for security
+          rm server.key
 
       - name: Generate Delta package.xml
         run: |
