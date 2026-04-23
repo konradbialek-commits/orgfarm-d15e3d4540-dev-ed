@@ -1,0 +1,96 @@
+<messaging:emailTemplate subject="ACTION REQUIRED: Case #{!relatedTo.CaseNumber} Escalated" recipientType="User" relatedToType="Case">
+    
+    <messaging:htmlEmailBody >
+        <html>
+            <head>
+                <style>
+                    body {
+                        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                        background-color: #f4f5f7;
+                        margin: 0;
+                        padding: 30px;
+                    }
+                    .email-container {
+                        background-color: #ffffff;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        border-radius: 8px;
+                        border-top: 5px solid #d9534f; /* Urgent Red border */
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+                        overflow: hidden;
+                    }
+                    .header {
+                        background-color: #fff3f3;
+                        padding: 20px 30px;
+                        border-bottom: 1px solid #ffcccc;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        color: #d9534f;
+                        font-size: 22px;
+                    }
+                    .content {
+                        padding: 30px;
+                        color: #333333;
+                        line-height: 1.6;
+                        font-size: 15px;
+                    }
+                    .info-box {
+                        background-color: #f8f9fa;
+                        border-left: 4px solid #d9534f;
+                        padding: 15px 20px;
+                        margin: 25px 0;
+                        border-radius: 0 4px 4px 0;
+                    }
+                    .info-box strong {
+                        display: inline-block;
+                        width: 120px;
+                        color: #555555;
+                    }
+                    .footer {
+                        background-color: #f9fafc;
+                        padding: 15px 30px;
+                        text-align: center;
+                        color: #888888;
+                        font-size: 12px;
+                        border-top: 1px solid #eeeeee;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    
+                    <div class="header">
+                        <h1>SLA Breach: System Escalation</h1>
+                    </div>
+                    
+                    <div class="content">
+                        <p>Hello Team,</p>
+                        
+                        <p>This is an automated system alert. <strong>Case #{!relatedTo.CaseNumber}</strong> has been open for 3 days without resolution. It has been automatically reassigned to the Urgent Escalations queue and upgraded to Critical priority.</p>
+                        
+                        <div class="info-box">
+                            <div><strong>Case Number:</strong> {!relatedTo.CaseNumber}</div>
+                            <div><strong>Subject:</strong> {!relatedTo.Subject}</div>
+                            <div><strong>Status:</strong> {!relatedTo.Status}</div>
+                            <div><strong>Priority:</strong> <span style="color: #d9534f; font-weight: bold;">{!relatedTo.Priority}</span></div>
+                            <div><strong>Date Logged:</strong> 
+                                <apex:outputText value="{0,date,MMMM d, yyyy}">
+                                    <apex:param value="{!relatedTo.CreatedDate}" />
+                                </apex:outputText>
+                            </div>
+                        </div>
+                        
+                        <p>Please log in to Salesforce immediately to review and resolve this case to prevent further customer delays.</p>
+                    </div>
+                    
+                    <div class="footer">
+                        &copy; 2026 BookSmart Automated Service Escalations
+                    </div>
+                    
+                </div>
+            </body>
+        </html>
+    </messaging:htmlEmailBody>
+    
+</messaging:emailTemplate>
