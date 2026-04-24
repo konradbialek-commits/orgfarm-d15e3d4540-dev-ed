@@ -66,6 +66,13 @@
                     hide-checkbox-column>
                 </lightning-datatable>
             </div>
+
+            <div class="slds-box slds-m-top_medium slds-theme_shade">
+                <p><strong>Subtotal:</strong> <lightning-formatted-number value={discountData.originalTotal} format-style="currency"></lightning-formatted-number></p>
+                <p class="slds-text-color_success"><strong>Discounts Applied:</strong> {discountData.appliedDiscounts}</p>
+                <p class="slds-text-color_success"><strong>Total Discount:</strong> -<lightning-formatted-number value={discountData.discountAmount} format-style="currency"></lightning-formatted-number></p>
+                <p class="slds-text-heading_small slds-m-top_small"><strong>Final Total:</strong> <lightning-formatted-number value={discountData.finalTotal} format-style="currency"></lightning-formatted-number></p>
+            </div>
             
             <div slot="footer">
                 <lightning-button label="Back" onclick={goBack} class="slds-m-right_small"></lightning-button>

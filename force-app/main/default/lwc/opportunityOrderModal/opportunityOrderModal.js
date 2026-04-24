@@ -6,6 +6,7 @@ import getAvailablePricebooks from '@salesforce/apex/OrderCreationController.get
 import getProductFamilies from '@salesforce/apex/OrderCreationController.getProductFamilies';
 import getProducts from '@salesforce/apex/OrderCreationController.getProducts';
 import createOrderWithItems from '@salesforce/apex/OrderCreationController.createOrderWithItems';
+import calculateOrderDiscounts from '@salesforce/apex/DiscountManagerController.calculateOrderDiscounts';
 
 const COLUMNS = [
     { label: 'Product Name', fieldName: 'productName' },
@@ -26,6 +27,8 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     @track products = [];
     @track selectedProducts = [];
     @track draftValues = [];
+    @track discountData = {};
+    subtotal = 0;
     
     isSummaryPage = false;
     isLoading = false;
@@ -112,7 +115,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
         this.draftValues = []; 
     }
 
-    goToSummary() {
+    async goToSummary() {
         if (!this.selectedPricebookId) {
             this.showToast('Wait!', 'Please select a Price Book first.', 'warning');
             return;
@@ -121,7 +124,15 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
              this.showToast('Hold up!', 'You must select at least one product.', 'warning');
              return;
         }
-        this.isSummaryPage = true;
+        
+        this.subtotal = this.selectedProducts.reduce((total, prod) => total + (prod.unitPrice * prod.quantity), 0);
+        
+        try {
+            this.discountData = await calculateOrderDiscounts({ subtotal: this.subtotal });
+            this.isSummaryPage = true;
+        } catch(error) {
+            this.showToast('Calculation Error', error.body.message, 'error');
+        }
     }
 
     goBack() {
