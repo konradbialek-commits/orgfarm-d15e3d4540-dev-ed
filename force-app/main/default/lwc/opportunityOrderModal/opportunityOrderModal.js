@@ -6,6 +6,7 @@ import getAvailablePricebooks from '@salesforce/apex/OrderCreationController.get
 import getProductFamilies from '@salesforce/apex/OrderCreationController.getProductFamilies';
 import getProducts from '@salesforce/apex/OrderCreationController.getProducts';
 import createOrderWithItems from '@salesforce/apex/OrderCreationController.createOrderWithItems';
+import calculateOrderDiscounts from '@salesforce/apex/DiscountManagerController.calculateOrderDiscounts';
 
 const COLUMNS = [
     { label: 'Product Name', fieldName: 'productName' },
@@ -25,8 +26,12 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     @track familyOptions = [];
     @track products = [];
     @track selectedProducts = [];
+    @track summaryProducts = [];
     @track draftValues = [];
+    @track discountData = {};
     
+    subtotal = 0;
+    hasDiscount = false;
     isSummaryPage = false;
     isLoading = false;
 
@@ -112,7 +117,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
         this.draftValues = []; 
     }
 
-    goToSummary() {
+    async goToSummary() {
         if (!this.selectedPricebookId) {
             this.showToast('Wait!', 'Please select a Price Book first.', 'warning');
             return;
@@ -121,7 +126,35 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
              this.showToast('Hold up!', 'You must select at least one product.', 'warning');
              return;
         }
-        this.isSummaryPage = true;
+        
+        this.subtotal = this.selectedProducts.reduce((total, prod) => total + (prod.unitPrice * prod.quantity), 0);
+        
+        try {
+            this.discountData = await calculateOrderDiscounts({ subtotal: this.subtotal });
+            this.hasDiscount = this.discountData.discountAmount > 0;
+            
+            let discountRatio = 0;
+            if (this.hasDiscount) {
+                discountRatio = this.discountData.discountAmount / this.subtotal;
+            }
+            
+            this.summaryProducts = this.selectedProducts.map(p => {
+                let itemOriginalTotal = p.unitPrice * p.quantity;
+                let itemDiscountAmount = itemOriginalTotal * discountRatio;
+                let itemNewTotal = itemOriginalTotal - itemDiscountAmount;
+                let itemNewUnitPrice = itemNewTotal / p.quantity;
+                
+                return {
+                    ...p,
+                    discountedUnitPrice: itemNewUnitPrice,
+                    discountedTotal: itemNewTotal
+                };
+            });
+            
+            this.isSummaryPage = true;
+        } catch(error) {
+            this.showToast('Calculation Error', error.body ? error.body.message : error.message, 'error');
+        }
     }
 
     goBack() {
@@ -131,17 +164,20 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     async handleSubmit() {
         this.isLoading = true;
         
-        let payload = this.selectedProducts.map(p => ({
+        let payload = this.summaryProducts.map(p => ({
             pricebookEntryId: p.Id,
             quantity: p.quantity,
-            unitPrice: p.unitPrice
+            unitPrice: p.discountedUnitPrice
         }));
 
         try {
             const newOrderId = await createOrderWithItems({ 
                 oppId: this.recordId, 
                 productData: JSON.stringify(payload),
-                pricebookId: this.selectedPricebookId
+                pricebookId: this.selectedPricebookId,
+                discountAmount: this.discountData.discountAmount,
+                appliedDiscounts: this.discountData.appliedDiscounts || '',
+                appliedDiscountIds: this.discountData.appliedDiscountIds || []
             });
             
             this.showToast('Success', 'Order Created Successfully!', 'success');

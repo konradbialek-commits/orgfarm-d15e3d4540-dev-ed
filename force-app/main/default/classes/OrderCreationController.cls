@@ -40,7 +40,7 @@ public with sharing class OrderCreationController {
     }
 
     @AuraEnabled
-    public static Id createOrderWithItems(Id oppId, String productData, Id pricebookId) {
+    public static Id createOrderWithItems(Id oppId, String productData, Id pricebookId, Decimal discountAmount, String appliedDiscounts, List<Id> appliedDiscountIds) {
         try {
             Opportunity opp = [SELECT AccountId FROM Opportunity WHERE Id = :oppId LIMIT 1];
 
@@ -49,7 +49,9 @@ public with sharing class OrderCreationController {
                 OpportunityId = opp.Id,
                 EffectiveDate = Date.today(),
                 Status = 'Draft',
-                Pricebook2Id = pricebookId
+                Pricebook2Id = pricebookId,
+                Discount_Amount__c = discountAmount,
+                Applied_Discounts__c = appliedDiscounts
             );
             insert newOrder;
 
@@ -69,6 +71,17 @@ public with sharing class OrderCreationController {
             }
             
             insert itemsToInsert;
+
+            if (appliedDiscountIds != null && !appliedDiscountIds.isEmpty()) {
+                List<Discount__c> usedDiscounts = [SELECT Id, Active__c FROM Discount__c WHERE Id IN :appliedDiscountIds AND Discount_Category__c = 'One Time Only'];
+                if (!usedDiscounts.isEmpty()) {
+                    for (Discount__c d : usedDiscounts) {
+                        d.Active__c = false;
+                    }
+                    update usedDiscounts;
+                }
+            }
+            
             return newOrder.Id;
             
         } catch (Exception e) {

@@ -1,0 +1,96 @@
+<template>
+    <lightning-card title="Discount Manager" icon-name="custom:custom41">
+        <lightning-tabset>
+            <lightning-tab label="Global Settings">
+                <div class="slds-p-around_medium slds-size_1-of-2">
+                    <lightning-combobox 
+                        label="Global Discount Strategy" 
+                        value={settings.Strategy__c} 
+                        options={strategyOptions} 
+                        onchange={handleSettingChange} 
+                        name="Strategy__c">
+                    </lightning-combobox>
+                    <lightning-input 
+                        type="number" 
+                        label="Minimum Price Floor (%)" 
+                        value={settings.Max_Discount_Percent__c} 
+                        onchange={handleSettingChange} 
+                        name="Max_Discount_Percent__c" 
+                        step="0.01">
+                    </lightning-input>
+                    <div class="slds-text-color_weak slds-m-top_x-small">
+                        <em>Example: If set to 10%, the final order price can never drop below 10% of the original subtotal, regardless of how many discounts are applied.</em>
+                    </div>
+                    <lightning-button 
+                        label="Save Settings" 
+                        variant="brand" 
+                        onclick={saveSettings} 
+                        class="slds-m-top_medium slds-show">
+                    </lightning-button>
+                </div>
+            </lightning-tab>
+
+            <lightning-tab label="Discounts">
+                <div class="slds-p-around_medium">
+                    <lightning-button label="New Discount" variant="brand" onclick={openModal} class="slds-m-right_small"></lightning-button>
+                    <lightning-button label="Activate" onclick={activateSelected} class="slds-m-right_small"></lightning-button>
+                    <lightning-button label="Deactivate" onclick={deactivateSelected} class="slds-m-right_small"></lightning-button>
+                    <lightning-button label="Delete Selected" variant="destructive" onclick={deleteSelected}></lightning-button>
+                </div>
+                <div style="height: 400px;">
+                    <lightning-datatable
+                        key-field="Id"
+                        data={discounts}
+                        columns={discountColumns}
+                        onrowselection={handleRowSelection}>
+                    </lightning-datatable>
+                </div>
+            </lightning-tab>
+        </lightning-tabset>
+    </lightning-card>
+
+    <template if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">New Discount Configuration</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-input label="Name" name="Name" value={currentDiscount.Name} onchange={handleFormChange} required></lightning-input>
+                    <lightning-input class="slds-m-top_small slds-m-bottom_small" type="checkbox" label="Active" name="Active__c" checked={currentDiscount.Active__c} onchange={handleFormChange}></lightning-input>
+                    
+                    <lightning-combobox label="Discount Category" name="Discount_Category__c" value={currentDiscount.Discount_Category__c} options={categoryOptions} onchange={handleFormChange} required></lightning-combobox>
+
+                    <template if:true={isConditional}>
+                        <lightning-input type="number" label="Minimum Order Value Requirement" name="Minimum_Order_Value__c" value={currentDiscount.Minimum_Order_Value__c} onchange={handleFormChange} step="0.01" required></lightning-input>
+                    </template>
+
+                    <template if:true={isRecurring}>
+                        <lightning-combobox label="Recurrence Schedule" name="Recurrence__c" value={currentDiscount.Recurrence__c} options={recurrenceOptions} onchange={handleFormChange} required></lightning-combobox>
+                        <div class="slds-text-color_weak slds-m-top_x-small slds-m-bottom_small">
+                            <em>Note: Recurring discounts will run indefinitely unless an End Date is provided below.</em>
+                        </div>
+                    </template>
+
+                    <div class="slds-m-top_small"></div>
+                    <lightning-combobox label="Discount Value Type" name="Discount_Type__c" value={currentDiscount.Discount_Type__c} options={typeOptions} onchange={handleFormChange} required></lightning-combobox>
+                    <lightning-input type="number" label="Discount Value" name="Value__c" value={currentDiscount.Value__c} onchange={handleFormChange} step="0.01" required></lightning-input>
+                    
+                    <div class="slds-grid slds-gutters slds-m-top_small">
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input type="date" label="Start Date" name="Start_Date__c" value={currentDiscount.Start_Date__c} onchange={handleFormChange}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input type="date" label="End Date" name="End_Date__c" value={currentDiscount.End_Date__c} onchange={handleFormChange}></lightning-input>
+                        </div>
+                    </div>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" onclick={closeModal} class="slds-m-right_small"></lightning-button>
+                    <lightning-button label="Save" variant="brand" onclick={saveDiscount}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

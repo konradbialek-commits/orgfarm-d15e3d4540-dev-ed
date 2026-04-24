@@ -98,7 +98,7 @@ private class OrderCreationControllerTest {
         String jsonPayload = JSON.serialize(payloadList);
 
         Test.startTest();
-        Id newOrderId = OrderCreationController.createOrderWithItems(opp.Id, jsonPayload, stdPricebookId);
+        Id newOrderId = OrderCreationController.createOrderWithItems(opp.Id, jsonPayload, stdPricebookId, 10.00, 'Test Discount', new List<Id>());
         Test.stopTest();
 
         Assert.isNotNull(newOrderId, 'Order ID should be returned');
