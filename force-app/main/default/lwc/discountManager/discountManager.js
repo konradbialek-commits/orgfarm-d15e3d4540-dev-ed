@@ -20,6 +20,12 @@ export default class DiscountManager extends LightningElement {
         { label: 'Cumulative', value: 'Cumulative' }
     ];
 
+    categoryOptions = [
+        { label: 'One Time Only', value: 'One Time Only' },
+        { label: 'Recurring', value: 'Recurring' },
+        { label: 'Conditional', value: 'Conditional' }
+    ];
+
     typeOptions = [
         { label: 'Percent', value: 'Percent' },
         { label: 'Fixed Amount', value: 'Fixed Amount' }
@@ -27,19 +33,30 @@ export default class DiscountManager extends LightningElement {
 
     recurrenceOptions = [
         { label: 'None', value: 'None' },
+        { label: 'Daily', value: 'Daily' },
+        { label: 'Every Monday', value: 'Every Monday' },
+        { label: 'Every Friday', value: 'Every Friday' },
         { label: 'First Day of Month', value: 'First Day of Month' },
-        { label: 'Every Monday', value: 'Every Monday' }
+        { label: 'First Day of Quarter', value: 'First Day of Quarter' }
     ];
 
     discountColumns = [
         { label: 'Name', fieldName: 'Name' },
         { label: 'Active', fieldName: 'Active__c', type: 'boolean' },
-        { label: 'Type', fieldName: 'Discount_Type__c' },
+        { label: 'Category', fieldName: 'Discount_Category__c' },
+        { label: 'Value Type', fieldName: 'Discount_Type__c' },
         { label: 'Value', fieldName: 'Value__c', type: 'number' },
-        { label: 'Recurrence', fieldName: 'Recurrence__c' },
-        { label: 'Start Date', fieldName: 'Start_Date__c', type: 'date' },
-        { label: 'End Date', fieldName: 'End_Date__c', type: 'date' }
+        { label: 'Min Order', fieldName: 'Minimum_Order_Value__c', type: 'currency' },
+        { label: 'Recurrence', fieldName: 'Recurrence__c' }
     ];
+
+    get isRecurring() {
+        return this.currentDiscount.Discount_Category__c === 'Recurring';
+    }
+
+    get isConditional() {
+        return this.currentDiscount.Discount_Category__c === 'Conditional';
+    }
 
     connectedCallback() {
         this.loadData();
@@ -87,7 +104,13 @@ export default class DiscountManager extends LightningElement {
     }
 
     openModal() {
-        this.currentDiscount = { sObjectType: 'Discount__c', Active__c: true, Discount_Type__c: 'Percent', Recurrence__c: 'None' };
+        this.currentDiscount = { 
+            sObjectType: 'Discount__c', 
+            Active__c: true, 
+            Discount_Category__c: 'One Time Only',
+            Discount_Type__c: 'Percent', 
+            Recurrence__c: 'None' 
+        };
         this.isModalOpen = true;
     }
 

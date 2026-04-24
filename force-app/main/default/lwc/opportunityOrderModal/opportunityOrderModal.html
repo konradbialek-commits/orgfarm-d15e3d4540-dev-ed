@@ -94,7 +94,10 @@
                 <p><strong>Subtotal:</strong> <lightning-formatted-number value={discountData.originalTotal} format-style="currency"></lightning-formatted-number></p>
                 <template if:true={hasDiscount}>
                     <p class="slds-text-color_success"><strong>Discounts Applied:</strong> {discountData.appliedDiscounts}</p>
-                    <p class="slds-text-color_success"><strong>Total Discount:</strong> -<lightning-formatted-number value={discountData.discountAmount} format-style="currency"></lightning-formatted-number></p>
+                    <p class="slds-text-color_success">
+                        <strong>Total Discount:</strong> -<lightning-formatted-number value={discountData.discountAmount} format-style="currency"></lightning-formatted-number> 
+                        (<lightning-formatted-number value={discountData.discountPercent} maximum-fraction-digits="2"></lightning-formatted-number>%)
+                    </p>
                 </template>
                 <p class="slds-text-heading_small slds-m-top_small"><strong>Final Total:</strong> <lightning-formatted-number value={discountData.finalTotal} format-style="currency"></lightning-formatted-number></p>
             </div>

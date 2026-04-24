@@ -176,7 +176,8 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
                 productData: JSON.stringify(payload),
                 pricebookId: this.selectedPricebookId,
                 discountAmount: this.discountData.discountAmount,
-                appliedDiscounts: this.discountData.appliedDiscounts || ''
+                appliedDiscounts: this.discountData.appliedDiscounts || '',
+                appliedDiscountIds: this.discountData.appliedDiscountIds || []
             });
             
             this.showToast('Success', 'Order Created Successfully!', 'success');
