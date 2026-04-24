@@ -1,6 +1,0 @@
-<design:component label="Header and One Region (Custom)">
-    <flexipage:template>
-        <flexipage:region name="header" defaultWidth="Large" />
-        <flexipage:region name="main" defaultWidth="Large" />
-    </flexipage:template>
-</design:component>
