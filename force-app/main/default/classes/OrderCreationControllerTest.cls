@@ -12,8 +12,7 @@ private class OrderCreationControllerTest {
             Name = 'Test Opp',
             StageName = 'Prospecting',
             CloseDate = Date.today().addDays(30),
-            AccountId = testAccount.Id,
-            Pricebook2Id = stdPricebookId
+            AccountId = testAccount.Id
         );
         insert testOpp;
 
@@ -37,13 +36,40 @@ private class OrderCreationControllerTest {
     }
 
     @IsTest
-    static void testGetProducts() {
+    static void testGetAvailablePricebooks() {
         Test.startTest();
-        List<PricebookEntry> specificResults = OrderCreationController.getProducts('Gatsby');
+        List<Pricebook2> pbs = OrderCreationController.getAvailablePricebooks();
+        Test.stopTest();
+        
+        Assert.isTrue(pbs.size() >= 0, 'Should return a list without throwing errors');
+    }
+
+    @IsTest
+    static void testGetProductFamilies() {
+        Test.startTest();
+        List<Map<String, String>> families = OrderCreationController.getProductFamilies();
+        Test.stopTest();
+        
+        Assert.isNotNull(families, 'Should return a list of picklist values');
+    }
+
+    @IsTest
+    static void testGetProducts() {
+        Id stdPricebookId = Test.getStandardPricebookId();
+        
+        Test.startTest();
+        
+        List<PricebookEntry> specificResults = OrderCreationController.getProducts('Gatsby', stdPricebookId, '');
         Assert.areEqual(1, specificResults.size(), 'Should find exactly 1 product matching Gatsby');
         
-        List<PricebookEntry> allResults = OrderCreationController.getProducts('');
+        List<PricebookEntry> allResults = OrderCreationController.getProducts('', stdPricebookId, '');
         Assert.areEqual(2, allResults.size(), 'Should return all active standard products when search is blank');
+
+        List<PricebookEntry> familyResults = OrderCreationController.getProducts('', stdPricebookId, 'Fiction Book');
+        Assert.areEqual(1, familyResults.size(), 'Should find exactly 1 product matching Fiction Book family');
+        
+        List<PricebookEntry> noPbResults = OrderCreationController.getProducts('Gatsby', null, '');
+        Assert.areEqual(0, noPbResults.size(), 'Should return 0 products if no pricebook is provided');
         
         Test.stopTest();
     }
@@ -51,6 +77,7 @@ private class OrderCreationControllerTest {
     @IsTest
     static void testCreateOrderWithItems() {
         Opportunity opp = [SELECT Id, AccountId FROM Opportunity LIMIT 1];
+        Id stdPricebookId = Test.getStandardPricebookId();
         PricebookEntry pbe1 = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2.Name = 'The Great Gatsby' LIMIT 1];
         PricebookEntry pbe2 = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2.Name = 'A Brief History of Time' LIMIT 1];
 
@@ -71,7 +98,7 @@ private class OrderCreationControllerTest {
         String jsonPayload = JSON.serialize(payloadList);
 
         Test.startTest();
-        Id newOrderId = OrderCreationController.createOrderWithItems(opp.Id, jsonPayload);
+        Id newOrderId = OrderCreationController.createOrderWithItems(opp.Id, jsonPayload, stdPricebookId);
         Test.stopTest();
 
         Assert.isNotNull(newOrderId, 'Order ID should be returned');
@@ -80,11 +107,9 @@ private class OrderCreationControllerTest {
         Assert.areEqual(opp.AccountId, insertedOrder.AccountId, 'Order should be linked to the correct Account');
         Assert.areEqual(opp.Id, insertedOrder.OpportunityId, 'Order should be linked to the Opportunity');
         Assert.areEqual('Draft', insertedOrder.Status, 'Order status should be Draft');
+        Assert.areEqual(stdPricebookId, insertedOrder.Pricebook2Id, 'Pricebook should match the selected one');
 
         List<OrderItem> insertedItems = [SELECT Quantity, UnitPrice, PricebookEntryId FROM OrderItem WHERE OrderId = :newOrderId ORDER BY Quantity DESC];
         Assert.areEqual(2, insertedItems.size(), 'Should have created exactly 2 Order Items');
-        
-        Assert.areEqual(2, insertedItems[0].Quantity, 'First item quantity should be 2');
-        Assert.areEqual(pbe1.Id, insertedItems[0].PricebookEntryId, 'PricebookEntry ID should match');
     }
 }

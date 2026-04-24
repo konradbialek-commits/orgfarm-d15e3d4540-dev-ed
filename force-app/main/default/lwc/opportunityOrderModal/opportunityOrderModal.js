@@ -2,6 +2,8 @@ import { LightningElement, api, wire, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { CloseActionScreenEvent } from 'lightning/actions';
+import getAvailablePricebooks from '@salesforce/apex/OrderCreationController.getAvailablePricebooks';
+import getProductFamilies from '@salesforce/apex/OrderCreationController.getProductFamilies';
 import getProducts from '@salesforce/apex/OrderCreationController.getProducts';
 import createOrderWithItems from '@salesforce/apex/OrderCreationController.createOrderWithItems';
 
@@ -16,7 +18,11 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     @api recordId;
     columns = COLUMNS;
     searchTerm = '';
+    selectedPricebookId = null;
+    selectedFamily = '';
     
+    @track pricebookOptions = [];
+    @track familyOptions = [];
     @track products = [];
     @track selectedProducts = [];
     @track draftValues = [];
@@ -24,7 +30,36 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     isSummaryPage = false;
     isLoading = false;
 
-    @wire(getProducts, { searchTerm: '$searchTerm' })
+    @wire(getAvailablePricebooks)
+    wiredPricebooks({ error, data }) {
+        if (data) {
+            this.pricebookOptions = data.map(pb => ({
+                label: pb.Name,
+                value: pb.Id
+            }));
+            
+            let defaultPb = data.find(pb => pb.IsStandard);
+            if (defaultPb) {
+                this.selectedPricebookId = defaultPb.Id;
+            } else if (data.length > 0) {
+                this.selectedPricebookId = data[0].Id;
+            }
+        } else if (error) {
+            this.showToast('Error', 'Failed to load price books', 'error');
+        }
+    }
+
+    @wire(getProductFamilies)
+    wiredFamilies({ error, data }) {
+        if (data) {
+            let options = [{ label: 'All Families', value: '' }];
+            this.familyOptions = [...options, ...data];
+        } else if (error) {
+            this.showToast('Error', 'Failed to load product families', 'error');
+        }
+    }
+
+    @wire(getProducts, { searchTerm: '$searchTerm', pricebookId: '$selectedPricebookId', productFamily: '$selectedFamily' })
     wiredProducts({ error, data }) {
         if (data) {
             this.products = data.map(pbe => ({
@@ -39,6 +74,19 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
         }
     }
 
+    get isSearchDisabled() {
+        return !this.selectedPricebookId;
+    }
+
+    handlePricebookChange(event) {
+        this.selectedPricebookId = event.detail.value;
+        this.selectedProducts = [];
+    }
+
+    handleFamilyChange(event) {
+        this.selectedFamily = event.detail.value;
+    }
+
     handleSearch(event) {
         this.searchTerm = event.target.value;
     }
@@ -48,7 +96,6 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     }
 
     handleQuantityChange(event) {
-
         let drafts = event.detail.draftValues;
         
         drafts.forEach(draft => {
@@ -56,17 +103,20 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
             if (index !== -1) {
                 this.products[index].quantity = draft.quantity;
             }
-
             let selIndex = this.selectedProducts.findIndex(p => p.Id === draft.Id);
             if(selIndex !== -1) {
                 this.selectedProducts[selIndex].quantity = draft.quantity;
             }
         });
-
+        
         this.draftValues = []; 
     }
 
     goToSummary() {
+        if (!this.selectedPricebookId) {
+            this.showToast('Wait!', 'Please select a Price Book first.', 'warning');
+            return;
+        }
         if(this.selectedProducts.length === 0) {
              this.showToast('Hold up!', 'You must select at least one product.', 'warning');
              return;
@@ -80,7 +130,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
 
     async handleSubmit() {
         this.isLoading = true;
-
+        
         let payload = this.selectedProducts.map(p => ({
             pricebookEntryId: p.Id,
             quantity: p.quantity,
@@ -90,13 +140,14 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
         try {
             const newOrderId = await createOrderWithItems({ 
                 oppId: this.recordId, 
-                productData: JSON.stringify(payload) 
+                productData: JSON.stringify(payload),
+                pricebookId: this.selectedPricebookId
             });
             
             this.showToast('Success', 'Order Created Successfully!', 'success');
-
+            
             this.dispatchEvent(new CloseActionScreenEvent());
-
+            
             this[NavigationMixin.Navigate]({
                 type: 'standard__recordPage',
                 attributes: {
@@ -106,7 +157,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
                 }
             });
         } catch (error) {
-            this.showToast('Creation Error', error.body.message, 'error');
+            this.showToast('Creation Error', error.body ? error.body.message : error.message, 'error');
         } finally {
             this.isLoading = false;
         }
