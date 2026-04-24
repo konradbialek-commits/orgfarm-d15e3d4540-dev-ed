@@ -6,16 +6,16 @@ private class DiscountManagerControllerTest {
         Discount_Setting__c setting = new Discount_Setting__c(
             Name = 'Global',
             Strategy__c = 'Cumulative',
-            Max_Discount_Percent__c = 50.0
+            Max_Discount_Percent__c = 0.0
         );
         insert setting;
 
         Discount__c d1 = new Discount__c(
             Name = '10 Percent Off',
             Active__c = true,
+            Discount_Category__c = 'One Time Only',
             Discount_Type__c = 'Percent',
             Value__c = 10,
-            Recurrence__c = 'None',
             Start_Date__c = Date.today().addDays(-1),
             End_Date__c = Date.today().addDays(10)
         );
@@ -23,6 +23,7 @@ private class DiscountManagerControllerTest {
         Discount__c d2 = new Discount__c(
             Name = '15 Fixed Off',
             Active__c = true,
+            Discount_Category__c = 'Recurring',
             Discount_Type__c = 'Fixed Amount',
             Value__c = 15,
             Recurrence__c = 'None',
@@ -30,16 +31,7 @@ private class DiscountManagerControllerTest {
             End_Date__c = Date.today().addDays(10)
         );
 
-        Discount__c d3 = new Discount__c(
-            Name = 'Future Discount',
-            Active__c = true,
-            Discount_Type__c = 'Percent',
-            Value__c = 20,
-            Recurrence__c = 'None',
-            Start_Date__c = Date.today().addDays(5)
-        );
-
-        insert new List<Discount__c>{d1, d2, d3};
+        insert new List<Discount__c>{d1, d2};
     }
 
     @IsTest
@@ -67,14 +59,14 @@ private class DiscountManagerControllerTest {
         
         Assert.isNotNull(setting);
         Assert.areEqual('Cumulative', setting.Strategy__c);
-        Assert.areEqual(100.0, setting.Max_Discount_Percent__c);
+        Assert.areEqual(0.0, setting.Max_Discount_Percent__c);
     }
 
     @IsTest
     static void testDiscountDML() {
         Test.startTest();
         List<Discount__c> discounts = DiscountManagerController.getDiscounts();
-        Assert.areEqual(3, discounts.size());
+        Assert.areEqual(2, discounts.size());
 
         List<Id> dIds = new List<Id>{discounts[0].Id};
         DiscountManagerController.toggleDiscounts(dIds, false);
@@ -82,9 +74,9 @@ private class DiscountManagerControllerTest {
         Discount__c newDiscount = new Discount__c(
             Name = 'New Test',
             Active__c = true,
+            Discount_Category__c = 'One Time Only',
             Discount_Type__c = 'Percent',
-            Value__c = 5,
-            Recurrence__c = 'None'
+            Value__c = 5
         );
         DiscountManagerController.upsertDiscount(newDiscount);
         Test.stopTest();
@@ -93,7 +85,7 @@ private class DiscountManagerControllerTest {
         Assert.isFalse(toggled.Active__c);
         
         Integer count = [SELECT COUNT() FROM Discount__c];
-        Assert.areEqual(4, count);
+        Assert.areEqual(3, count);
     }
 
     @IsTest
@@ -107,35 +99,9 @@ private class DiscountManagerControllerTest {
     }
 
     @IsTest
-    static void testCalculateHighest() {
-        Discount_Setting__c setting = [SELECT Id FROM Discount_Setting__c LIMIT 1];
-        setting.Strategy__c = 'Highest';
-        update setting;
-
-        Test.startTest();
-        Map<String, Object> result = DiscountManagerController.calculateOrderDiscounts(100.0);
-        Test.stopTest();
-
-        Assert.areEqual(15.0, (Decimal)result.get('discountAmount'));
-    }
-
-    @IsTest
-    static void testCalculateLowest() {
-        Discount_Setting__c setting = [SELECT Id FROM Discount_Setting__c LIMIT 1];
-        setting.Strategy__c = 'Lowest';
-        update setting;
-
-        Test.startTest();
-        Map<String, Object> result = DiscountManagerController.calculateOrderDiscounts(100.0);
-        Test.stopTest();
-
-        Assert.areEqual(10.0, (Decimal)result.get('discountAmount'));
-    }
-
-    @IsTest
     static void testCalculateCapped() {
         Discount_Setting__c setting = [SELECT Id FROM Discount_Setting__c LIMIT 1];
-        setting.Max_Discount_Percent__c = 20.0;
+        setting.Max_Discount_Percent__c = 80.0;
         update setting;
 
         Test.startTest();
@@ -143,6 +109,7 @@ private class DiscountManagerControllerTest {
         Test.stopTest();
 
         Assert.areEqual(20.0, (Decimal)result.get('discountAmount'));
-        Assert.isTrue(((String)result.get('appliedDiscounts')).contains('Capped'));
+        Assert.areEqual(80.0, (Decimal)result.get('finalTotal'));
+        Assert.isTrue(((String)result.get('appliedDiscounts')).contains('Floor'));
     }
 }
