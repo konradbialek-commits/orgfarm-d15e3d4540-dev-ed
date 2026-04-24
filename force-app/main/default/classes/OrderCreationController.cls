@@ -40,7 +40,7 @@ public with sharing class OrderCreationController {
     }
 
     @AuraEnabled
-    public static Id createOrderWithItems(Id oppId, String productData, Id pricebookId) {
+    public static Id createOrderWithItems(Id oppId, String productData, Id pricebookId, Decimal discountAmount, String appliedDiscounts) {
         try {
             Opportunity opp = [SELECT AccountId FROM Opportunity WHERE Id = :oppId LIMIT 1];
 
@@ -49,7 +49,9 @@ public with sharing class OrderCreationController {
                 OpportunityId = opp.Id,
                 EffectiveDate = Date.today(),
                 Status = 'Draft',
-                Pricebook2Id = pricebookId
+                Pricebook2Id = pricebookId,
+                Discount_Amount__c = discountAmount,
+                Applied_Discounts__c = appliedDiscounts
             );
             insert newOrder;
 

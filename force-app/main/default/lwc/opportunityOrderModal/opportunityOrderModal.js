@@ -26,10 +26,12 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     @track familyOptions = [];
     @track products = [];
     @track selectedProducts = [];
+    @track summaryProducts = [];
     @track draftValues = [];
     @track discountData = {};
-    subtotal = 0;
     
+    subtotal = 0;
+    hasDiscount = false;
     isSummaryPage = false;
     isLoading = false;
 
@@ -129,9 +131,29 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
         
         try {
             this.discountData = await calculateOrderDiscounts({ subtotal: this.subtotal });
+            this.hasDiscount = this.discountData.discountAmount > 0;
+            
+            let discountRatio = 0;
+            if (this.hasDiscount) {
+                discountRatio = this.discountData.discountAmount / this.subtotal;
+            }
+            
+            this.summaryProducts = this.selectedProducts.map(p => {
+                let itemOriginalTotal = p.unitPrice * p.quantity;
+                let itemDiscountAmount = itemOriginalTotal * discountRatio;
+                let itemNewTotal = itemOriginalTotal - itemDiscountAmount;
+                let itemNewUnitPrice = itemNewTotal / p.quantity;
+                
+                return {
+                    ...p,
+                    discountedUnitPrice: itemNewUnitPrice,
+                    discountedTotal: itemNewTotal
+                };
+            });
+            
             this.isSummaryPage = true;
         } catch(error) {
-            this.showToast('Calculation Error', error.body.message, 'error');
+            this.showToast('Calculation Error', error.body ? error.body.message : error.message, 'error');
         }
     }
 
@@ -142,17 +164,19 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     async handleSubmit() {
         this.isLoading = true;
         
-        let payload = this.selectedProducts.map(p => ({
+        let payload = this.summaryProducts.map(p => ({
             pricebookEntryId: p.Id,
             quantity: p.quantity,
-            unitPrice: p.unitPrice
+            unitPrice: p.discountedUnitPrice
         }));
 
         try {
             const newOrderId = await createOrderWithItems({ 
                 oppId: this.recordId, 
                 productData: JSON.stringify(payload),
-                pricebookId: this.selectedPricebookId
+                pricebookId: this.selectedPricebookId,
+                discountAmount: this.discountData.discountAmount,
+                appliedDiscounts: this.discountData.appliedDiscounts || ''
             });
             
             this.showToast('Success', 'Order Created Successfully!', 'success');

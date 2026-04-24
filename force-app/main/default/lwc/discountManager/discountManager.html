@@ -30,8 +30,9 @@
             <lightning-tab label="Discounts">
                 <div class="slds-p-around_medium">
                     <lightning-button label="New Discount" variant="brand" onclick={openModal} class="slds-m-right_small"></lightning-button>
-                    <lightning-button label="Activate Selected" onclick={activateSelected} class="slds-m-right_small"></lightning-button>
-                    <lightning-button label="Deactivate Selected" onclick={deactivateSelected}></lightning-button>
+                    <lightning-button label="Activate" onclick={activateSelected} class="slds-m-right_small"></lightning-button>
+                    <lightning-button label="Deactivate" onclick={deactivateSelected} class="slds-m-right_small"></lightning-button>
+                    <lightning-button label="Delete Selected" variant="destructive" onclick={deleteSelected}></lightning-button>
                 </div>
                 <div style="height: 400px;">
                     <lightning-datatable
@@ -49,7 +50,7 @@
         <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
             <div class="slds-modal__container">
                 <header class="slds-modal__header">
-                    <h2 class="slds-text-heading_medium">Discount Configuration</h2>
+                    <h2 class="slds-text-heading_medium">New Discount Configuration</h2>
                 </header>
                 <div class="slds-modal__content slds-p-around_medium">
                     <lightning-input label="Name" name="Name" value={currentDiscount.Name} onchange={handleFormChange} required></lightning-input>

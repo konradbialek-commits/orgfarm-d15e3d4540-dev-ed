@@ -4,6 +4,7 @@ import getGlobalSettings from '@salesforce/apex/DiscountManagerController.getGlo
 import saveGlobalSettings from '@salesforce/apex/DiscountManagerController.saveGlobalSettings';
 import getDiscounts from '@salesforce/apex/DiscountManagerController.getDiscounts';
 import toggleDiscounts from '@salesforce/apex/DiscountManagerController.toggleDiscounts';
+import deleteDiscounts from '@salesforce/apex/DiscountManagerController.deleteDiscounts';
 import upsertDiscount from '@salesforce/apex/DiscountManagerController.upsertDiscount';
 
 export default class DiscountManager extends LightningElement {
@@ -75,6 +76,16 @@ export default class DiscountManager extends LightningElement {
             });
     }
 
+    deleteSelected() {
+        if (!this.selectedRows.length) return;
+        deleteDiscounts({ discountIds: this.selectedRows })
+            .then(() => {
+                this.showToast('Success', 'Discounts Deleted', 'success');
+                this.loadData();
+            })
+            .catch(err => this.showToast('Error', err.body.message, 'error'));
+    }
+
     openModal() {
         this.currentDiscount = { sObjectType: 'Discount__c', Active__c: true, Discount_Type__c: 'Percent', Recurrence__c: 'None' };
         this.isModalOpen = true;
@@ -90,7 +101,7 @@ export default class DiscountManager extends LightningElement {
     saveDiscount() {
         upsertDiscount({ discountRecord: this.currentDiscount })
             .then(() => {
-                this.showToast('Success', 'Discount Saved', 'success');
+                this.showToast('Success', 'Discount Created', 'success');
                 this.closeModal();
                 this.loadData();
             })

@@ -31,8 +31,13 @@ public with sharing class DiscountManagerController {
     }
 
     @AuraEnabled
+    public static void deleteDiscounts(List<Id> discountIds) {
+        delete [SELECT Id FROM Discount__c WHERE Id IN :discountIds];
+    }
+
+    @AuraEnabled
     public static void upsertDiscount(Discount__c discountRecord) {
-        upsert discountRecord;
+        insert discountRecord;
     }
 
     @AuraEnabled

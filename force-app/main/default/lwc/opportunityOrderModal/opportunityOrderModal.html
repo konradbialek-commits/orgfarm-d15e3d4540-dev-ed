@@ -58,19 +58,44 @@
         <template if:true={isSummaryPage}>
             <div class="slds-text-heading_small slds-m-bottom_medium">Review Your Order</div>
             
-            <div style="height: 300px;">
-                <lightning-datatable
-                    key-field="Id"
-                    data={selectedProducts}
-                    columns={columns}
-                    hide-checkbox-column>
-                </lightning-datatable>
+            <div style="height: 200px; overflow-y: auto;">
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={summaryProducts} for:item="prod">
+                            <tr key={prod.Id}>
+                                <td>{prod.productName}</td>
+                                <td>{prod.quantity}</td>
+                                <td>
+                                    <template if:true={hasDiscount}>
+                                        <del class="slds-text-color_weak slds-m-right_small">
+                                            <lightning-formatted-number value={prod.unitPrice} format-style="currency"></lightning-formatted-number>
+                                        </del>
+                                    </template>
+                                    <lightning-formatted-number value={prod.discountedUnitPrice} format-style="currency"></lightning-formatted-number>
+                                </td>
+                                <td>
+                                    <lightning-formatted-number value={prod.discountedTotal} format-style="currency"></lightning-formatted-number>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
             </div>
 
             <div class="slds-box slds-m-top_medium slds-theme_shade">
                 <p><strong>Subtotal:</strong> <lightning-formatted-number value={discountData.originalTotal} format-style="currency"></lightning-formatted-number></p>
-                <p class="slds-text-color_success"><strong>Discounts Applied:</strong> {discountData.appliedDiscounts}</p>
-                <p class="slds-text-color_success"><strong>Total Discount:</strong> -<lightning-formatted-number value={discountData.discountAmount} format-style="currency"></lightning-formatted-number></p>
+                <template if:true={hasDiscount}>
+                    <p class="slds-text-color_success"><strong>Discounts Applied:</strong> {discountData.appliedDiscounts}</p>
+                    <p class="slds-text-color_success"><strong>Total Discount:</strong> -<lightning-formatted-number value={discountData.discountAmount} format-style="currency"></lightning-formatted-number></p>
+                </template>
                 <p class="slds-text-heading_small slds-m-top_small"><strong>Final Total:</strong> <lightning-formatted-number value={discountData.finalTotal} format-style="currency"></lightning-formatted-number></p>
             </div>
             
