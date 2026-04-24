@@ -6,8 +6,36 @@
         </template>
 
         <template if:false={isSummaryPage}>
-            <div class="slds-m-bottom_medium">
-                <lightning-input type="search" label="Search Products" placeholder="Type a product name..." onchange={handleSearch}></lightning-input>
+            <div class="slds-m-bottom_medium slds-grid slds-gutters">
+                <div class="slds-col slds-size_1-of-3">
+                    <lightning-combobox
+                        name="pricebook"
+                        label="Price Book"
+                        value={selectedPricebookId}
+                        options={pricebookOptions}
+                        onchange={handlePricebookChange}
+                        required>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-3">
+                    <lightning-combobox
+                        name="family"
+                        label="Product Family"
+                        value={selectedFamily}
+                        options={familyOptions}
+                        onchange={handleFamilyChange}
+                        disabled={isSearchDisabled}>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-3">
+                    <lightning-input 
+                        type="search" 
+                        label="Search Name" 
+                        placeholder="Type..." 
+                        onchange={handleSearch}
+                        disabled={isSearchDisabled}>
+                    </lightning-input>
+                </div>
             </div>
             
             <div style="height: 300px;">
