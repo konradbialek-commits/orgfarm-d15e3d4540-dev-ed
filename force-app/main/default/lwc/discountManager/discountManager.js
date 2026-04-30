@@ -160,7 +160,8 @@ export default class DiscountManager extends LightningElement {
         { label: 'Target', fieldName: 'Target_Type__c' },
         { label: 'Type', fieldName: 'Discount_Type__c' },
         { label: LBL_DM_COL_VALUE, fieldName: 'Value__c', type: 'number' },
-        { label: 'Recurrence', fieldName: 'Recurrence__c' }
+        { label: 'Recurrence', fieldName: 'Recurrence__c' },
+        { type: 'action', typeAttributes: { rowActions: this.getRowActions } }
     ];
 
     productColumns = [
