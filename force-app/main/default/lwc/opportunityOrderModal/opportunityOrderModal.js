@@ -165,14 +165,11 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
             this.discountData = await calculateOrderDiscounts({ cartPayload: JSON.stringify(cartPayload) });
             this.hasDiscount = this.discountData.discountAmount > 0;
             
-            let discountRatio = 0;
-            if (this.hasDiscount) {
-                discountRatio = this.discountData.discountAmount / this.subtotal;
-            }
+            let itemDiscounts = this.discountData.itemDiscounts || {};
             
             this.summaryProducts = this.selectedProducts.map(p => {
                 let itemOriginalTotal = p.unitPrice * p.quantity;
-                let itemDiscountAmount = itemOriginalTotal * discountRatio;
+                let itemDiscountAmount = itemDiscounts[p.Id] || 0;
                 let itemNewTotal = itemOriginalTotal - itemDiscountAmount;
                 let itemNewUnitPrice = itemNewTotal / p.quantity;
                 

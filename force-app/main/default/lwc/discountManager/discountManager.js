@@ -73,6 +73,7 @@ export default class DiscountManager extends LightningElement {
     @track discounts = [];
     selectedRows = [];
     isModalOpen = false;
+    productSearchTerm = '';
     @track currentDiscount = {};
     @track currentStep = 1;
     
@@ -253,8 +254,26 @@ export default class DiscountManager extends LightningElement {
         this.selectedFamilies = event.detail.value;
     }
 
+    handleProductSearch(event) {
+        this.productSearchTerm = event.target.value;
+    }
+
+    get filteredProducts() {
+        if (!this.productSearchTerm) {
+            return this.productOptions;
+        }
+        const term = this.productSearchTerm.toLowerCase();
+        return this.productOptions.filter(p => 
+            p.Name.toLowerCase().includes(term) || 
+            (p.Family && p.Family.toLowerCase().includes(term))
+        );
+    }
+
     handleProductSelection(event) {
-        this.selectedProductIds = event.detail.selectedRows.map(row => row.Id);
+        const selectedIds = event.detail.selectedRows.map(row => row.Id);
+        const visibleIds = this.filteredProducts.map(row => row.Id);
+        const idsToKeep = this.selectedProductIds.filter(id => !visibleIds.includes(id));
+        this.selectedProductIds = [...new Set([...idsToKeep, ...selectedIds])];
     }
 
     nextStep() {

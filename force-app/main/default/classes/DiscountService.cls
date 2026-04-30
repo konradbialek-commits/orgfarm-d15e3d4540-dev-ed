@@ -32,10 +32,12 @@ public class DiscountService {
 
         List<Discount__c> applicableDiscounts = new List<Discount__c>();
         Map<Id, Decimal> discountToValueMap = new Map<Id, Decimal>();
+        Map<Id, List<CartItem>> discountToEligibleItems = new Map<Id, List<CartItem>>();
         
         for (Discount__c d : activeDiscounts) {
             Decimal eligibleSubtotal = 0;
             Integer eligibleQuantity = 0;
+            List<CartItem> eItems = new List<CartItem>();
             
             Set<Id> targetedProductIds = new Set<Id>();
             if (d.Target_Type__c == 'Specific Products') {
@@ -62,6 +64,7 @@ public class DiscountService {
                 if (isEligible) {
                     eligibleSubtotal += (item.unitPrice * item.quantity);
                     eligibleQuantity += item.quantity;
+                    eItems.add(item);
                 }
             }
 
@@ -89,21 +92,15 @@ public class DiscountService {
                     dValue = eligibleSubtotal;
                 }
                 discountToValueMap.put(d.Id, dValue);
+                discountToEligibleItems.put(d.Id, eItems);
             }
         }
 
-        Decimal totalDiscountAmount = 0;
-        List<String> appliedNames = new List<String>();
-        List<Id> appliedIds = new List<Id>();
-
+        List<Discount__c> winningDiscounts = new List<Discount__c>();
         if (!applicableDiscounts.isEmpty()) {
             if (settings.Strategy__c == 'Cumulative') {
-                for (Discount__c d : applicableDiscounts) {
-                    appliedNames.add(d.Name);
-                    appliedIds.add(d.Id);
-                    totalDiscountAmount += discountToValueMap.get(d.Id);
-                }
-            } else if (settings.Strategy__c == 'Highest' || settings.Strategy__c == 'Lowest') {
+                winningDiscounts.addAll(applicableDiscounts);
+            } else {
                 Discount__c selectedDiscount = applicableDiscounts[0];
                 Decimal selectedVal = discountToValueMap.get(selectedDiscount.Id);
                 
@@ -119,10 +116,39 @@ public class DiscountService {
                         selectedVal = currentVal;
                     }
                 }
+                winningDiscounts.add(selectedDiscount);
+            }
+        }
+
+        Map<String, Decimal> itemDiscounts = new Map<String, Decimal>();
+        for (CartItem item : cartItems) {
+            itemDiscounts.put((String)item.pricebookEntryId, 0.0);
+        }
+
+        Decimal totalDiscountAmount = 0;
+        List<String> appliedNames = new List<String>();
+        List<Id> appliedIds = new List<Id>();
+
+        for (Discount__c d : winningDiscounts) {
+            appliedNames.add(d.Name);
+            appliedIds.add(d.Id);
+            
+            Decimal dTotalValue = discountToValueMap.get(d.Id);
+            totalDiscountAmount += dTotalValue;
+            
+            List<CartItem> eItems = discountToEligibleItems.get(d.Id);
+            Decimal dEligibleSubtotal = 0;
+            for (CartItem item : eItems) {
+                dEligibleSubtotal += (item.unitPrice * item.quantity);
+            }
+            
+            for (CartItem item : eItems) {
+                Decimal itemLineTotal = item.unitPrice * item.quantity;
+                Decimal proportion = dEligibleSubtotal > 0 ? (itemLineTotal / dEligibleSubtotal) : 0;
+                Decimal itemDiscount = dTotalValue * proportion;
                 
-                appliedNames.add(selectedDiscount.Name);
-                appliedIds.add(selectedDiscount.Id);
-                totalDiscountAmount = selectedVal;
+                Decimal currentVal = itemDiscounts.get((String)item.pricebookEntryId);
+                itemDiscounts.put((String)item.pricebookEntryId, currentVal + itemDiscount);
             }
         }
 
@@ -130,6 +156,11 @@ public class DiscountService {
         Decimal maxDiscountAllowed = subtotal - minPriceAllowed;
 
         if (totalDiscountAmount > maxDiscountAllowed) {
+            Decimal scaleFactor = totalDiscountAmount > 0 ? (maxDiscountAllowed / totalDiscountAmount) : 0;
+            for (String pbeId : itemDiscounts.keySet()) {
+                Decimal scaledVal = itemDiscounts.get(pbeId) * scaleFactor;
+                itemDiscounts.put(pbeId, scaledVal);
+            }
             totalDiscountAmount = maxDiscountAllowed;
             appliedNames.add('(Price Floor Adjusted)');
         }
@@ -143,6 +174,7 @@ public class DiscountService {
         result.put('finalTotal', subtotal - totalDiscountAmount);
         result.put('appliedDiscounts', String.join(appliedNames, ', '));
         result.put('appliedDiscountIds', appliedIds);
+        result.put('itemDiscounts', itemDiscounts);
         
         return result;
     }
