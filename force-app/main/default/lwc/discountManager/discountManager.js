@@ -160,7 +160,8 @@ export default class DiscountManager extends LightningElement {
         { label: 'Target', fieldName: 'Target_Type__c' },
         { label: 'Type', fieldName: 'Discount_Type__c' },
         { label: LBL_DM_COL_VALUE, fieldName: 'Value__c', type: 'number' },
-        { label: 'Recurrence', fieldName: 'Recurrence__c' }
+        { label: 'Recurrence', fieldName: 'Recurrence__c' },
+        { type: 'action', typeAttributes: { rowActions: this.getRowActions } }
     ];
 
     productColumns = [
@@ -225,6 +226,31 @@ export default class DiscountManager extends LightningElement {
                 this.loadData();
             })
             .catch(err => this.showToast(LBL_MSG_ERROR, err.body.message, 'error'));
+    }
+
+    getRowActions(row, doneCallback) {
+        const actions = [
+            {
+                label: 'Edit',
+                name: 'edit',
+                disabled: row.Active__c
+            }
+        ];
+        doneCallback(actions);
+    }
+
+    handleRowAction(event) {
+        const actionName = event.detail.action.name;
+        const row = event.detail.row;
+
+        if (actionName === 'edit') {
+            this.openEditModal(row);
+        }
+    }
+
+    openEditModal(row) {
+        this.currentDiscount = { ...row, sObjectType: 'Discount__c' };
+        this.isModalOpen = true;
     }
 
     openModal() {
