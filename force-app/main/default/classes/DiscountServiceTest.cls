@@ -36,14 +36,7 @@ private class DiscountServiceTest {
     }
 
     static String getCartPayload() {
-        return '[{"pricebookEntryId":"01u000000000000","productId":"01t000000000000","family":"Fiction","unitPrice":100.0,"quantity":1}]';
-    }
-
-    static String getMultiItemCartPayload() {
-        return '[' +
-            '{"pricebookEntryId":"01u000000000001","productId":"01t000000000001","family":"Fiction","unitPrice":100.0,"quantity":1},' +
-            '{"pricebookEntryId":"01u000000000002","productId":"01t000000000002","family":"Hardware","unitPrice":50.0,"quantity":2}' +
-        ']';
+        return '[{"pricebookEntryId":"01u000000000000AAA","productId":"01t000000000000AAA","family":"Test","unitPrice":100.0,"quantity":1}]';
     }
 
     @isTest
@@ -55,7 +48,7 @@ private class DiscountServiceTest {
         System.assertEquals(75.0, result.get('finalTotal'));
         
         Map<String, Decimal> itemDiscounts = (Map<String, Decimal>) result.get('itemDiscounts');
-        System.assertEquals(25.0, itemDiscounts.get('01u000000000000'));
+        System.assertEquals(25.0, itemDiscounts.get('01u000000000000AAA'));
     }
 
     @isTest
@@ -70,7 +63,7 @@ private class DiscountServiceTest {
         System.assertEquals(85.0, result.get('finalTotal'));
         
         Map<String, Decimal> itemDiscounts = (Map<String, Decimal>) result.get('itemDiscounts');
-        System.assertEquals(15.0, itemDiscounts.get('01u000000000000'));
+        System.assertEquals(15.0, itemDiscounts.get('01u000000000000AAA'));
     }
 
     @isTest
@@ -85,7 +78,7 @@ private class DiscountServiceTest {
         System.assertEquals(90.0, result.get('finalTotal'));
         
         Map<String, Decimal> itemDiscounts = (Map<String, Decimal>) result.get('itemDiscounts');
-        System.assertEquals(10.0, itemDiscounts.get('01u000000000000'));
+        System.assertEquals(10.0, itemDiscounts.get('01u000000000000AAA'));
     }
 
     @isTest
@@ -101,7 +94,7 @@ private class DiscountServiceTest {
         System.assertEquals(80.0, result.get('finalTotal'));
         
         Map<String, Decimal> itemDiscounts = (Map<String, Decimal>) result.get('itemDiscounts');
-        System.assertEquals(20.0, itemDiscounts.get('01u000000000000'));
+        System.assertEquals(20.0, itemDiscounts.get('01u000000000000AAA'));
     }
 
     @isTest
@@ -113,18 +106,34 @@ private class DiscountServiceTest {
         setting.Max_Discount_Percent__c = 0.0;
         update setting;
 
+        Product2 prod1 = new Product2(Name = 'Product 1', IsActive = true);
+        Product2 prod2 = new Product2(Name = 'Product 2', IsActive = true);
+        insert new List<Product2>{prod1, prod2};
+
+        String pbe1 = '01u000000000001AAA';
+        String pbe2 = '01u000000000002AAA';
+
+        String multiCart = '[' +
+            '{"pricebookEntryId":"' + pbe1 + '","productId":"' + prod1.Id + '","family":"","unitPrice":100.0,"quantity":1},' +
+            '{"pricebookEntryId":"' + pbe2 + '","productId":"' + prod2.Id + '","family":"","unitPrice":50.0,"quantity":2}' +
+        ']';
+
         Discount__c targetedDiscount = new Discount__c(
-            Name = 'Hardware Only 50 Off',
+            Name = 'Prod 2 Only 50 Off',
             Active__c = true,
             Discount_Category__c = 'One Time Only',
-            Target_Type__c = 'Specific Families',
-            Eligible_Families__c = 'Hardware',
+            Target_Type__c = 'Specific Products',
             Discount_Type__c = 'Fixed Amount',
             Value__c = 50.0
         );
         insert targetedDiscount;
 
-        Map<String, Object> result = DiscountService.calculateOrderDiscounts(getMultiItemCartPayload());
+        insert new Discount_Product__c(
+            Discount__c = targetedDiscount.Id,
+            Product__c = prod2.Id
+        );
+
+        Map<String, Object> result = DiscountService.calculateOrderDiscounts(multiCart);
         
         System.assertEquals(200.0, result.get('originalTotal'));
         System.assertEquals(50.0, result.get('discountAmount'));
@@ -132,7 +141,7 @@ private class DiscountServiceTest {
 
         Map<String, Decimal> itemDiscounts = (Map<String, Decimal>) result.get('itemDiscounts');
         
-        System.assertEquals(0.0, itemDiscounts.get('01u000000000001')); 
-        System.assertEquals(50.0, itemDiscounts.get('01u000000000002'));
+        System.assertEquals(0.0, itemDiscounts.get(pbe1)); 
+        System.assertEquals(50.0, itemDiscounts.get(pbe2));
     }
 }
