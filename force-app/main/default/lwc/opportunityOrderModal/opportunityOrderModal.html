@@ -1,5 +1,5 @@
 <template>
-    <lightning-quick-action-panel title="Create Order">
+    <lightning-quick-action-panel title={labels.title}>
         
         <template if:true={isLoading}>
             <lightning-spinner alternative-text="Loading" size="medium" variant="brand"></lightning-spinner>
@@ -30,7 +30,7 @@
                 <div class="slds-col slds-size_1-of-3">
                     <lightning-input 
                         type="search" 
-                        label="Search Name" 
+                        label={labels.search} 
                         placeholder="Type..." 
                         onchange={handleSearch}
                         disabled={isSearchDisabled}>
@@ -51,12 +51,12 @@
             </div>
             
             <div slot="footer">
-                <lightning-button label="Next" variant="brand" onclick={goToSummary}></lightning-button>
+                <lightning-button label={labels.next} variant="brand" onclick={goToSummary}></lightning-button>
             </div>
         </template>
 
         <template if:true={isSummaryPage}>
-            <div class="slds-text-heading_small slds-m-bottom_medium">Review Your Order</div>
+            <div class="slds-text-heading_small slds-m-bottom_medium">{labels.review}</div>
             
             <div style="height: 200px; overflow-y: auto;">
                 <table class="slds-table slds-table_cell-buffer slds-table_bordered">
@@ -91,7 +91,7 @@
             </div>
 
             <div class="slds-box slds-m-top_medium slds-theme_shade">
-                <p><strong>Subtotal:</strong> <lightning-formatted-number value={discountData.originalTotal} format-style="currency"></lightning-formatted-number></p>
+                <p><strong>{labels.subtotal}:</strong> <lightning-formatted-number value={discountData.originalTotal} format-style="currency"></lightning-formatted-number></p>
                 <template if:true={hasDiscount}>
                     <p class="slds-text-color_success"><strong>Discounts Applied:</strong> {discountData.appliedDiscounts}</p>
                     <p class="slds-text-color_success">
@@ -99,12 +99,12 @@
                         (<lightning-formatted-number value={discountData.discountPercent} maximum-fraction-digits="2"></lightning-formatted-number>%)
                     </p>
                 </template>
-                <p class="slds-text-heading_small slds-m-top_small"><strong>Final Total:</strong> <lightning-formatted-number value={discountData.finalTotal} format-style="currency"></lightning-formatted-number></p>
+                <p class="slds-text-heading_small slds-m-top_small"><strong>{labels.finalTotal}:</strong> <lightning-formatted-number value={discountData.finalTotal} format-style="currency"></lightning-formatted-number></p>
             </div>
             
             <div slot="footer">
-                <lightning-button label="Back" onclick={goBack} class="slds-m-right_small"></lightning-button>
-                <lightning-button label="Submit & Create Order" variant="brand" onclick={handleSubmit}></lightning-button>
+                <lightning-button label={labels.back} onclick={goBack} class="slds-m-right_small"></lightning-button>
+                <lightning-button label={labels.submit} variant="brand" onclick={handleSubmit}></lightning-button>
             </div>
         </template>
 
