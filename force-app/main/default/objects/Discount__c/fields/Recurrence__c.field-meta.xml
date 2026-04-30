@@ -39,6 +39,11 @@
                 <default>false</default>
                 <label>First Day of Quarter</label>
             </value>
+            <value>
+                <fullName>Yearly Custom Date</fullName>
+                <default>false</default>
+                <label>Yearly Custom Date</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>
