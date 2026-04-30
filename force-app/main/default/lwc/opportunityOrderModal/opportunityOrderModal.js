@@ -8,16 +8,20 @@ import getProducts from '@salesforce/apex/OrderCreationController.getProducts';
 import createOrderWithItems from '@salesforce/apex/OrderCreationController.createOrderWithItems';
 import calculateOrderDiscounts from '@salesforce/apex/DiscountManagerController.calculateOrderDiscounts';
 
-const COLUMNS = [
-    { label: 'Product Name', fieldName: 'productName' },
-    { label: 'Family', fieldName: 'family' },
-    { label: 'Unit Price', fieldName: 'unitPrice', type: 'currency' },
-    { label: 'Quantity', fieldName: 'quantity', type: 'number', editable: true } 
-];
+// Custom Label Imports
+import LBL_BTN_NEXT from '@salesforce/label/c.Btn_Next';
+import LBL_BTN_BACK from '@salesforce/label/c.Btn_Back';
+import LBL_MSG_SUCCESS from '@salesforce/label/c.Msg_Success';
+import LBL_MSG_ERROR from '@salesforce/label/c.Msg_Error';
+import LBL_OM_TITLE from '@salesforce/label/c.OM_Title';
+import LBL_OM_SEARCH from '@salesforce/label/c.OM_Search';
+import LBL_OM_REVIEW from '@salesforce/label/c.OM_Review';
+import LBL_OM_SUBTOTAL from '@salesforce/label/c.OM_Subtotal';
+import LBL_OM_FINAL_TOTAL from '@salesforce/label/c.OM_Final_Total';
+import LBL_OM_SUBMIT from '@salesforce/label/c.OM_Submit';
 
 export default class OpportunityOrderModal extends NavigationMixin(LightningElement) {
     @api recordId;
-    columns = COLUMNS;
     searchTerm = '';
     selectedPricebookId = null;
     selectedFamily = '';
@@ -35,6 +39,25 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     isSummaryPage = false;
     isLoading = false;
 
+    // Expose labels to HTML
+    labels = {
+        title: LBL_OM_TITLE,
+        search: LBL_OM_SEARCH,
+        review: LBL_OM_REVIEW,
+        subtotal: LBL_OM_SUBTOTAL,
+        finalTotal: LBL_OM_FINAL_TOTAL,
+        next: LBL_BTN_NEXT,
+        back: LBL_BTN_BACK,
+        submit: LBL_OM_SUBMIT
+    };
+
+    columns = [
+        { label: 'Product Name', fieldName: 'productName' },
+        { label: 'Family', fieldName: 'family' },
+        { label: 'Unit Price', fieldName: 'unitPrice', type: 'currency' },
+        { label: 'Quantity', fieldName: 'quantity', type: 'number', editable: true } 
+    ];
+
     @wire(getAvailablePricebooks)
     wiredPricebooks({ error, data }) {
         if (data) {
@@ -50,7 +73,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
                 this.selectedPricebookId = data[0].Id;
             }
         } else if (error) {
-            this.showToast('Error', 'Failed to load price books', 'error');
+            this.showToast(LBL_MSG_ERROR, 'Failed to load price books', 'error');
         }
     }
 
@@ -60,7 +83,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
             let options = [{ label: 'All Families', value: '' }];
             this.familyOptions = [...options, ...data];
         } else if (error) {
-            this.showToast('Error', 'Failed to load product families', 'error');
+            this.showToast(LBL_MSG_ERROR, 'Failed to load product families', 'error');
         }
     }
 
@@ -75,7 +98,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
                 quantity: 1
             }));
         } else if (error) {
-            this.showToast('Error', 'Failed to load products', 'error');
+            this.showToast(LBL_MSG_ERROR, 'Failed to load products', 'error');
         }
     }
 
@@ -153,7 +176,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
             
             this.isSummaryPage = true;
         } catch(error) {
-            this.showToast('Calculation Error', error.body ? error.body.message : error.message, 'error');
+            this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : error.message, 'error');
         }
     }
 
@@ -180,7 +203,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
                 appliedDiscountIds: this.discountData.appliedDiscountIds || []
             });
             
-            this.showToast('Success', 'Order Created Successfully!', 'success');
+            this.showToast(LBL_MSG_SUCCESS, 'Order Created Successfully!', 'success');
             
             this.dispatchEvent(new CloseActionScreenEvent());
             
@@ -193,7 +216,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
                 }
             });
         } catch (error) {
-            this.showToast('Creation Error', error.body ? error.body.message : error.message, 'error');
+            this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : error.message, 'error');
         } finally {
             this.isLoading = false;
         }

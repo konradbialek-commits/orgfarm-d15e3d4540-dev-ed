@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels><fullName>Btn_Save</fullName><language>en_US</language><protected>false</protected><shortDescription>Save</shortDescription><value>Save</value></labels>
+    <labels><fullName>Btn_Cancel</fullName><language>en_US</language><protected>false</protected><shortDescription>Cancel</shortDescription><value>Cancel</value></labels>
+    <labels><fullName>Btn_Next</fullName><language>en_US</language><protected>false</protected><shortDescription>Next</shortDescription><value>Next</value></labels>
+    <labels><fullName>Btn_Back</fullName><language>en_US</language><protected>false</protected><shortDescription>Back</shortDescription><value>Back</value></labels>
+    <labels><fullName>Msg_Success</fullName><language>en_US</language><protected>false</protected><shortDescription>Success</shortDescription><value>Success</value></labels>
+    <labels><fullName>Msg_Error</fullName><language>en_US</language><protected>false</protected><shortDescription>Error</shortDescription><value>Error</value></labels>
+    
+    <labels><fullName>DM_Title</fullName><language>en_US</language><protected>false</protected><shortDescription>Discount Manager Title</shortDescription><value>Discount Manager</value></labels>
+    <labels><fullName>DM_Tab_Global</fullName><language>en_US</language><protected>false</protected><shortDescription>Global Settings</shortDescription><value>Global Settings</value></labels>
+    <labels><fullName>DM_Tab_Discounts</fullName><language>en_US</language><protected>false</protected><shortDescription>Discounts</shortDescription><value>Discounts</value></labels>
+    <labels><fullName>DM_Btn_New</fullName><language>en_US</language><protected>false</protected><shortDescription>New Discount</shortDescription><value>New Discount</value></labels>
+    <labels><fullName>DM_Btn_Activate</fullName><language>en_US</language><protected>false</protected><shortDescription>Activate</shortDescription><value>Activate</value></labels>
+    <labels><fullName>DM_Btn_Deactivate</fullName><language>en_US</language><protected>false</protected><shortDescription>Deactivate</shortDescription><value>Deactivate</value></labels>
+    <labels><fullName>DM_Btn_Delete</fullName><language>en_US</language><protected>false</protected><shortDescription>Delete Selected</shortDescription><value>Delete Selected</value></labels>
+    <labels><fullName>DM_Col_Name</fullName><language>en_US</language><protected>false</protected><shortDescription>Name</shortDescription><value>Name</value></labels>
+    <labels><fullName>DM_Col_Value</fullName><language>en_US</language><protected>false</protected><shortDescription>Value</shortDescription><value>Value</value></labels>
+    
+    <labels><fullName>OM_Title</fullName><language>en_US</language><protected>false</protected><shortDescription>Create Order</shortDescription><value>Create Order</value></labels>
+    <labels><fullName>OM_Search</fullName><language>en_US</language><protected>false</protected><shortDescription>Search Name</shortDescription><value>Search Name</value></labels>
+    <labels><fullName>OM_Review</fullName><language>en_US</language><protected>false</protected><shortDescription>Review Your Order</shortDescription><value>Review Your Order</value></labels>
+    <labels><fullName>OM_Subtotal</fullName><language>en_US</language><protected>false</protected><shortDescription>Subtotal</shortDescription><value>Subtotal</value></labels>
+    <labels><fullName>OM_Final_Total</fullName><language>en_US</language><protected>false</protected><shortDescription>Final Total</shortDescription><value>Final Total</value></labels>
+    <labels><fullName>OM_Submit</fullName><language>en_US</language><protected>false</protected><shortDescription>Submit Order</shortDescription><value>Submit &amp; Create Order</value></labels>
+</CustomLabels>
