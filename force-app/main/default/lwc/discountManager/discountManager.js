@@ -8,6 +8,7 @@ import deleteDiscounts from '@salesforce/apex/DiscountManagerController.deleteDi
 import upsertDiscount from '@salesforce/apex/DiscountManagerController.upsertDiscount';
 import getAvailableFamilies from '@salesforce/apex/DiscountManagerController.getAvailableFamilies';
 import getAvailableProducts from '@salesforce/apex/DiscountManagerController.getAvailableProducts';
+import getDiscountProducts from '@salesforce/apex/DiscountManagerController.getDiscountProducts';
 
 import LBL_BTN_SAVE from '@salesforce/label/c.Btn_Save';
 import LBL_BTN_CANCEL from '@salesforce/label/c.Btn_Cancel';
@@ -249,8 +250,29 @@ export default class DiscountManager extends LightningElement {
     }
 
     openEditModal(row) {
+        this.currentStep = 1;
         this.currentDiscount = { ...row, sObjectType: 'Discount__c' };
-        this.isModalOpen = true;
+
+        if (row.Target_Type__c === 'Specific Families' && row.Eligible_Families__c) {
+            this.selectedFamilies = row.Eligible_Families__c.split(';');
+        } else {
+            this.selectedFamilies = [];
+        }
+
+        if (row.Target_Type__c === 'Specific Products') {
+            getDiscountProducts({ discountId: row.Id })
+                .then(result => {
+                    this.selectedProductIds = result;
+                    this.isModalOpen = true;
+                })
+                .catch(err => {
+                    this.showToast(LBL_MSG_ERROR, 'Failed to load targeted products', 'error');
+                    this.isModalOpen = true;
+                });
+        } else {
+            this.selectedProductIds = [];
+            this.isModalOpen = true;
+        }
     }
 
     openModal() {

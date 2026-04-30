@@ -28,6 +28,15 @@ public with sharing class DiscountManagerController {
     }
 
     @AuraEnabled
+    public static List<Id> getDiscountProducts(Id discountId) {
+        List<Id> productIds = new List<Id>();
+        for (Discount_Product__c dp : [SELECT Product__c FROM Discount_Product__c WHERE Discount__c = :discountId]) {
+            productIds.add(dp.Product__c);
+        }
+        return productIds;
+    }
+
+    @AuraEnabled
     public static void toggleDiscounts(List<Id> discountIds, Boolean isActive) {
         List<Discount__c> toUpdate = new List<Discount__c>();
         for (Id dId : discountIds) {
