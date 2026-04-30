@@ -36,7 +36,7 @@ private class DiscountServiceTest {
     }
 
     static String getCartPayload() {
-        return '[{"pricebookEntryId":"01u000000000000000","productId":"01t000000000000000","family":"Fiction","unitPrice":100.0,"quantity":1}]';
+        return '[{"pricebookEntryId":"01u000000000000","productId":"01t000000000000","family":"Fiction","unitPrice":100.0,"quantity":1}]';
     }
 
     @isTest

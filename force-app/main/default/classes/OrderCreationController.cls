@@ -51,10 +51,11 @@ public with sharing class OrderCreationController {
         );
         insert newOrder;
         
-        List<Map<String, Object>> parsedData = (List<Map<String, Object>>) JSON.deserializeUntyped(productData);
+        List<Object> parsedData = (List<Object>) JSON.deserializeUntyped(productData);
         List<OrderItem> itemsToInsert = new List<OrderItem>();
         
-        for (Map<String, Object> item : parsedData) {
+        for (Object obj : parsedData) {
+            Map<String, Object> item = (Map<String, Object>) obj;
             itemsToInsert.add(new OrderItem(
                 OrderId = newOrder.Id,
                 PricebookEntryId = (Id) item.get('pricebookEntryId'),
