@@ -20,9 +20,9 @@ import LBL_DM_TITLE from '@salesforce/label/c.DM_Title';
 import LBL_DM_TAB_GLOBAL from '@salesforce/label/c.DM_Tab_Global';
 import LBL_DM_TAB_DISCOUNTS from '@salesforce/label/c.DM_Tab_Discounts';
 import LBL_DM_BTN_NEW from '@salesforce/label/c.DM_Btn_New';
-import LBL_DM_BTN_ACTIVATE from '@salesforce/label/c.DM_Btn_Activate';
-import LBL_DM_BTN_DEACTIVATE from '@salesforce/label/c.DM_Btn_Deactivate';
-import LBL_DM_BTN_DELETE from '@salesforce/label/c.DM_Btn_Delete';
+import LBL_DM_BTN_ACTIVATE from '@salesforce/label/c.DM_Btn_ACTIVATE';
+import LBL_DM_BTN_DEACTIVATE from '@salesforce/label/c.DM_Btn_DEACTIVATE';
+import LBL_DM_BTN_DELETE from '@salesforce/label/c.DM_Btn_DELETE';
 import LBL_DM_COL_NAME from '@salesforce/label/c.DM_Col_Name';
 import LBL_DM_COL_VALUE from '@salesforce/label/c.DM_Col_Value';
 
@@ -61,13 +61,29 @@ import DM_Lbl_ValueType from '@salesforce/label/c.DM_Lbl_ValueType';
 import DM_Lbl_DiscountValue from '@salesforce/label/c.DM_Lbl_DiscountValue';
 import DM_Lbl_StartDate from '@salesforce/label/c.DM_Lbl_StartDate';
 import DM_Lbl_EndDate from '@salesforce/label/c.DM_Lbl_EndDate';
-
 import DM_Lbl_TargetType from '@salesforce/label/c.DM_Lbl_TargetType';
 import DM_Opt_AllProducts from '@salesforce/label/c.DM_Opt_AllProducts';
 import DM_Opt_SpecificFamilies from '@salesforce/label/c.DM_Opt_SpecificFamilies';
 import DM_Opt_SpecificProducts from '@salesforce/label/c.DM_Opt_SpecificProducts';
 import DM_Lbl_SelectFamilies from '@salesforce/label/c.DM_Lbl_SelectFamilies';
 import DM_Lbl_SelectProducts from '@salesforce/label/c.DM_Lbl_SelectProducts';
+
+import DM_Lbl_Name from '@salesforce/label/c.DM_Lbl_Name';
+import DM_Lbl_Step from '@salesforce/label/c.DM_Lbl_Step';
+import DM_Lbl_Of from '@salesforce/label/c.DM_Lbl_Of';
+import DM_Col_Active from '@salesforce/label/c.DM_Col_Active';
+import DM_Col_Target from '@salesforce/label/c.DM_Col_Target';
+import DM_Col_Type from '@salesforce/label/c.DM_Col_Type';
+import DM_Col_Recurrence from '@salesforce/label/c.DM_Col_Recurrence';
+import DM_Col_ProductName from '@salesforce/label/c.DM_Col_ProductName';
+import DM_Col_Family from '@salesforce/label/c.DM_Col_Family';
+import DM_Lbl_SearchProducts from '@salesforce/label/c.DM_Lbl_SearchProducts';
+import DM_Btn_Edit from '@salesforce/label/c.DM_Btn_Edit';
+import DM_Msg_SettingsSaved from '@salesforce/label/c.DM_Msg_SettingsSaved';
+import DM_Msg_DiscountsUpdated from '@salesforce/label/c.DM_Msg_DiscountsUpdated';
+import DM_Msg_DiscountsDeleted from '@salesforce/label/c.DM_Msg_DiscountsDeleted';
+import DM_Msg_DiscountCreated from '@salesforce/label/c.DM_Msg_DiscountCreated';
+import DM_Msg_FailedLoadProducts from '@salesforce/label/c.DM_Msg_FailedLoadProducts';
 
 export default class DiscountManager extends LightningElement {
     @track settings = {};
@@ -114,7 +130,11 @@ export default class DiscountManager extends LightningElement {
         lblEndDate: DM_Lbl_EndDate,
         lblTargetType: DM_Lbl_TargetType,
         lblSelectFamilies: DM_Lbl_SelectFamilies,
-        lblSelectProducts: DM_Lbl_SelectProducts
+        lblSelectProducts: DM_Lbl_SelectProducts,
+        lblName: DM_Lbl_Name,
+        lblStep: DM_Lbl_Step,
+        lblOf: DM_Lbl_Of,
+        lblSearchProducts: DM_Lbl_SearchProducts
     };
 
     strategyOptions = [
@@ -157,17 +177,17 @@ export default class DiscountManager extends LightningElement {
 
     discountColumns = [
         { label: LBL_DM_COL_NAME, fieldName: 'Name' },
-        { label: 'Active', fieldName: 'Active__c', type: 'boolean' },
-        { label: 'Target', fieldName: 'Target_Type__c' },
-        { label: 'Type', fieldName: 'Discount_Type__c' },
+        { label: DM_Col_Active, fieldName: 'Active__c', type: 'boolean' },
+        { label: DM_Col_Target, fieldName: 'Target_Type__c' },
+        { label: DM_Col_Type, fieldName: 'Discount_Type__c' },
         { label: LBL_DM_COL_VALUE, fieldName: 'Value__c', type: 'number' },
-        { label: 'Recurrence', fieldName: 'Recurrence__c' },
+        { label: DM_Col_Recurrence, fieldName: 'Recurrence__c' },
         { type: 'action', typeAttributes: { rowActions: this.getRowActions } }
     ];
 
     productColumns = [
-        { label: 'Product Name', fieldName: 'Name' },
-        { label: 'Family', fieldName: 'Family' }
+        { label: DM_Col_ProductName, fieldName: 'Name' },
+        { label: DM_Col_Family, fieldName: 'Family' }
     ];
 
     @wire(getAvailableFamilies)
@@ -202,7 +222,7 @@ export default class DiscountManager extends LightningElement {
 
     saveSettings() {
         saveGlobalSettings({ setting: this.settings })
-            .then(() => this.showToast(LBL_MSG_SUCCESS, 'Settings Saved', 'success'))
+            .then(() => this.showToast(LBL_MSG_SUCCESS, DM_Msg_SettingsSaved, 'success'))
             .catch(err => this.showToast(LBL_MSG_ERROR, err.body.message, 'error'));
     }
 
@@ -214,7 +234,7 @@ export default class DiscountManager extends LightningElement {
         if (!this.selectedRows.length) return;
         toggleDiscounts({ discountIds: this.selectedRows, isActive: isActive })
             .then(() => {
-                this.showToast(LBL_MSG_SUCCESS, 'Discounts Updated', 'success');
+                this.showToast(LBL_MSG_SUCCESS, DM_Msg_DiscountsUpdated, 'success');
                 this.loadData();
             });
     }
@@ -223,7 +243,7 @@ export default class DiscountManager extends LightningElement {
         if (!this.selectedRows.length) return;
         deleteDiscounts({ discountIds: this.selectedRows })
             .then(() => {
-                this.showToast(LBL_MSG_SUCCESS, 'Discounts Deleted', 'success');
+                this.showToast(LBL_MSG_SUCCESS, DM_Msg_DiscountsDeleted, 'success');
                 this.loadData();
             })
             .catch(err => this.showToast(LBL_MSG_ERROR, err.body.message, 'error'));
@@ -232,7 +252,7 @@ export default class DiscountManager extends LightningElement {
     getRowActions(row, doneCallback) {
         const actions = [
             {
-                label: 'Edit',
+                label: DM_Btn_Edit,
                 name: 'edit',
                 disabled: row.Active__c
             }
@@ -266,7 +286,7 @@ export default class DiscountManager extends LightningElement {
                     this.isModalOpen = true;
                 })
                 .catch(err => {
-                    this.showToast(LBL_MSG_ERROR, 'Failed to load targeted products', 'error');
+                    this.showToast(LBL_MSG_ERROR, DM_Msg_FailedLoadProducts, 'error');
                     this.isModalOpen = true;
                 });
         } else {
@@ -350,7 +370,7 @@ export default class DiscountManager extends LightningElement {
 
         upsertDiscount({ discountRecord: this.currentDiscount, selectedProductIds: productIdsToSave })
             .then(() => {
-                this.showToast(LBL_MSG_SUCCESS, 'Discount Created', 'success');
+                this.showToast(LBL_MSG_SUCCESS, DM_Msg_DiscountCreated, 'success');
                 this.closeModal();
                 this.loadData();
             })

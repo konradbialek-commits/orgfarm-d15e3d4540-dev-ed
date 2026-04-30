@@ -53,11 +53,11 @@ public with sharing class DiscountManagerController {
     @AuraEnabled
     public static void upsertDiscount(Discount__c discountRecord, List<Id> selectedProductIds) {
         if (discountRecord.Discount_Type__c == 'Percent' && discountRecord.Value__c > 100) {
-            throw new AuraHandledException('Percentage discounts cannot exceed 100%.');
+            throw new AuraHandledException(System.Label.DM_Err_PctExceed);
         }
         
         if (discountRecord.Recurrence__c == 'Yearly Custom Date' && discountRecord.Custom_Recurrence_Date__c == null) {
-            throw new AuraHandledException('Please provide a target date for the yearly recurrence.');
+            throw new AuraHandledException(System.Label.DM_Err_ReqTargetDate);
         }
         
         upsert discountRecord;

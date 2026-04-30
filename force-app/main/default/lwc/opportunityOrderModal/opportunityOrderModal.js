@@ -19,6 +19,11 @@ import LBL_OM_REVIEW from '@salesforce/label/c.OM_Review';
 import LBL_OM_SUBTOTAL from '@salesforce/label/c.OM_Subtotal';
 import LBL_OM_FINAL_TOTAL from '@salesforce/label/c.OM_Final_Total';
 import LBL_OM_SUBMIT from '@salesforce/label/c.OM_Submit';
+import DM_Msg_Wait from '@salesforce/label/c.DM_Msg_Wait';
+import DM_Err_SelectPricebook from '@salesforce/label/c.DM_Err_SelectPricebook';
+import DM_Msg_HoldUp from '@salesforce/label/c.DM_Msg_HoldUp';
+import DM_Err_SelectProduct from '@salesforce/label/c.DM_Err_SelectProduct';
+import DM_Err_LoadProducts from '@salesforce/label/c.DM_Err_LoadProducts';
 
 export default class OpportunityOrderModal extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -99,7 +104,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
                 quantity: 1
             }));
         } else if (error) {
-            this.showToast(LBL_MSG_ERROR, 'Failed to load products', 'error');
+            this.showToast(LBL_MSG_ERROR, DM_Err_LoadProducts, 'error');
         }
     }
 
@@ -143,11 +148,11 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
 
     async goToSummary() {
         if (!this.selectedPricebookId) {
-            this.showToast('Wait!', 'Please select a Price Book first.', 'warning');
+            this.showToast(DM_Msg_Wait, DM_Err_SelectPricebook, 'warning');
             return;
         }
         if(this.selectedProducts.length === 0) {
-             this.showToast('Hold up!', 'You must select at least one product.', 'warning');
+             this.showToast(DM_Msg_HoldUp, DM_Err_SelectProduct, 'warning');
              return;
         }
         

@@ -69,4 +69,24 @@
     <labels><fullName>DM_Opt_SpecificProducts</fullName><language>en_US</language><protected>false</protected><shortDescription>Specific Products</shortDescription><value>Specific Products</value></labels>
     <labels><fullName>DM_Lbl_SelectFamilies</fullName><language>en_US</language><protected>false</protected><shortDescription>Select Families</shortDescription><value>Select Eligible Families</value></labels>
     <labels><fullName>DM_Lbl_SelectProducts</fullName><language>en_US</language><protected>false</protected><shortDescription>Select Products</shortDescription><value>Select Eligible Products</value></labels>
+    <labels><fullName>DM_Lbl_Name</fullName><language>en_US</language><protected>false</protected><shortDescription>Name</shortDescription><value>Name</value></labels>
+    <labels><fullName>DM_Lbl_Step</fullName><language>en_US</language><protected>false</protected><shortDescription>Step</shortDescription><value>Step</value></labels>
+    <labels><fullName>DM_Lbl_Of</fullName><language>en_US</language><protected>false</protected><shortDescription>Of</shortDescription><value>of</value></labels>
+    <labels><fullName>DM_Col_Target</fullName><language>en_US</language><protected>false</protected><shortDescription>Target Column</shortDescription><value>Target</value></labels>
+    <labels><fullName>DM_Col_ProductName</fullName><language>en_US</language><protected>false</protected><shortDescription>Product Name Column</shortDescription><value>Product Name</value></labels>
+    <labels><fullName>DM_Col_Family</fullName><language>en_US</language><protected>false</protected><shortDescription>Family Column</shortDescription><value>Family</value></labels>
+    <labels><fullName>DM_Lbl_SearchProducts</fullName><language>en_US</language><protected>false</protected><shortDescription>Search Products</shortDescription><value>Search products...</value></labels>
+    <labels><fullName>DM_Btn_Edit</fullName><language>en_US</language><protected>false</protected><shortDescription>Edit Button</shortDescription><value>Edit</value></labels>
+    <labels><fullName>DM_Msg_SettingsSaved</fullName><language>en_US</language><protected>false</protected><shortDescription>Settings Saved</shortDescription><value>Settings Saved</value></labels>
+    <labels><fullName>DM_Msg_DiscountsUpdated</fullName><language>en_US</language><protected>false</protected><shortDescription>Discounts Updated</shortDescription><value>Discounts Updated</value></labels>
+    <labels><fullName>DM_Msg_DiscountsDeleted</fullName><language>en_US</language><protected>false</protected><shortDescription>Discounts Deleted</shortDescription><value>Discounts Deleted</value></labels>
+    <labels><fullName>DM_Msg_DiscountCreated</fullName><language>en_US</language><protected>false</protected><shortDescription>Discount Created</shortDescription><value>Discount Created</value></labels>
+    <labels><fullName>DM_Msg_FailedLoadProducts</fullName><language>en_US</language><protected>false</protected><shortDescription>Failed to Load Products</shortDescription><value>Failed to load targeted products</value></labels>
+    <labels><fullName>DM_Err_PctExceed</fullName><language>en_US</language><protected>false</protected><shortDescription>Percent Exceed Error</shortDescription><value>Percentage discounts cannot exceed 100%.</value></labels>
+    <labels><fullName>DM_Err_ReqTargetDate</fullName><language>en_US</language><protected>false</protected><shortDescription>Require Target Date Error</shortDescription><value>Please provide a target date for the yearly recurrence.</value></labels>
+    <labels><fullName>DM_Msg_Wait</fullName><language>en_US</language><protected>false</protected><shortDescription>Wait Warning</shortDescription><value>Wait!</value></labels>
+    <labels><fullName>DM_Err_SelectPricebook</fullName><language>en_US</language><protected>false</protected><shortDescription>Select Pricebook Error</shortDescription><value>Please select a Price Book first.</value></labels>
+    <labels><fullName>DM_Msg_HoldUp</fullName><language>en_US</language><protected>false</protected><shortDescription>Hold Up Warning</shortDescription><value>Hold up!</value></labels>
+    <labels><fullName>DM_Err_SelectProduct</fullName><language>en_US</language><protected>false</protected><shortDescription>Select Product Error</shortDescription><value>You must select at least one product.</value></labels>
+    <labels><fullName>DM_Err_LoadProducts</fullName><language>en_US</language><protected>false</protected><shortDescription>Load Products Error</shortDescription><value>Failed to load products</value></labels>
 </CustomLabels>
