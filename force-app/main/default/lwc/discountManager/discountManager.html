@@ -67,14 +67,22 @@
 
                     <template if:true={isRecurring}>
                         <lightning-combobox label="Recurrence Schedule" name="Recurrence__c" value={currentDiscount.Recurrence__c} options={recurrenceOptions} onchange={handleFormChange} required></lightning-combobox>
-                        <div class="slds-text-color_weak slds-m-top_x-small slds-m-bottom_small">
+                        
+                        <template if:true={isYearlyCustom}>
+                            <lightning-input type="date" label="Annual Recurrence Date" name="Custom_Recurrence_Date__c" value={currentDiscount.Custom_Recurrence_Date__c} onchange={handleFormChange} required></lightning-input>
+                            <div class="slds-text-color_weak slds-m-top_x-small">
+                                <em>Note: The year selected does not matter. The system will trigger this discount every year on the specified month and day.</em>
+                            </div>
+                        </template>
+
+                        <div class="slds-text-color_weak slds-m-top_small slds-m-bottom_small">
                             <em>Note: Recurring discounts will run indefinitely unless an End Date is provided below.</em>
                         </div>
                     </template>
 
                     <div class="slds-m-top_small"></div>
                     <lightning-combobox label="Discount Value Type" name="Discount_Type__c" value={currentDiscount.Discount_Type__c} options={typeOptions} onchange={handleFormChange} required></lightning-combobox>
-                    <lightning-input type="number" label="Discount Value" name="Value__c" value={currentDiscount.Value__c} onchange={handleFormChange} step="0.01" required></lightning-input>
+                    <lightning-input type="number" label="Discount Value" name="Value__c" value={currentDiscount.Value__c} max={maxDiscountValue} onchange={handleFormChange} step="0.01" required></lightning-input>
                     
                     <div class="slds-grid slds-gutters slds-m-top_small">
                         <div class="slds-col slds-size_1-of-2">

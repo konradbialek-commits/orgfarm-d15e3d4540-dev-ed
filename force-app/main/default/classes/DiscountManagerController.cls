@@ -18,7 +18,7 @@ public with sharing class DiscountManagerController {
 
     @AuraEnabled
     public static List<Discount__c> getDiscounts() {
-        return [SELECT Id, Name, Active__c, Discount_Category__c, Discount_Type__c, Value__c, Recurrence__c, Minimum_Order_Value__c, Start_Date__c, End_Date__c FROM Discount__c ORDER BY CreatedDate DESC];
+        return [SELECT Id, Name, Active__c, Discount_Category__c, Discount_Type__c, Value__c, Recurrence__c, Custom_Recurrence_Date__c, Minimum_Order_Value__c, Start_Date__c, End_Date__c FROM Discount__c ORDER BY CreatedDate DESC];
     }
 
     @AuraEnabled
@@ -37,6 +37,13 @@ public with sharing class DiscountManagerController {
 
     @AuraEnabled
     public static void upsertDiscount(Discount__c discountRecord) {
+        if (discountRecord.Discount_Type__c == 'Percent' && discountRecord.Value__c > 100) {
+            throw new AuraHandledException('Percentage discounts cannot exceed 100%.');
+        }
+        if (discountRecord.Recurrence__c == 'Yearly Custom Date' && discountRecord.Custom_Recurrence_Date__c == null) {
+            throw new AuraHandledException('Please provide a target date for the yearly recurrence.');
+        }
+        
         upsert discountRecord;
     }
 
@@ -46,7 +53,7 @@ public with sharing class DiscountManagerController {
         Date today = Date.today();
         
         List<Discount__c> activeDiscounts = [
-            SELECT Id, Name, Discount_Category__c, Discount_Type__c, Value__c, Recurrence__c, Minimum_Order_Value__c
+            SELECT Id, Name, Discount_Category__c, Discount_Type__c, Value__c, Recurrence__c, Custom_Recurrence_Date__c, Minimum_Order_Value__c
             FROM Discount__c 
             WHERE Active__c = true 
             AND (Start_Date__c <= :today OR Start_Date__c = null)
@@ -62,6 +69,14 @@ public with sharing class DiscountManagerController {
                 if (d.Recurrence__c == 'First Day of Quarter' && !(today.day() == 1 && (today.month() == 1 || today.month() == 4 || today.month() == 7 || today.month() == 10))) continue;
                 if (d.Recurrence__c == 'Every Monday' && DateTime.newInstance(today.year(), today.month(), today.day()).format('EEEE') != 'Monday') continue;
                 if (d.Recurrence__c == 'Every Friday' && DateTime.newInstance(today.year(), today.month(), today.day()).format('EEEE') != 'Friday') continue;
+                
+                if (d.Recurrence__c == 'Yearly Custom Date') {
+                    if (d.Custom_Recurrence_Date__c == null || 
+                        today.month() != d.Custom_Recurrence_Date__c.month() || 
+                        today.day() != d.Custom_Recurrence_Date__c.day()) {
+                        continue;
+                    }
+                }
             }
             
             applicableDiscounts.add(d);

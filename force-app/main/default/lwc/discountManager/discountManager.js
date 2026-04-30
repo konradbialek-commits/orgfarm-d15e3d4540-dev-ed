@@ -37,7 +37,8 @@ export default class DiscountManager extends LightningElement {
         { label: 'Every Monday', value: 'Every Monday' },
         { label: 'Every Friday', value: 'Every Friday' },
         { label: 'First Day of Month', value: 'First Day of Month' },
-        { label: 'First Day of Quarter', value: 'First Day of Quarter' }
+        { label: 'First Day of Quarter', value: 'First Day of Quarter' },
+        { label: 'Yearly Custom Date', value: 'Yearly Custom Date'}
     ];
 
     discountColumns = [
@@ -56,6 +57,14 @@ export default class DiscountManager extends LightningElement {
 
     get isConditional() {
         return this.currentDiscount.Discount_Category__c === 'Conditional';
+    }
+
+    get isYearlyCustom() {
+        return this.currentDiscount.Recurrence__c === 'Yearly Custom Date';
+    }
+
+    get maxDiscountValue() {
+        return this.currentDiscount.Discount_Type__c === 'Percent' ? 100 : null;
     }
 
     connectedCallback() {
@@ -122,6 +131,18 @@ export default class DiscountManager extends LightningElement {
     }
 
     saveDiscount() {
+        // Run standard frontend validity checks (this catches the max=100 rule)
+        const allValid = [...this.template.querySelectorAll('lightning-input, lightning-combobox')]
+            .reduce((validSoFar, inputCmp) => {
+                inputCmp.reportValidity();
+                return validSoFar && inputCmp.checkValidity();
+            }, true);
+
+        if (!allValid) {
+            this.showToast('Wait!', 'Please fix the errors before saving.', 'warning');
+            return;
+        }
+
         upsertDiscount({ discountRecord: this.currentDiscount })
             .then(() => {
                 this.showToast('Success', 'Discount Created', 'success');
