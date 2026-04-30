@@ -151,9 +151,10 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
         }
         
         this.subtotal = this.selectedProducts.reduce((total, prod) => total + (prod.unitPrice * prod.quantity), 0);
+        let totalQty = this.selectedProducts.reduce((total, prod) => total + parseInt(prod.quantity, 10), 0);
         
         try {
-            this.discountData = await calculateOrderDiscounts({ subtotal: this.subtotal });
+            this.discountData = await calculateOrderDiscounts({ subtotal: this.subtotal, totalQuantity: totalQty });
             this.hasDiscount = this.discountData.discountAmount > 0;
             
             let discountRatio = 0;
