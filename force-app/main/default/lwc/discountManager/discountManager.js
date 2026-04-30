@@ -228,6 +228,31 @@ export default class DiscountManager extends LightningElement {
             .catch(err => this.showToast(LBL_MSG_ERROR, err.body.message, 'error'));
     }
 
+    getRowActions(row, doneCallback) {
+        const actions = [
+            {
+                label: 'Edit',
+                name: 'edit',
+                disabled: row.Active__c
+            }
+        ];
+        doneCallback(actions);
+    }
+
+    handleRowAction(event) {
+        const actionName = event.detail.action.name;
+        const row = event.detail.row;
+
+        if (actionName === 'edit') {
+            this.openEditModal(row);
+        }
+    }
+
+    openEditModal(row) {
+        this.currentDiscount = { ...row, sObjectType: 'Discount__c' };
+        this.isModalOpen = true;
+    }
+
     openModal() {
         this.currentStep = 1;
         this.selectedFamilies = [];
