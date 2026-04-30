@@ -23,4 +23,44 @@
     <labels><fullName>OM_Subtotal</fullName><language>en_US</language><protected>false</protected><shortDescription>Subtotal</shortDescription><value>Subtotal</value></labels>
     <labels><fullName>OM_Final_Total</fullName><language>en_US</language><protected>false</protected><shortDescription>Final Total</shortDescription><value>Final Total</value></labels>
     <labels><fullName>OM_Submit</fullName><language>en_US</language><protected>false</protected><shortDescription>Submit Order</shortDescription><value>Submit &amp; Create Order</value></labels>
+    <labels><fullName>DM_Opt_Lowest</fullName><language>en_US</language><protected>false</protected><shortDescription>Lowest Discount</shortDescription><value>Lowest Discount</value></labels>
+    <labels><fullName>DM_Opt_Highest</fullName><language>en_US</language><protected>false</protected><shortDescription>Highest Discount</shortDescription><value>Highest Discount</value></labels>
+    <labels><fullName>DM_Opt_Cumulative</fullName><language>en_US</language><protected>false</protected><shortDescription>Cumulative</shortDescription><value>Cumulative</value></labels>
+    <labels><fullName>DM_Opt_OneTime</fullName><language>en_US</language><protected>false</protected><shortDescription>One Time Only</shortDescription><value>One Time Only</value></labels>
+    <labels><fullName>DM_Opt_Recurring</fullName><language>en_US</language><protected>false</protected><shortDescription>Recurring</shortDescription><value>Recurring</value></labels>
+    <labels><fullName>DM_Opt_Conditional</fullName><language>en_US</language><protected>false</protected><shortDescription>Conditional</shortDescription><value>Conditional</value></labels>
+    <labels><fullName>DM_Opt_MinOrder</fullName><language>en_US</language><protected>false</protected><shortDescription>Minimum Order Value</shortDescription><value>Minimum Order Value</value></labels>
+    <labels><fullName>DM_Opt_TwoForOne</fullName><language>en_US</language><protected>false</protected><shortDescription>Two For One</shortDescription><value>Two For One</value></labels>
+    <labels><fullName>DM_Opt_Percent</fullName><language>en_US</language><protected>false</protected><shortDescription>Percent</shortDescription><value>Percent</value></labels>
+    <labels><fullName>DM_Opt_Fixed</fullName><language>en_US</language><protected>false</protected><shortDescription>Fixed Amount</shortDescription><value>Fixed Amount</value></labels>
+    <labels><fullName>DM_Opt_None</fullName><language>en_US</language><protected>false</protected><shortDescription>None</shortDescription><value>None</value></labels>
+    <labels><fullName>DM_Opt_Daily</fullName><language>en_US</language><protected>false</protected><shortDescription>Daily</shortDescription><value>Daily</value></labels>
+    <labels><fullName>DM_Opt_Monday</fullName><language>en_US</language><protected>false</protected><shortDescription>Every Monday</shortDescription><value>Every Monday</value></labels>
+    <labels><fullName>DM_Opt_Friday</fullName><language>en_US</language><protected>false</protected><shortDescription>Every Friday</shortDescription><value>Every Friday</value></labels>
+    <labels><fullName>DM_Opt_FirstMonth</fullName><language>en_US</language><protected>false</protected><shortDescription>First Day of Month</shortDescription><value>First Day of Month</value></labels>
+    <labels><fullName>DM_Opt_FirstQuarter</fullName><language>en_US</language><protected>false</protected><shortDescription>First Day of Quarter</shortDescription><value>First Day of Quarter</value></labels>
+    <labels><fullName>DM_Opt_YearlyCustom</fullName><language>en_US</language><protected>false</protected><shortDescription>Yearly Custom Date</shortDescription><value>Yearly Custom Date</value></labels>
+    <labels><fullName>DM_Lbl_GlobalStrategy</fullName><language>en_US</language><protected>false</protected><shortDescription>Global Discount Strategy</shortDescription><value>Global Discount Strategy</value></labels>
+    <labels><fullName>DM_Lbl_MinPriceFloor</fullName><language>en_US</language><protected>false</protected><shortDescription>Minimum Price Floor (%)</shortDescription><value>Minimum Price Floor (%)</value></labels>
+    <labels><fullName>DM_Lbl_FloorHelp</fullName><language>en_US</language><protected>false</protected><shortDescription>Floor Help Text</shortDescription><value>Example: If set to 10%, the final order price can never drop below 10% of the original subtotal, regardless of how many discounts are applied.</value></labels>
+    <labels><fullName>DM_Lbl_ModalTitle</fullName><language>en_US</language><protected>false</protected><shortDescription>New Discount Config</shortDescription><value>New Discount Configuration</value></labels>
+    <labels><fullName>DM_Lbl_Active</fullName><language>en_US</language><protected>false</protected><shortDescription>Active</shortDescription><value>Active</value></labels>
+    <labels><fullName>DM_Lbl_Category</fullName><language>en_US</language><protected>false</protected><shortDescription>Discount Category</shortDescription><value>Discount Category</value></labels>
+    <labels><fullName>DM_Lbl_ConditionType</fullName><language>en_US</language><protected>false</protected><shortDescription>Condition Type</shortDescription><value>Condition Type</value></labels>
+    <labels><fullName>DM_Lbl_MinOrderReq</fullName><language>en_US</language><protected>false</protected><shortDescription>Min Order Requirement</shortDescription><value>Minimum Order Value Requirement</value></labels>
+    <labels><fullName>DM_Lbl_TwoForOneHelp</fullName><language>en_US</language><protected>false</protected><shortDescription>Two For One Help</shortDescription><value>Note: The Two For One discount will automatically apply when 2 or more items are in the cart.</value></labels>
+    <labels><fullName>DM_Lbl_Recurrence</fullName><language>en_US</language><protected>false</protected><shortDescription>Recurrence Schedule</shortDescription><value>Recurrence Schedule</value></labels>
+    <labels><fullName>DM_Lbl_AnnualDate</fullName><language>en_US</language><protected>false</protected><shortDescription>Annual Recurrence Date</shortDescription><value>Annual Recurrence Date</value></labels>
+    <labels><fullName>DM_Lbl_AnnualHelp</fullName><language>en_US</language><protected>false</protected><shortDescription>Annual Help</shortDescription><value>Note: The year selected does not matter. The system will trigger this discount every year on the specified month and day.</value></labels>
+    <labels><fullName>DM_Lbl_RecurringHelp</fullName><language>en_US</language><protected>false</protected><shortDescription>Recurring Help</shortDescription><value>Note: Recurring discounts will run indefinitely unless an End Date is provided below.</value></labels>
+    <labels><fullName>DM_Lbl_ValueType</fullName><language>en_US</language><protected>false</protected><shortDescription>Discount Value Type</shortDescription><value>Discount Value Type</value></labels>
+    <labels><fullName>DM_Lbl_DiscountValue</fullName><language>en_US</language><protected>false</protected><shortDescription>Discount Value</shortDescription><value>Discount Value</value></labels>
+    <labels><fullName>DM_Lbl_StartDate</fullName><language>en_US</language><protected>false</protected><shortDescription>Start Date</shortDescription><value>Start Date</value></labels>
+    <labels><fullName>DM_Lbl_EndDate</fullName><language>en_US</language><protected>false</protected><shortDescription>End Date</shortDescription><value>End Date</value></labels>
+    <labels><fullName>DM_Col_Active</fullName><language>en_US</language><protected>false</protected><shortDescription>Active Col</shortDescription><value>Active</value></labels>
+    <labels><fullName>DM_Col_Category</fullName><language>en_US</language><protected>false</protected><shortDescription>Category Col</shortDescription><value>Category</value></labels>
+    <labels><fullName>DM_Col_Condition</fullName><language>en_US</language><protected>false</protected><shortDescription>Condition Col</shortDescription><value>Condition</value></labels>
+    <labels><fullName>DM_Col_Type</fullName><language>en_US</language><protected>false</protected><shortDescription>Type Col</shortDescription><value>Type</value></labels>
+    <labels><fullName>DM_Col_MinOrder</fullName><language>en_US</language><protected>false</protected><shortDescription>Min Order Col</shortDescription><value>Min Order</value></labels>
+    <labels><fullName>DM_Col_Recurrence</fullName><language>en_US</language><protected>false</protected><shortDescription>Recurrence Col</shortDescription><value>Recurrence</value></labels>
 </CustomLabels>

@@ -7,7 +7,6 @@ import toggleDiscounts from '@salesforce/apex/DiscountManagerController.toggleDi
 import deleteDiscounts from '@salesforce/apex/DiscountManagerController.deleteDiscounts';
 import upsertDiscount from '@salesforce/apex/DiscountManagerController.upsertDiscount';
 
-// Custom Label Imports
 import LBL_BTN_SAVE from '@salesforce/label/c.Btn_Save';
 import LBL_BTN_CANCEL from '@salesforce/label/c.Btn_Cancel';
 import LBL_MSG_SUCCESS from '@salesforce/label/c.Msg_Success';
@@ -21,6 +20,49 @@ import LBL_DM_BTN_DEACTIVATE from '@salesforce/label/c.DM_Btn_Deactivate';
 import LBL_DM_BTN_DELETE from '@salesforce/label/c.DM_Btn_Delete';
 import LBL_DM_COL_NAME from '@salesforce/label/c.DM_Col_Name';
 import LBL_DM_COL_VALUE from '@salesforce/label/c.DM_Col_Value';
+
+import DM_Opt_Lowest from '@salesforce/label/c.DM_Opt_Lowest';
+import DM_Opt_Highest from '@salesforce/label/c.DM_Opt_Highest';
+import DM_Opt_Cumulative from '@salesforce/label/c.DM_Opt_Cumulative';
+import DM_Opt_OneTime from '@salesforce/label/c.DM_Opt_OneTime';
+import DM_Opt_Recurring from '@salesforce/label/c.DM_Opt_Recurring';
+import DM_Opt_Conditional from '@salesforce/label/c.DM_Opt_Conditional';
+import DM_Opt_MinOrder from '@salesforce/label/c.DM_Opt_MinOrder';
+import DM_Opt_TwoForOne from '@salesforce/label/c.DM_Opt_TwoForOne';
+import DM_Opt_Percent from '@salesforce/label/c.DM_Opt_Percent';
+import DM_Opt_Fixed from '@salesforce/label/c.DM_Opt_Fixed';
+import DM_Opt_None from '@salesforce/label/c.DM_Opt_None';
+import DM_Opt_Daily from '@salesforce/label/c.DM_Opt_Daily';
+import DM_Opt_Monday from '@salesforce/label/c.DM_Opt_Monday';
+import DM_Opt_Friday from '@salesforce/label/c.DM_Opt_Friday';
+import DM_Opt_FirstMonth from '@salesforce/label/c.DM_Opt_FirstMonth';
+import DM_Opt_FirstQuarter from '@salesforce/label/c.DM_Opt_FirstQuarter';
+import DM_Opt_YearlyCustom from '@salesforce/label/c.DM_Opt_YearlyCustom';
+
+import DM_Lbl_GlobalStrategy from '@salesforce/label/c.DM_Lbl_GlobalStrategy';
+import DM_Lbl_MinPriceFloor from '@salesforce/label/c.DM_Lbl_MinPriceFloor';
+import DM_Lbl_FloorHelp from '@salesforce/label/c.DM_Lbl_FloorHelp';
+import DM_Lbl_ModalTitle from '@salesforce/label/c.DM_Lbl_ModalTitle';
+import DM_Lbl_Active from '@salesforce/label/c.DM_Lbl_Active';
+import DM_Lbl_Category from '@salesforce/label/c.DM_Lbl_Category';
+import DM_Lbl_ConditionType from '@salesforce/label/c.DM_Lbl_ConditionType';
+import DM_Lbl_MinOrderReq from '@salesforce/label/c.DM_Lbl_MinOrderReq';
+import DM_Lbl_TwoForOneHelp from '@salesforce/label/c.DM_Lbl_TwoForOneHelp';
+import DM_Lbl_Recurrence from '@salesforce/label/c.DM_Lbl_Recurrence';
+import DM_Lbl_AnnualDate from '@salesforce/label/c.DM_Lbl_AnnualDate';
+import DM_Lbl_AnnualHelp from '@salesforce/label/c.DM_Lbl_AnnualHelp';
+import DM_Lbl_RecurringHelp from '@salesforce/label/c.DM_Lbl_RecurringHelp';
+import DM_Lbl_ValueType from '@salesforce/label/c.DM_Lbl_ValueType';
+import DM_Lbl_DiscountValue from '@salesforce/label/c.DM_Lbl_DiscountValue';
+import DM_Lbl_StartDate from '@salesforce/label/c.DM_Lbl_StartDate';
+import DM_Lbl_EndDate from '@salesforce/label/c.DM_Lbl_EndDate';
+
+import DM_Col_Active from '@salesforce/label/c.DM_Col_Active';
+import DM_Col_Category from '@salesforce/label/c.DM_Col_Category';
+import DM_Col_Condition from '@salesforce/label/c.DM_Col_Condition';
+import DM_Col_Type from '@salesforce/label/c.DM_Col_Type';
+import DM_Col_MinOrder from '@salesforce/label/c.DM_Col_MinOrder';
+import DM_Col_Recurrence from '@salesforce/label/c.DM_Col_Recurrence';
 
 export default class DiscountManager extends LightningElement {
     @track settings = {};
@@ -38,48 +80,73 @@ export default class DiscountManager extends LightningElement {
         btnNew: LBL_DM_BTN_NEW,
         btnActivate: LBL_DM_BTN_ACTIVATE,
         btnDeactivate: LBL_DM_BTN_DEACTIVATE,
-        btnDelete: LBL_DM_BTN_DELETE
+        btnDelete: LBL_DM_BTN_DELETE,
+        lblGlobalStrategy: DM_Lbl_GlobalStrategy,
+        lblMinPriceFloor: DM_Lbl_MinPriceFloor,
+        lblFloorHelp: DM_Lbl_FloorHelp,
+        lblModalTitle: DM_Lbl_ModalTitle,
+        lblActive: DM_Lbl_Active,
+        lblCategory: DM_Lbl_Category,
+        lblConditionType: DM_Lbl_ConditionType,
+        lblMinOrderReq: DM_Lbl_MinOrderReq,
+        lblTwoForOneHelp: DM_Lbl_TwoForOneHelp,
+        lblRecurrence: DM_Lbl_Recurrence,
+        lblAnnualDate: DM_Lbl_AnnualDate,
+        lblAnnualHelp: DM_Lbl_AnnualHelp,
+        lblRecurringHelp: DM_Lbl_RecurringHelp,
+        lblValueType: DM_Lbl_ValueType,
+        lblDiscountValue: DM_Lbl_DiscountValue,
+        lblStartDate: DM_Lbl_StartDate,
+        lblEndDate: DM_Lbl_EndDate
     };
 
     strategyOptions = [
-        { label: 'Lowest Discount', value: 'Lowest' },
-        { label: 'Highest Discount', value: 'Highest' },
-        { label: 'Cumulative', value: 'Cumulative' }
+        { label: DM_Opt_Lowest, value: 'Lowest' },
+        { label: DM_Opt_Highest, value: 'Highest' },
+        { label: DM_Opt_Cumulative, value: 'Cumulative' }
     ];
 
     categoryOptions = [
-        { label: 'One Time Only', value: 'One Time Only' },
-        { label: 'Recurring', value: 'Recurring' },
-        { label: 'Conditional', value: 'Conditional' }
+        { label: DM_Opt_OneTime, value: 'One Time Only' },
+        { label: DM_Opt_Recurring, value: 'Recurring' },
+        { label: DM_Opt_Conditional, value: 'Conditional' }
+    ];
+
+    conditionOptions = [
+        { label: DM_Opt_MinOrder, value: 'Minimum Order Value' },
+        { label: DM_Opt_TwoForOne, value: 'Two For One' }
     ];
 
     typeOptions = [
-        { label: 'Percent', value: 'Percent' },
-        { label: 'Fixed Amount', value: 'Fixed Amount' }
+        { label: DM_Opt_Percent, value: 'Percent' },
+        { label: DM_Opt_Fixed, value: 'Fixed Amount' }
     ];
 
     recurrenceOptions = [
-        { label: 'None', value: 'None' },
-        { label: 'Daily', value: 'Daily' },
-        { label: 'Every Monday', value: 'Every Monday' },
-        { label: 'Every Friday', value: 'Every Friday' },
-        { label: 'First Day of Month', value: 'First Day of Month' },
-        { label: 'First Day of Quarter', value: 'First Day of Quarter' },
-        { label: 'Yearly Custom Date', value: 'Yearly Custom Date'}
+        { label: DM_Opt_None, value: 'None' },
+        { label: DM_Opt_Daily, value: 'Daily' },
+        { label: DM_Opt_Monday, value: 'Every Monday' },
+        { label: DM_Opt_Friday, value: 'Every Friday' },
+        { label: DM_Opt_FirstMonth, value: 'First Day of Month' },
+        { label: DM_Opt_FirstQuarter, value: 'First Day of Quarter' },
+        { label: DM_Opt_YearlyCustom, value: 'Yearly Custom Date'}
     ];
 
     discountColumns = [
         { label: LBL_DM_COL_NAME, fieldName: 'Name' },
-        { label: 'Active', fieldName: 'Active__c', type: 'boolean' },
-        { label: 'Category', fieldName: 'Discount_Category__c' },
-        { label: 'Type', fieldName: 'Discount_Type__c' },
+        { label: DM_Col_Active, fieldName: 'Active__c', type: 'boolean' },
+        { label: DM_Col_Category, fieldName: 'Discount_Category__c' },
+        { label: DM_Col_Condition, fieldName: 'Condition_Type__c' },
+        { label: DM_Col_Type, fieldName: 'Discount_Type__c' },
         { label: LBL_DM_COL_VALUE, fieldName: 'Value__c', type: 'number' },
-        { label: 'Min Order', fieldName: 'Minimum_Order_Value__c', type: 'currency' },
-        { label: 'Recurrence', fieldName: 'Recurrence__c' }
+        { label: DM_Col_MinOrder, fieldName: 'Minimum_Order_Value__c', type: 'currency' },
+        { label: DM_Col_Recurrence, fieldName: 'Recurrence__c' }
     ];
 
     get isRecurring() { return this.currentDiscount.Discount_Category__c === 'Recurring'; }
     get isConditional() { return this.currentDiscount.Discount_Category__c === 'Conditional'; }
+    get isMinimumOrderValue() { return this.currentDiscount.Condition_Type__c === 'Minimum Order Value'; }
+    get isTwoForOne() { return this.currentDiscount.Condition_Type__c === 'Two For One'; }
     get isYearlyCustom() { return this.currentDiscount.Recurrence__c === 'Yearly Custom Date'; }
     get maxDiscountValue() { return this.currentDiscount.Discount_Type__c === 'Percent' ? 100 : null; }
 
@@ -122,7 +189,14 @@ export default class DiscountManager extends LightningElement {
     }
 
     openModal() {
-        this.currentDiscount = { sObjectType: 'Discount__c', Active__c: true, Discount_Category__c: 'One Time Only', Discount_Type__c: 'Percent', Recurrence__c: 'None' };
+        this.currentDiscount = { 
+            sObjectType: 'Discount__c', 
+            Active__c: true, 
+            Discount_Category__c: 'One Time Only', 
+            Discount_Type__c: 'Percent', 
+            Recurrence__c: 'None',
+            Condition_Type__c: 'Minimum Order Value'
+        };
         this.isModalOpen = true;
     }
 
