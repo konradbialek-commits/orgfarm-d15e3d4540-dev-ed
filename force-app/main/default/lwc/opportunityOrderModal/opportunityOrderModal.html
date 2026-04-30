@@ -74,12 +74,16 @@
                                 <td>{prod.productName}</td>
                                 <td>{prod.quantity}</td>
                                 <td>
-                                    <template if:true={hasDiscount}>
-                                        <del class="slds-text-color_weak slds-m-right_small">
+                                    <template if:true={prod.hasLineDiscount}>
+                                        <span style="text-decoration: line-through;" class="slds-text-color_weak slds-m-right_x-small">
                                             <lightning-formatted-number value={prod.unitPrice} format-style="currency"></lightning-formatted-number>
-                                        </del>
+                                        </span>
+                                        <lightning-formatted-number value={prod.discountedUnitPrice} format-style="currency"></lightning-formatted-number>
                                     </template>
-                                    <lightning-formatted-number value={prod.discountedUnitPrice} format-style="currency"></lightning-formatted-number>
+
+                                    <template if:false={prod.hasLineDiscount}>
+                                        <lightning-formatted-number value={prod.unitPrice} format-style="currency"></lightning-formatted-number>
+                                    </template>
                                 </td>
                                 <td>
                                     <lightning-formatted-number value={prod.discountedTotal} format-style="currency"></lightning-formatted-number>

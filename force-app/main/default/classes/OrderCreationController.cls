@@ -56,11 +56,12 @@ public with sharing class OrderCreationController {
         
         for (Object obj : parsedData) {
             Map<String, Object> item = (Map<String, Object>) obj;
+            
             itemsToInsert.add(new OrderItem(
                 OrderId = newOrder.Id,
                 PricebookEntryId = (Id) item.get('pricebookEntryId'),
-                Quantity = (Decimal) item.get('quantity'),
-                UnitPrice = (Decimal) item.get('unitPrice')
+                Quantity = Decimal.valueOf(String.valueOf(item.get('quantity'))),
+                UnitPrice = Decimal.valueOf(String.valueOf(item.get('unitPrice')))
             ));
         }
         insert itemsToInsert;

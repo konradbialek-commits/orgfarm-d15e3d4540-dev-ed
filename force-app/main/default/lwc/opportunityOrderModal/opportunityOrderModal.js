@@ -176,7 +176,8 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
                 return {
                     ...p,
                     discountedUnitPrice: itemNewUnitPrice,
-                    discountedTotal: itemNewTotal
+                    discountedTotal: itemNewTotal,
+                    hasLineDiscount: itemDiscountAmount > 0
                 };
             });
             
