@@ -18,7 +18,13 @@
                     <lightning-button label={labels.btnDelete} variant="destructive" onclick={deleteSelected}></lightning-button>
                 </div>
                 <div style="height: 400px;">
-                    <lightning-datatable key-field="Id" data={discounts} columns={discountColumns} onrowselection={handleRowSelection}></lightning-datatable>
+                    <lightning-datatable
+                        key-field="Id"
+                        data={discounts}
+                        columns={discountColumns}
+                        onrowselection={handleRowSelection}
+                        onrowaction={handleRowAction}>
+                    </lightning-datatable>
                 </div>
             </lightning-tab>
         </lightning-tabset>
