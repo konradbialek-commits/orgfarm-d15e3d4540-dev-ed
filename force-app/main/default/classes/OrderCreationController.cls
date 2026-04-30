@@ -46,7 +46,7 @@ public with sharing class OrderCreationController {
             Pricebook2Id = pricebookId,
             Status = 'Draft',
             EffectiveDate = Date.today(),
-            Total_Discount_Amount__c = discountAmount,
+            Discount_Amount__c = discountAmount,
             Applied_Discounts__c = appliedDiscounts
         );
         insert newOrder;

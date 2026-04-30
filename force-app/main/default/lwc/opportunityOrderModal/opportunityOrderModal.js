@@ -117,7 +117,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     }
 
     handleSearch(event) {
-        this.searchTerm = event.target.value;
+    this.searchTerm = event.target.value;
     }
 
     handleRowSelection(event) {
