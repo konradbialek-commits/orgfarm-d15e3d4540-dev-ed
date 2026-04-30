@@ -3,30 +3,10 @@
         <lightning-tabset>
             <lightning-tab label={labels.tabGlobal}>
                 <div class="slds-p-around_medium slds-size_1-of-2">
-                    <lightning-combobox 
-                        label={labels.lblGlobalStrategy}
-                        value={settings.Strategy__c} 
-                        options={strategyOptions} 
-                        onchange={handleSettingChange} 
-                        name="Strategy__c">
-                    </lightning-combobox>
-                    <lightning-input 
-                        type="number" 
-                        label={labels.lblMinPriceFloor}
-                        value={settings.Max_Discount_Percent__c} 
-                        onchange={handleSettingChange} 
-                        name="Max_Discount_Percent__c" 
-                        step="0.01">
-                    </lightning-input>
-                    <div class="slds-text-color_weak slds-m-top_x-small">
-                        <em>{labels.lblFloorHelp}</em>
-                    </div>
-                    <lightning-button 
-                        label={labels.save} 
-                        variant="brand" 
-                        onclick={saveSettings} 
-                        class="slds-m-top_medium slds-show">
-                    </lightning-button>
+                    <lightning-combobox label={labels.lblGlobalStrategy} value={settings.Strategy__c} options={strategyOptions} onchange={handleSettingChange} name="Strategy__c"></lightning-combobox>
+                    <lightning-input type="number" label={labels.lblMinPriceFloor} value={settings.Max_Discount_Percent__c} onchange={handleSettingChange} name="Max_Discount_Percent__c" step="0.01"></lightning-input>
+                    <div class="slds-text-color_weak slds-m-top_x-small"><em>{labels.lblFloorHelp}</em></div>
+                    <lightning-button label={labels.save} variant="brand" onclick={saveSettings} class="slds-m-top_medium slds-show"></lightning-button>
                 </div>
             </lightning-tab>
 
@@ -38,12 +18,7 @@
                     <lightning-button label={labels.btnDelete} variant="destructive" onclick={deleteSelected}></lightning-button>
                 </div>
                 <div style="height: 400px;">
-                    <lightning-datatable
-                        key-field="Id"
-                        data={discounts}
-                        columns={discountColumns}
-                        onrowselection={handleRowSelection}>
-                    </lightning-datatable>
+                    <lightning-datatable key-field="Id" data={discounts} columns={discountColumns} onrowselection={handleRowSelection}></lightning-datatable>
                 </div>
             </lightning-tab>
         </lightning-tabset>
@@ -53,59 +28,82 @@
         <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
             <div class="slds-modal__container">
                 <header class="slds-modal__header">
-                    <h2 class="slds-text-heading_medium">{labels.lblModalTitle}</h2>
+                    <h2 class="slds-text-heading_medium">{labels.lblModalTitle} (Step {currentStep} of 2)</h2>
                 </header>
+                
                 <div class="slds-modal__content slds-p-around_medium">
-                    <lightning-input label="Name" name="Name" value={currentDiscount.Name} onchange={handleFormChange} required></lightning-input>
-                    <lightning-input class="slds-m-top_small slds-m-bottom_small" type="checkbox" label={labels.lblActive} name="Active__c" checked={currentDiscount.Active__c} onchange={handleFormChange}></lightning-input>
                     
-                    <lightning-combobox label={labels.lblCategory} name="Discount_Category__c" value={currentDiscount.Discount_Category__c} options={categoryOptions} onchange={handleFormChange} required></lightning-combobox>
-
-                    <template if:true={isConditional}>
-                        <lightning-combobox label={labels.lblConditionType} name="Condition_Type__c" value={currentDiscount.Condition_Type__c} options={conditionOptions} onchange={handleFormChange} required></lightning-combobox>
-
-                        <template if:true={isMinimumOrderValue}>
-                            <lightning-input type="number" label={labels.lblMinOrderReq} name="Minimum_Order_Value__c" value={currentDiscount.Minimum_Order_Value__c} onchange={handleFormChange} step="0.01" required></lightning-input>
-                        </template>
-
-                        <template if:true={isTwoForOne}>
-                            <div class="slds-text-color_weak slds-m-top_x-small">
-                                <em>{labels.lblTwoForOneHelp}</em>
-                            </div>
-                        </template>
-                    </template>
-
-                    <template if:true={isRecurring}>
-                        <lightning-combobox label={labels.lblRecurrence} name="Recurrence__c" value={currentDiscount.Recurrence__c} options={recurrenceOptions} onchange={handleFormChange} required></lightning-combobox>
+                    <template if:true={isStep1}>
+                        <lightning-input label="Name" name="Name" value={currentDiscount.Name} onchange={handleFormChange} required></lightning-input>
+                        <lightning-input class="slds-m-top_small slds-m-bottom_small" type="checkbox" label={labels.lblActive} name="Active__c" checked={currentDiscount.Active__c} onchange={handleFormChange}></lightning-input>
                         
-                        <template if:true={isYearlyCustom}>
-                            <lightning-input type="date" label={labels.lblAnnualDate} name="Custom_Recurrence_Date__c" value={currentDiscount.Custom_Recurrence_Date__c} onchange={handleFormChange} required></lightning-input>
-                            <div class="slds-text-color_weak slds-m-top_x-small">
-                                <em>{labels.lblAnnualHelp}</em>
-                            </div>
+                        <lightning-combobox label={labels.lblCategory} name="Discount_Category__c" value={currentDiscount.Discount_Category__c} options={categoryOptions} onchange={handleFormChange} required></lightning-combobox>
+
+                        <template if:true={isConditional}>
+                            <lightning-combobox label={labels.lblConditionType} name="Condition_Type__c" value={currentDiscount.Condition_Type__c} options={conditionOptions} onchange={handleFormChange} required></lightning-combobox>
+
+                            <template if:true={isMinimumOrderValue}>
+                                <lightning-input type="number" label={labels.lblMinOrderReq} name="Minimum_Order_Value__c" value={currentDiscount.Minimum_Order_Value__c} onchange={handleFormChange} step="0.01" required></lightning-input>
+                            </template>
+
+                            <template if:true={isTwoForOne}>
+                                <div class="slds-text-color_weak slds-m-top_x-small"><em>{labels.lblTwoForOneHelp}</em></div>
+                            </template>
                         </template>
 
-                        <div class="slds-text-color_weak slds-m-top_small slds-m-bottom_small">
-                            <em>{labels.lblRecurringHelp}</em>
+                        <template if:true={isRecurring}>
+                            <lightning-combobox label={labels.lblRecurrence} name="Recurrence__c" value={currentDiscount.Recurrence__c} options={recurrenceOptions} onchange={handleFormChange} required></lightning-combobox>
+                            
+                            <template if:true={isYearlyCustom}>
+                                <lightning-input type="date" label={labels.lblAnnualDate} name="Custom_Recurrence_Date__c" value={currentDiscount.Custom_Recurrence_Date__c} onchange={handleFormChange} required></lightning-input>
+                                <div class="slds-text-color_weak slds-m-top_x-small"><em>{labels.lblAnnualHelp}</em></div>
+                            </template>
+
+                            <div class="slds-text-color_weak slds-m-top_small slds-m-bottom_small"><em>{labels.lblRecurringHelp}</em></div>
+                        </template>
+
+                        <div class="slds-m-top_small"></div>
+                        <lightning-combobox label={labels.lblValueType} name="Discount_Type__c" value={currentDiscount.Discount_Type__c} options={typeOptions} onchange={handleFormChange} required></lightning-combobox>
+                        <lightning-input type="number" label={labels.lblDiscountValue} name="Value__c" value={currentDiscount.Value__c} max={maxDiscountValue} onchange={handleFormChange} step="0.01" required></lightning-input>
+                        
+                        <div class="slds-grid slds-gutters slds-m-top_small">
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input type="date" label={labels.lblStartDate} name="Start_Date__c" value={currentDiscount.Start_Date__c} onchange={handleFormChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input type="date" label={labels.lblEndDate} name="End_Date__c" value={currentDiscount.End_Date__c} onchange={handleFormChange}></lightning-input>
+                            </div>
                         </div>
                     </template>
 
-                    <div class="slds-m-top_small"></div>
-                    <lightning-combobox label={labels.lblValueType} name="Discount_Type__c" value={currentDiscount.Discount_Type__c} options={typeOptions} onchange={handleFormChange} required></lightning-combobox>
-                    <lightning-input type="number" label={labels.lblDiscountValue} name="Value__c" value={currentDiscount.Value__c} max={maxDiscountValue} onchange={handleFormChange} step="0.01" required></lightning-input>
-                    
-                    <div class="slds-grid slds-gutters slds-m-top_small">
-                        <div class="slds-col slds-size_1-of-2">
-                            <lightning-input type="date" label={labels.lblStartDate} name="Start_Date__c" value={currentDiscount.Start_Date__c} onchange={handleFormChange}></lightning-input>
-                        </div>
-                        <div class="slds-col slds-size_1-of-2">
-                            <lightning-input type="date" label={labels.lblEndDate} name="End_Date__c" value={currentDiscount.End_Date__c} onchange={handleFormChange}></lightning-input>
-                        </div>
-                    </div>
+                    <template if:true={isStep2}>
+                        <lightning-combobox label={labels.lblTargetType} name="Target_Type__c" value={currentDiscount.Target_Type__c} options={targetOptions} onchange={handleFormChange} required></lightning-combobox>
+
+                        <template if:true={isTargetFamily}>
+                            <div class="slds-m-top_medium">
+                                <lightning-checkbox-group name="Eligible_Families__c" label={labels.lblSelectFamilies} options={familyOptions} value={selectedFamilies} onchange={handleFamilySelection}></lightning-checkbox-group>
+                            </div>
+                        </template>
+
+                        <template if:true={isTargetProduct}>
+                            <div class="slds-m-top_medium slds-text-title_caps slds-m-bottom_x-small">{labels.lblSelectProducts}</div>
+                            <div style="height: 300px;">
+                                <lightning-datatable key-field="Id" data={productOptions} columns={productColumns} onrowselection={handleProductSelection}></lightning-datatable>
+                            </div>
+                        </template>
+                    </template>
+
                 </div>
+                
                 <footer class="slds-modal__footer">
-                    <lightning-button label={labels.cancel} onclick={closeModal} class="slds-m-right_small"></lightning-button>
-                    <lightning-button label={labels.save} variant="brand" onclick={saveDiscount}></lightning-button>
+                    <template if:true={isStep1}>
+                        <lightning-button label={labels.cancel} onclick={closeModal} class="slds-m-right_small"></lightning-button>
+                        <lightning-button label={labels.next} variant="brand" onclick={nextStep}></lightning-button>
+                    </template>
+                    <template if:true={isStep2}>
+                        <lightning-button label={labels.back} onclick={previousStep} class="slds-m-right_small"></lightning-button>
+                        <lightning-button label={labels.save} variant="brand" onclick={saveDiscount}></lightning-button>
+                    </template>
                 </footer>
             </div>
         </section>

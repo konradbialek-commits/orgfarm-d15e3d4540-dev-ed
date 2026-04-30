@@ -16,6 +16,7 @@ private class DiscountServiceTest {
             Name = '10 Percent Off',
             Active__c = true,
             Discount_Category__c = 'One Time Only',
+            Target_Type__c = 'All Products',
             Discount_Type__c = 'Percent',
             Value__c = 10.0
         ));
@@ -26,6 +27,7 @@ private class DiscountServiceTest {
             Discount_Category__c = 'Conditional',
             Condition_Type__c = 'Minimum Order Value',
             Minimum_Order_Value__c = 50.0,
+            Target_Type__c = 'All Products',
             Discount_Type__c = 'Fixed Amount',
             Value__c = 15.0
         ));
@@ -33,9 +35,13 @@ private class DiscountServiceTest {
         insert discounts;
     }
 
+    static String getCartPayload() {
+        return '[{"pricebookEntryId":"01u000000000000000","productId":"01t000000000000000","family":"Fiction","unitPrice":100.0,"quantity":1}]';
+    }
+
     @isTest
     static void testCalculateOrderDiscountsCumulative() {
-        Map<String, Object> result = DiscountService.calculateOrderDiscounts(100.0, 1);
+        Map<String, Object> result = DiscountService.calculateOrderDiscounts(getCartPayload());
         
         System.assertEquals(100.0, result.get('originalTotal'));
         System.assertEquals(25.0, result.get('discountAmount'));
@@ -48,7 +54,7 @@ private class DiscountServiceTest {
         setting.Strategy__c = 'Highest';
         update setting;
 
-        Map<String, Object> result = DiscountService.calculateOrderDiscounts(100.0, 1);
+        Map<String, Object> result = DiscountService.calculateOrderDiscounts(getCartPayload());
         
         System.assertEquals(15.0, result.get('discountAmount'));
         System.assertEquals(85.0, result.get('finalTotal'));
@@ -60,7 +66,7 @@ private class DiscountServiceTest {
         setting.Strategy__c = 'Lowest';
         update setting;
 
-        Map<String, Object> result = DiscountService.calculateOrderDiscounts(100.0, 1);
+        Map<String, Object> result = DiscountService.calculateOrderDiscounts(getCartPayload());
         
         System.assertEquals(10.0, result.get('discountAmount'));
         System.assertEquals(90.0, result.get('finalTotal'));
@@ -73,7 +79,7 @@ private class DiscountServiceTest {
         setting.Max_Discount_Percent__c = 80.0;
         update setting;
 
-        Map<String, Object> result = DiscountService.calculateOrderDiscounts(100.0, 1);
+        Map<String, Object> result = DiscountService.calculateOrderDiscounts(getCartPayload());
         
         System.assertEquals(20.0, result.get('discountAmount')); 
         System.assertEquals(80.0, result.get('finalTotal'));
