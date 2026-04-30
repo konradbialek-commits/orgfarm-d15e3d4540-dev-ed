@@ -33,6 +33,15 @@ private class OrderCreationControllerTest {
             IsActive = true
         );
         insert new List<PricebookEntry>{pbe1, pbe2};
+
+        Discount__c d = new Discount__c(
+            Name = 'One Time 10',
+            Active__c = true,
+            Discount_Category__c = Util.Discount.CAT_ONETIME,
+            Discount_Type__c = Util.Discount.TYPE_PERCENT,
+            Value__c = 10.0
+        );
+        insert d;
     }
 
     @IsTest
@@ -80,6 +89,7 @@ private class OrderCreationControllerTest {
         Id stdPricebookId = Test.getStandardPricebookId();
         PricebookEntry pbe1 = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2.Name = 'The Great Gatsby' LIMIT 1];
         PricebookEntry pbe2 = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2.Name = 'A Brief History of Time' LIMIT 1];
+        Discount__c testDiscount = [SELECT Id FROM Discount__c LIMIT 1];
 
         List<Map<String, Object>> payloadList = new List<Map<String, Object>>();
         
@@ -98,18 +108,30 @@ private class OrderCreationControllerTest {
         String jsonPayload = JSON.serialize(payloadList);
 
         Test.startTest();
-        Id newOrderId = OrderCreationController.createOrderWithItems(opp.Id, jsonPayload, stdPricebookId, 10.00, 'Test Discount', new List<Id>());
+        Id newOrderId = OrderCreationController.createOrderWithItems(
+            opp.Id, 
+            jsonPayload, 
+            stdPricebookId, 
+            10.00, 
+            'One Time 10', 
+            new List<Id>{testDiscount.Id}
+        );
         Test.stopTest();
 
         Assert.isNotNull(newOrderId, 'Order ID should be returned');
 
-        Order insertedOrder = [SELECT AccountId, OpportunityId, Status, Pricebook2Id FROM Order WHERE Id = :newOrderId];
+        Order insertedOrder = [SELECT AccountId, OpportunityId, Status, Pricebook2Id, Discount_Amount__c, Applied_Discounts__c FROM Order WHERE Id = :newOrderId];
         Assert.areEqual(opp.AccountId, insertedOrder.AccountId, 'Order should be linked to the correct Account');
         Assert.areEqual(opp.Id, insertedOrder.OpportunityId, 'Order should be linked to the Opportunity');
-        Assert.areEqual('Draft', insertedOrder.Status, 'Order status should be Draft');
+        Assert.areEqual(Util.Order.STATUS_DRAFT, insertedOrder.Status, 'Order status should be Draft via Util');
         Assert.areEqual(stdPricebookId, insertedOrder.Pricebook2Id, 'Pricebook should match the selected one');
+        Assert.areEqual(10.00, insertedOrder.Discount_Amount__c, 'Discount amount should be saved');
+        Assert.areEqual('One Time 10', insertedOrder.Applied_Discounts__c, 'Applied Discounts should be saved');
 
         List<OrderItem> insertedItems = [SELECT Quantity, UnitPrice, PricebookEntryId FROM OrderItem WHERE OrderId = :newOrderId ORDER BY Quantity DESC];
         Assert.areEqual(2, insertedItems.size(), 'Should have created exactly 2 Order Items');
+
+        Discount__c updatedDiscount = [SELECT Active__c FROM Discount__c WHERE Id = :testDiscount.Id];
+        Assert.isFalse(updatedDiscount.Active__c, 'One Time Only discount should be deactivated');
     }
 }

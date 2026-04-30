@@ -4,8 +4,8 @@ private class DiscountServiceTest {
     @testSetup
     static void setupData() {
         Discount_Setting__c setting = new Discount_Setting__c(
-            Name = 'Global',
-            Strategy__c = 'Cumulative',
+            Name = Util.Settings.DEFAULT_NAME,
+            Strategy__c = Util.Settings.STRATEGY_CUMULATIVE,
             Max_Discount_Percent__c = 20.0
         );
         insert setting;
@@ -15,20 +15,20 @@ private class DiscountServiceTest {
         discounts.add(new Discount__c(
             Name = '10 Percent Off',
             Active__c = true,
-            Discount_Category__c = 'One Time Only',
-            Target_Type__c = 'All Products',
-            Discount_Type__c = 'Percent',
+            Discount_Category__c = Util.Discount.CAT_ONETIME,
+            Target_Type__c = Util.Discount.TARGET_ALL,
+            Discount_Type__c = Util.Discount.TYPE_PERCENT,
             Value__c = 10.0
         ));
 
         discounts.add(new Discount__c(
             Name = '15 Fixed Off',
             Active__c = true,
-            Discount_Category__c = 'Conditional',
-            Condition_Type__c = 'Minimum Order Value',
+            Discount_Category__c = Util.Discount.CAT_CONDITIONAL,
+            Condition_Type__c = Util.Discount.COND_MIN_ORDER,
             Minimum_Order_Value__c = 50.0,
-            Target_Type__c = 'All Products',
-            Discount_Type__c = 'Fixed Amount',
+            Target_Type__c = Util.Discount.TARGET_ALL,
+            Discount_Type__c = Util.Discount.TYPE_FIXED,
             Value__c = 15.0
         ));
 
@@ -54,7 +54,7 @@ private class DiscountServiceTest {
     @isTest
     static void testHighestStrategy() {
         Discount_Setting__c setting = [SELECT Id FROM Discount_Setting__c LIMIT 1];
-        setting.Strategy__c = 'Highest';
+        setting.Strategy__c = Util.Settings.STRATEGY_HIGHEST;
         update setting;
 
         Map<String, Object> result = DiscountService.calculateOrderDiscounts(getCartPayload());
@@ -69,7 +69,7 @@ private class DiscountServiceTest {
     @isTest
     static void testLowestStrategy() {
         Discount_Setting__c setting = [SELECT Id FROM Discount_Setting__c LIMIT 1];
-        setting.Strategy__c = 'Lowest';
+        setting.Strategy__c = Util.Settings.STRATEGY_LOWEST;
         update setting;
 
         Map<String, Object> result = DiscountService.calculateOrderDiscounts(getCartPayload());
@@ -84,7 +84,7 @@ private class DiscountServiceTest {
     @isTest
     static void testMaxDiscountFloor() {
         Discount_Setting__c setting = [SELECT Id FROM Discount_Setting__c LIMIT 1];
-        setting.Strategy__c = 'Cumulative';
+        setting.Strategy__c = Util.Settings.STRATEGY_CUMULATIVE;
         setting.Max_Discount_Percent__c = 80.0;
         update setting;
 
@@ -102,7 +102,7 @@ private class DiscountServiceTest {
         delete [SELECT Id FROM Discount__c];
         
         Discount_Setting__c setting = [SELECT Id FROM Discount_Setting__c LIMIT 1];
-        setting.Strategy__c = 'Cumulative';
+        setting.Strategy__c = Util.Settings.STRATEGY_CUMULATIVE;
         setting.Max_Discount_Percent__c = 0.0;
         update setting;
 
@@ -121,9 +121,9 @@ private class DiscountServiceTest {
         Discount__c targetedDiscount = new Discount__c(
             Name = 'Prod 2 Only 50 Off',
             Active__c = true,
-            Discount_Category__c = 'One Time Only',
-            Target_Type__c = 'Specific Products',
-            Discount_Type__c = 'Fixed Amount',
+            Discount_Category__c = Util.Discount.CAT_ONETIME,
+            Target_Type__c = Util.Discount.TARGET_PRODUCTS,
+            Discount_Type__c = Util.Discount.TYPE_FIXED,
             Value__c = 50.0
         );
         insert targetedDiscount;

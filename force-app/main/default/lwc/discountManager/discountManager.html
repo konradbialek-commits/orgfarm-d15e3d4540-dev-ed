@@ -34,13 +34,13 @@
         <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
             <div class="slds-modal__container">
                 <header class="slds-modal__header">
-                    <h2 class="slds-text-heading_medium">{labels.lblModalTitle} (Step {currentStep} of 2)</h2>
+                    <h2 class="slds-text-heading_medium">{labels.lblModalTitle} ({labels.lblStep} {currentStep} {labels.lblOf} 2)</h2>
                 </header>
                 
                 <div class="slds-modal__content slds-p-around_medium">
                     
                     <template if:true={isStep1}>
-                        <lightning-input label="Name" name="Name" value={currentDiscount.Name} onchange={handleFormChange} required></lightning-input>
+                        <lightning-input label={labels.lblName} name="Name" value={currentDiscount.Name} onchange={handleFormChange} required></lightning-input>
                         <lightning-input class="slds-m-top_small slds-m-bottom_small" type="checkbox" label={labels.lblActive} name="Active__c" checked={currentDiscount.Active__c} onchange={handleFormChange}></lightning-input>
                         
                         <lightning-combobox label={labels.lblCategory} name="Discount_Category__c" value={currentDiscount.Discount_Category__c} options={categoryOptions} onchange={handleFormChange} required></lightning-combobox>
@@ -93,7 +93,7 @@
 
                         <template if:true={isTargetProduct}>
                             <div class="slds-m-top_medium slds-text-title_caps slds-m-bottom_x-small">{labels.lblSelectProducts}</div>
-                            <lightning-input type="search" placeholder="Search products..." onchange={handleProductSearch} class="slds-m-bottom_small"></lightning-input>
+                            <lightning-input type="search" placeholder={labels.lblSearchProducts} onchange={handleProductSearch} class="slds-m-bottom_small"></lightning-input>
                             <div style="height: 300px;">
                                 <lightning-datatable key-field="Id" data={filteredProducts} columns={productColumns} selected-rows={selectedProductIds} onrowselection={handleProductSelection}></lightning-datatable>
                             </div>

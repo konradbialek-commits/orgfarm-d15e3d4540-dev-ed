@@ -17,8 +17,8 @@ private class DiscountManagerControllerTest {
         Discount__c d = new Discount__c(
             Name = 'Test', 
             Active__c = false, 
-            Target_Type__c = 'Specific Products',
-            Discount_Type__c = 'Percent', 
+            Target_Type__c = Util.Discount.TARGET_PRODUCTS,
+            Discount_Type__c = Util.Discount.TYPE_PERCENT, 
             Value__c = 10
         );
         
@@ -34,13 +34,17 @@ private class DiscountManagerControllerTest {
         Map<String, Object> calcResult = DiscountManagerController.calculateOrderDiscounts(cartPayload);
         System.assertNotEquals(null, calcResult);
 
+        List<Id> fetchedProductIds = DiscountManagerController.getDiscountProducts(d.Id);
+        System.assertEquals(1, fetchedProductIds.size());
+        System.assertEquals(testProd.Id, fetchedProductIds[0]);
+
         DiscountManagerController.deleteDiscounts(new List<Id>{d.Id});
         System.assertEquals(0, [SELECT Count() FROM Discount__c]);
     }
     
     @isTest
     static void testUpsertExceptions() {
-        Discount__c dTooHigh = new Discount__c(Discount_Type__c = 'Percent', Value__c = 110);
+        Discount__c dTooHigh = new Discount__c(Discount_Type__c = Util.Discount.TYPE_PERCENT, Value__c = 110);
         try {
             DiscountManagerController.upsertDiscount(dTooHigh, null);
             System.assert(false);
@@ -48,7 +52,7 @@ private class DiscountManagerControllerTest {
             System.assert(true);
         }
 
-        Discount__c dMissingDate = new Discount__c(Recurrence__c = 'Yearly Custom Date');
+        Discount__c dMissingDate = new Discount__c(Recurrence__c = Util.Discount.REC_YEARLY_CUSTOM);
         try {
             DiscountManagerController.upsertDiscount(dMissingDate, null);
             System.assert(false);

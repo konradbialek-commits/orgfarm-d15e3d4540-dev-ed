@@ -4,7 +4,11 @@ public with sharing class DiscountManagerController {
     public static Discount_Setting__c getGlobalSettings() {
         List<Discount_Setting__c> settings = [SELECT Id, Strategy__c, Max_Discount_Percent__c FROM Discount_Setting__c LIMIT 1];
         if (settings.isEmpty()) {
-            Discount_Setting__c newSetting = new Discount_Setting__c(Name = 'Global', Strategy__c = 'Cumulative', Max_Discount_Percent__c = 0.0);
+            Discount_Setting__c newSetting = new Discount_Setting__c(
+                Name = Util.Settings.DEFAULT_NAME, 
+                Strategy__c = Util.Settings.STRATEGY_CUMULATIVE, 
+                Max_Discount_Percent__c = 0.0
+            );
             insert newSetting;
             return newSetting;
         }
@@ -28,15 +32,6 @@ public with sharing class DiscountManagerController {
     }
 
     @AuraEnabled
-    public static List<Id> getDiscountProducts(Id discountId) {
-        List<Id> productIds = new List<Id>();
-        for (Discount_Product__c dp : [SELECT Product__c FROM Discount_Product__c WHERE Discount__c = :discountId]) {
-            productIds.add(dp.Product__c);
-        }
-        return productIds;
-    }
-
-    @AuraEnabled
     public static void toggleDiscounts(List<Id> discountIds, Boolean isActive) {
         List<Discount__c> toUpdate = new List<Discount__c>();
         for (Id dId : discountIds) {
@@ -52,19 +47,19 @@ public with sharing class DiscountManagerController {
 
     @AuraEnabled
     public static void upsertDiscount(Discount__c discountRecord, List<Id> selectedProductIds) {
-        if (discountRecord.Discount_Type__c == 'Percent' && discountRecord.Value__c > 100) {
-            throw new AuraHandledException('Percentage discounts cannot exceed 100%.');
+        if (discountRecord.Discount_Type__c == Util.Discount.TYPE_PERCENT && discountRecord.Value__c > 100) {
+            throw new AuraHandledException(System.Label.DM_Err_PctExceed);
         }
         
-        if (discountRecord.Recurrence__c == 'Yearly Custom Date' && discountRecord.Custom_Recurrence_Date__c == null) {
-            throw new AuraHandledException('Please provide a target date for the yearly recurrence.');
+        if (discountRecord.Recurrence__c == Util.Discount.REC_YEARLY_CUSTOM && discountRecord.Custom_Recurrence_Date__c == null) {
+            throw new AuraHandledException(System.Label.DM_Err_ReqTargetDate);
         }
         
         upsert discountRecord;
 
         delete [SELECT Id FROM Discount_Product__c WHERE Discount__c = :discountRecord.Id];
 
-        if (discountRecord.Target_Type__c == 'Specific Products' && selectedProductIds != null && !selectedProductIds.isEmpty()) {
+        if (discountRecord.Target_Type__c == Util.Discount.TARGET_PRODUCTS && selectedProductIds != null && !selectedProductIds.isEmpty()) {
             List<Discount_Product__c> junctionRecords = new List<Discount_Product__c>();
             for (Id pId : selectedProductIds) {
                 junctionRecords.add(new Discount_Product__c(
@@ -97,5 +92,14 @@ public with sharing class DiscountManagerController {
     @AuraEnabled
     public static Map<String, Object> calculateOrderDiscounts(String cartPayload) {
         return DiscountService.calculateOrderDiscounts(cartPayload);
+    }
+    
+    @AuraEnabled
+    public static List<Id> getDiscountProducts(Id discountId) {
+        List<Id> productIds = new List<Id>();
+        for (Discount_Product__c dp : [SELECT Product__c FROM Discount_Product__c WHERE Discount__c = :discountId]) {
+            productIds.add(dp.Product__c);
+        }
+        return productIds;
     }
 }
