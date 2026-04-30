@@ -1,4 +1,4 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getGlobalSettings from '@salesforce/apex/DiscountManagerController.getGlobalSettings';
 import saveGlobalSettings from '@salesforce/apex/DiscountManagerController.saveGlobalSettings';
@@ -6,9 +6,13 @@ import getDiscounts from '@salesforce/apex/DiscountManagerController.getDiscount
 import toggleDiscounts from '@salesforce/apex/DiscountManagerController.toggleDiscounts';
 import deleteDiscounts from '@salesforce/apex/DiscountManagerController.deleteDiscounts';
 import upsertDiscount from '@salesforce/apex/DiscountManagerController.upsertDiscount';
+import getAvailableFamilies from '@salesforce/apex/DiscountManagerController.getAvailableFamilies';
+import getAvailableProducts from '@salesforce/apex/DiscountManagerController.getAvailableProducts';
 
 import LBL_BTN_SAVE from '@salesforce/label/c.Btn_Save';
 import LBL_BTN_CANCEL from '@salesforce/label/c.Btn_Cancel';
+import LBL_BTN_NEXT from '@salesforce/label/c.Btn_Next';
+import LBL_BTN_BACK from '@salesforce/label/c.Btn_Back';
 import LBL_MSG_SUCCESS from '@salesforce/label/c.Msg_Success';
 import LBL_MSG_ERROR from '@salesforce/label/c.Msg_Error';
 import LBL_DM_TITLE from '@salesforce/label/c.DM_Title';
@@ -57,23 +61,32 @@ import DM_Lbl_DiscountValue from '@salesforce/label/c.DM_Lbl_DiscountValue';
 import DM_Lbl_StartDate from '@salesforce/label/c.DM_Lbl_StartDate';
 import DM_Lbl_EndDate from '@salesforce/label/c.DM_Lbl_EndDate';
 
-import DM_Col_Active from '@salesforce/label/c.DM_Col_Active';
-import DM_Col_Category from '@salesforce/label/c.DM_Col_Category';
-import DM_Col_Condition from '@salesforce/label/c.DM_Col_Condition';
-import DM_Col_Type from '@salesforce/label/c.DM_Col_Type';
-import DM_Col_MinOrder from '@salesforce/label/c.DM_Col_MinOrder';
-import DM_Col_Recurrence from '@salesforce/label/c.DM_Col_Recurrence';
+import DM_Lbl_TargetType from '@salesforce/label/c.DM_Lbl_TargetType';
+import DM_Opt_AllProducts from '@salesforce/label/c.DM_Opt_AllProducts';
+import DM_Opt_SpecificFamilies from '@salesforce/label/c.DM_Opt_SpecificFamilies';
+import DM_Opt_SpecificProducts from '@salesforce/label/c.DM_Opt_SpecificProducts';
+import DM_Lbl_SelectFamilies from '@salesforce/label/c.DM_Lbl_SelectFamilies';
+import DM_Lbl_SelectProducts from '@salesforce/label/c.DM_Lbl_SelectProducts';
 
 export default class DiscountManager extends LightningElement {
     @track settings = {};
     @track discounts = [];
     selectedRows = [];
     isModalOpen = false;
+    productSearchTerm = '';
     @track currentDiscount = {};
+    @track currentStep = 1;
+    
+    @track familyOptions = [];
+    @track productOptions = [];
+    selectedFamilies = [];
+    selectedProductIds = [];
 
     labels = {
         save: LBL_BTN_SAVE,
         cancel: LBL_BTN_CANCEL,
+        next: LBL_BTN_NEXT,
+        back: LBL_BTN_BACK,
         title: LBL_DM_TITLE,
         tabGlobal: LBL_DM_TAB_GLOBAL,
         tabDiscounts: LBL_DM_TAB_DISCOUNTS,
@@ -97,7 +110,10 @@ export default class DiscountManager extends LightningElement {
         lblValueType: DM_Lbl_ValueType,
         lblDiscountValue: DM_Lbl_DiscountValue,
         lblStartDate: DM_Lbl_StartDate,
-        lblEndDate: DM_Lbl_EndDate
+        lblEndDate: DM_Lbl_EndDate,
+        lblTargetType: DM_Lbl_TargetType,
+        lblSelectFamilies: DM_Lbl_SelectFamilies,
+        lblSelectProducts: DM_Lbl_SelectProducts
     };
 
     strategyOptions = [
@@ -132,23 +148,46 @@ export default class DiscountManager extends LightningElement {
         { label: DM_Opt_YearlyCustom, value: 'Yearly Custom Date'}
     ];
 
-    discountColumns = [
-        { label: LBL_DM_COL_NAME, fieldName: 'Name' },
-        { label: DM_Col_Active, fieldName: 'Active__c', type: 'boolean' },
-        { label: DM_Col_Category, fieldName: 'Discount_Category__c' },
-        { label: DM_Col_Condition, fieldName: 'Condition_Type__c' },
-        { label: DM_Col_Type, fieldName: 'Discount_Type__c' },
-        { label: LBL_DM_COL_VALUE, fieldName: 'Value__c', type: 'number' },
-        { label: DM_Col_MinOrder, fieldName: 'Minimum_Order_Value__c', type: 'currency' },
-        { label: DM_Col_Recurrence, fieldName: 'Recurrence__c' }
+    targetOptions = [
+        { label: DM_Opt_AllProducts, value: 'All Products' },
+        { label: DM_Opt_SpecificFamilies, value: 'Specific Families' },
+        { label: DM_Opt_SpecificProducts, value: 'Specific Products' }
     ];
 
+    discountColumns = [
+        { label: LBL_DM_COL_NAME, fieldName: 'Name' },
+        { label: 'Active', fieldName: 'Active__c', type: 'boolean' },
+        { label: 'Target', fieldName: 'Target_Type__c' },
+        { label: 'Type', fieldName: 'Discount_Type__c' },
+        { label: LBL_DM_COL_VALUE, fieldName: 'Value__c', type: 'number' },
+        { label: 'Recurrence', fieldName: 'Recurrence__c' }
+    ];
+
+    productColumns = [
+        { label: 'Product Name', fieldName: 'Name' },
+        { label: 'Family', fieldName: 'Family' }
+    ];
+
+    @wire(getAvailableFamilies)
+    wiredFamilies({ error, data }) {
+        if (data) this.familyOptions = data;
+    }
+
+    @wire(getAvailableProducts)
+    wiredProducts({ error, data }) {
+        if (data) this.productOptions = data;
+    }
+
+    get isStep1() { return this.currentStep === 1; }
+    get isStep2() { return this.currentStep === 2; }
     get isRecurring() { return this.currentDiscount.Discount_Category__c === 'Recurring'; }
     get isConditional() { return this.currentDiscount.Discount_Category__c === 'Conditional'; }
     get isMinimumOrderValue() { return this.currentDiscount.Condition_Type__c === 'Minimum Order Value'; }
     get isTwoForOne() { return this.currentDiscount.Condition_Type__c === 'Two For One'; }
     get isYearlyCustom() { return this.currentDiscount.Recurrence__c === 'Yearly Custom Date'; }
     get maxDiscountValue() { return this.currentDiscount.Discount_Type__c === 'Percent' ? 100 : null; }
+    get isTargetFamily() { return this.currentDiscount.Target_Type__c === 'Specific Families'; }
+    get isTargetProduct() { return this.currentDiscount.Target_Type__c === 'Specific Products'; }
 
     connectedCallback() { this.loadData(); }
 
@@ -189,13 +228,17 @@ export default class DiscountManager extends LightningElement {
     }
 
     openModal() {
+        this.currentStep = 1;
+        this.selectedFamilies = [];
+        this.selectedProductIds = [];
         this.currentDiscount = { 
             sObjectType: 'Discount__c', 
             Active__c: true, 
             Discount_Category__c: 'One Time Only', 
             Discount_Type__c: 'Percent', 
             Recurrence__c: 'None',
-            Condition_Type__c: 'Minimum Order Value'
+            Condition_Type__c: 'Minimum Order Value',
+            Target_Type__c: 'All Products'
         };
         this.isModalOpen = true;
     }
@@ -207,7 +250,33 @@ export default class DiscountManager extends LightningElement {
         this.currentDiscount[event.target.name] = val;
     }
 
-    saveDiscount() {
+    handleFamilySelection(event) {
+        this.selectedFamilies = event.detail.value;
+    }
+
+    handleProductSearch(event) {
+        this.productSearchTerm = event.target.value;
+    }
+
+    get filteredProducts() {
+        if (!this.productSearchTerm) {
+            return this.productOptions;
+        }
+        const term = this.productSearchTerm.toLowerCase();
+        return this.productOptions.filter(p => 
+            p.Name.toLowerCase().includes(term) || 
+            (p.Family && p.Family.toLowerCase().includes(term))
+        );
+    }
+
+    handleProductSelection(event) {
+        const selectedIds = event.detail.selectedRows.map(row => row.Id);
+        const visibleIds = this.filteredProducts.map(row => row.Id);
+        const idsToKeep = this.selectedProductIds.filter(id => !visibleIds.includes(id));
+        this.selectedProductIds = [...new Set([...idsToKeep, ...selectedIds])];
+    }
+
+    nextStep() {
         const allValid = [...this.template.querySelectorAll('lightning-input, lightning-combobox')]
             .reduce((validSoFar, inputCmp) => {
                 inputCmp.reportValidity();
@@ -215,8 +284,23 @@ export default class DiscountManager extends LightningElement {
             }, true);
 
         if (!allValid) return;
+        this.currentStep = 2;
+    }
 
-        upsertDiscount({ discountRecord: this.currentDiscount })
+    previousStep() {
+        this.currentStep = 1;
+    }
+
+    saveDiscount() {
+        if (this.currentDiscount.Target_Type__c === 'Specific Families' && this.selectedFamilies.length > 0) {
+            this.currentDiscount.Eligible_Families__c = this.selectedFamilies.join(';');
+        } else {
+            this.currentDiscount.Eligible_Families__c = null;
+        }
+
+        let productIdsToSave = this.currentDiscount.Target_Type__c === 'Specific Products' ? this.selectedProductIds : [];
+
+        upsertDiscount({ discountRecord: this.currentDiscount, selectedProductIds: productIdsToSave })
             .then(() => {
                 this.showToast(LBL_MSG_SUCCESS, 'Discount Created', 'success');
                 this.closeModal();

@@ -1,60 +1,154 @@
 public class DiscountService {
-    public static Map<String, Object> calculateOrderDiscounts(Decimal subtotal, Integer totalQuantity) {
+    
+    public class CartItem {
+        public Id pricebookEntryId;
+        public Id productId;
+        public String family;
+        public Decimal unitPrice;
+        public Integer quantity;
+    }
+
+    public static Map<String, Object> calculateOrderDiscounts(String cartPayload) {
+        List<CartItem> cartItems = (List<CartItem>)JSON.deserialize(cartPayload, List<CartItem>.class);
+        
+        Decimal subtotal = 0;
+        for (CartItem item : cartItems) {
+            subtotal += (item.unitPrice * item.quantity);
+        }
+
         Discount_Setting__c settings = DiscountManagerController.getGlobalSettings();
-        OrderContext context = new OrderContext(subtotal, totalQuantity, Date.today());
+        Date today = Date.today();
         
         List<Discount__c> activeDiscounts = [
-            SELECT Id, Name, Discount_Category__c, Condition_Type__c, Discount_Type__c, Value__c, Recurrence__c, Custom_Recurrence_Date__c, Minimum_Order_Value__c
+            SELECT Id, Name, Discount_Category__c, Condition_Type__c, Discount_Type__c, 
+                   Value__c, Recurrence__c, Custom_Recurrence_Date__c, Minimum_Order_Value__c,
+                   Target_Type__c, Eligible_Families__c,
+                   (SELECT Product__c FROM Discount_Products__r)
             FROM Discount__c 
             WHERE Active__c = true 
-            AND (Start_Date__c <= :context.currentDate OR Start_Date__c = null)
-            AND (End_Date__c >= :context.currentDate OR End_Date__c = null)
+            AND (Start_Date__c <= :today OR Start_Date__c = null)
+            AND (End_Date__c >= :today OR End_Date__c = null)
         ];
 
         List<Discount__c> applicableDiscounts = new List<Discount__c>();
+        Map<Id, Decimal> discountToValueMap = new Map<Id, Decimal>();
+        Map<Id, List<CartItem>> discountToEligibleItems = new Map<Id, List<CartItem>>();
         
         for (Discount__c d : activeDiscounts) {
+            Decimal eligibleSubtotal = 0;
+            Integer eligibleQuantity = 0;
+            List<CartItem> eItems = new List<CartItem>();
+            
+            Set<Id> targetedProductIds = new Set<Id>();
+            if (d.Target_Type__c == 'Specific Products') {
+                for (Discount_Product__c dp : d.Discount_Products__r) {
+                    targetedProductIds.add(dp.Product__c);
+                }
+            }
+
+            for (CartItem item : cartItems) {
+                Boolean isEligible = false;
+                
+                if (d.Target_Type__c == 'All Products' || d.Target_Type__c == null) {
+                    isEligible = true;
+                } else if (d.Target_Type__c == 'Specific Families' && String.isNotBlank(d.Eligible_Families__c) && String.isNotBlank(item.family)) {
+                    if (d.Eligible_Families__c.contains(item.family)) {
+                        isEligible = true;
+                    }
+                } else if (d.Target_Type__c == 'Specific Products') {
+                    if (targetedProductIds.contains(item.productId)) {
+                        isEligible = true;
+                    }
+                }
+                
+                if (isEligible) {
+                    eligibleSubtotal += (item.unitPrice * item.quantity);
+                    eligibleQuantity += item.quantity;
+                    eItems.add(item);
+                }
+            }
+
+            if (eligibleSubtotal == 0) continue;
+
+            OrderContext context = new OrderContext(subtotal, eligibleSubtotal, eligibleQuantity, today);
+            
             String criteria = d.Discount_Category__c == 'Conditional' ? d.Condition_Type__c : d.Recurrence__c;
             
+            Boolean isApplicable = false;
             if (String.isNotBlank(criteria)) {
                 DiscountEvaluator evaluator = DiscountEvaluatorFactory.getEvaluator(criteria);
                 if (evaluator.isApplicable(d, context)) {
-                    applicableDiscounts.add(d);
+                    isApplicable = true;
                 }
             } else if (d.Discount_Category__c == 'One Time Only') {
-                applicableDiscounts.add(d);
+                isApplicable = true;
             }
+
+            if (isApplicable) {
+                applicableDiscounts.add(d);
+                Decimal dValue = d.Discount_Type__c == 'Percent' ? eligibleSubtotal * (d.Value__c / 100) : d.Value__c;
+                
+                if (dValue > eligibleSubtotal) {
+                    dValue = eligibleSubtotal;
+                }
+                discountToValueMap.put(d.Id, dValue);
+                discountToEligibleItems.put(d.Id, eItems);
+            }
+        }
+
+        List<Discount__c> winningDiscounts = new List<Discount__c>();
+        if (!applicableDiscounts.isEmpty()) {
+            if (settings.Strategy__c == 'Cumulative') {
+                winningDiscounts.addAll(applicableDiscounts);
+            } else {
+                Discount__c selectedDiscount = applicableDiscounts[0];
+                Decimal selectedVal = discountToValueMap.get(selectedDiscount.Id);
+                
+                for (Discount__c d : applicableDiscounts) {
+                    Decimal currentVal = discountToValueMap.get(d.Id);
+                    
+                    if (settings.Strategy__c == 'Highest' && currentVal > selectedVal) {
+                        selectedDiscount = d;
+                        selectedVal = currentVal;
+                    }
+                    if (settings.Strategy__c == 'Lowest' && currentVal < selectedVal) {
+                        selectedDiscount = d;
+                        selectedVal = currentVal;
+                    }
+                }
+                winningDiscounts.add(selectedDiscount);
+            }
+        }
+
+        Map<String, Decimal> itemDiscounts = new Map<String, Decimal>();
+        for (CartItem item : cartItems) {
+            itemDiscounts.put((String)item.pricebookEntryId, 0.0);
         }
 
         Decimal totalDiscountAmount = 0;
         List<String> appliedNames = new List<String>();
         List<Id> appliedIds = new List<Id>();
 
-        if (!applicableDiscounts.isEmpty()) {
-            if (settings.Strategy__c == 'Cumulative') {
-                for (Discount__c d : applicableDiscounts) {
-                    appliedNames.add(d.Name);
-                    appliedIds.add(d.Id);
-                    if (d.Discount_Type__c == 'Percent') {
-                        totalDiscountAmount += subtotal * (d.Value__c / 100);
-                    } else {
-                        totalDiscountAmount += d.Value__c;
-                    }
-                }
-            } else if (settings.Strategy__c == 'Highest' || settings.Strategy__c == 'Lowest') {
-                Discount__c selectedDiscount = applicableDiscounts[0];
+        for (Discount__c d : winningDiscounts) {
+            appliedNames.add(d.Name);
+            appliedIds.add(d.Id);
+            
+            Decimal dTotalValue = discountToValueMap.get(d.Id);
+            totalDiscountAmount += dTotalValue;
+            
+            List<CartItem> eItems = discountToEligibleItems.get(d.Id);
+            Decimal dEligibleSubtotal = 0;
+            for (CartItem item : eItems) {
+                dEligibleSubtotal += (item.unitPrice * item.quantity);
+            }
+            
+            for (CartItem item : eItems) {
+                Decimal itemLineTotal = item.unitPrice * item.quantity;
+                Decimal proportion = dEligibleSubtotal > 0 ? (itemLineTotal / dEligibleSubtotal) : 0;
+                Decimal itemDiscount = dTotalValue * proportion;
                 
-                for (Discount__c d : applicableDiscounts) {
-                    Decimal currentVal = d.Discount_Type__c == 'Percent' ? subtotal * (d.Value__c / 100) : d.Value__c;
-                    Decimal selectedVal = selectedDiscount.Discount_Type__c == 'Percent' ? subtotal * (selectedDiscount.Value__c / 100) : selectedDiscount.Value__c;
-                    
-                    if (settings.Strategy__c == 'Highest' && currentVal > selectedVal) selectedDiscount = d;
-                    if (settings.Strategy__c == 'Lowest' && currentVal < selectedVal) selectedDiscount = d;
-                }
-                
-                appliedNames.add(selectedDiscount.Name);
-                appliedIds.add(selectedDiscount.Id);
-                totalDiscountAmount = selectedDiscount.Discount_Type__c == 'Percent' ? subtotal * (selectedDiscount.Value__c / 100) : selectedDiscount.Value__c;
+                Decimal currentVal = itemDiscounts.get((String)item.pricebookEntryId);
+                itemDiscounts.put((String)item.pricebookEntryId, currentVal + itemDiscount);
             }
         }
 
@@ -62,6 +156,11 @@ public class DiscountService {
         Decimal maxDiscountAllowed = subtotal - minPriceAllowed;
 
         if (totalDiscountAmount > maxDiscountAllowed) {
+            Decimal scaleFactor = totalDiscountAmount > 0 ? (maxDiscountAllowed / totalDiscountAmount) : 0;
+            for (String pbeId : itemDiscounts.keySet()) {
+                Decimal scaledVal = itemDiscounts.get(pbeId) * scaleFactor;
+                itemDiscounts.put(pbeId, scaledVal);
+            }
             totalDiscountAmount = maxDiscountAllowed;
             appliedNames.add('(Price Floor Adjusted)');
         }
@@ -75,6 +174,7 @@ public class DiscountService {
         result.put('finalTotal', subtotal - totalDiscountAmount);
         result.put('appliedDiscounts', String.join(appliedNames, ', '));
         result.put('appliedDiscountIds', appliedIds);
+        result.put('itemDiscounts', itemDiscounts);
         
         return result;
     }

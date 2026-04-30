@@ -18,7 +18,13 @@ public with sharing class DiscountManagerController {
 
     @AuraEnabled
     public static List<Discount__c> getDiscounts() {
-        return [SELECT Id, Name, Active__c, Discount_Category__c, Discount_Type__c, Value__c, Recurrence__c, Custom_Recurrence_Date__c, Minimum_Order_Value__c, Start_Date__c, End_Date__c FROM Discount__c ORDER BY CreatedDate DESC];
+        return [
+            SELECT Id, Name, Active__c, Discount_Category__c, Condition_Type__c, Discount_Type__c, 
+                   Value__c, Recurrence__c, Custom_Recurrence_Date__c, Minimum_Order_Value__c, 
+                   Start_Date__c, End_Date__c, Target_Type__c, Eligible_Families__c 
+            FROM Discount__c 
+            ORDER BY CreatedDate DESC
+        ];
     }
 
     @AuraEnabled
@@ -36,7 +42,7 @@ public with sharing class DiscountManagerController {
     }
 
     @AuraEnabled
-    public static void upsertDiscount(Discount__c discountRecord) {
+    public static void upsertDiscount(Discount__c discountRecord, List<Id> selectedProductIds) {
         if (discountRecord.Discount_Type__c == 'Percent' && discountRecord.Value__c > 100) {
             throw new AuraHandledException('Percentage discounts cannot exceed 100%.');
         }
@@ -46,10 +52,41 @@ public with sharing class DiscountManagerController {
         }
         
         upsert discountRecord;
+
+        delete [SELECT Id FROM Discount_Product__c WHERE Discount__c = :discountRecord.Id];
+
+        if (discountRecord.Target_Type__c == 'Specific Products' && selectedProductIds != null && !selectedProductIds.isEmpty()) {
+            List<Discount_Product__c> junctionRecords = new List<Discount_Product__c>();
+            for (Id pId : selectedProductIds) {
+                junctionRecords.add(new Discount_Product__c(
+                    Discount__c = discountRecord.Id,
+                    Product__c = pId
+                ));
+            }
+            insert junctionRecords;
+        }
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Map<String, String>> getAvailableFamilies() {
+        List<Map<String, String>> options = new List<Map<String, String>>();
+        Schema.DescribeFieldResult fieldResult = Product2.Family.getDescribe();
+        for(Schema.PicklistEntry f : fieldResult.getPicklistValues()) {
+            options.add(new Map<String, String>{
+                'label' => f.getLabel(),
+                'value' => f.getValue()
+            });
+        }
+        return options;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Product2> getAvailableProducts() {
+        return [SELECT Id, Name, Family FROM Product2 WHERE IsActive = true ORDER BY Name ASC];
     }
 
     @AuraEnabled
-    public static Map<String, Object> calculateOrderDiscounts(Decimal subtotal, Integer totalQuantity) {
-        return DiscountService.calculateOrderDiscounts(subtotal, totalQuantity);
+    public static Map<String, Object> calculateOrderDiscounts(String cartPayload) {
+        return DiscountService.calculateOrderDiscounts(cartPayload);
     }
 }

@@ -92,6 +92,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
         if (data) {
             this.products = data.map(pbe => ({
                 Id: pbe.Id,
+                productId: pbe.Product2Id, 
                 productName: pbe.Product2.Name,
                 family: pbe.Product2.Family,
                 unitPrice: pbe.UnitPrice,
@@ -116,7 +117,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     }
 
     handleSearch(event) {
-        this.searchTerm = event.target.value;
+    this.searchTerm = event.target.value;
     }
 
     handleRowSelection(event) {
@@ -151,27 +152,32 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
         }
         
         this.subtotal = this.selectedProducts.reduce((total, prod) => total + (prod.unitPrice * prod.quantity), 0);
-        let totalQty = this.selectedProducts.reduce((total, prod) => total + parseInt(prod.quantity, 10), 0);
+        
+        let cartPayload = this.selectedProducts.map(p => ({
+            pricebookEntryId: p.Id,
+            productId: p.productId,
+            family: p.family,
+            unitPrice: p.unitPrice,
+            quantity: parseInt(p.quantity, 10)
+        }));
         
         try {
-            this.discountData = await calculateOrderDiscounts({ subtotal: this.subtotal, totalQuantity: totalQty });
+            this.discountData = await calculateOrderDiscounts({ cartPayload: JSON.stringify(cartPayload) });
             this.hasDiscount = this.discountData.discountAmount > 0;
             
-            let discountRatio = 0;
-            if (this.hasDiscount) {
-                discountRatio = this.discountData.discountAmount / this.subtotal;
-            }
+            let itemDiscounts = this.discountData.itemDiscounts || {};
             
             this.summaryProducts = this.selectedProducts.map(p => {
                 let itemOriginalTotal = p.unitPrice * p.quantity;
-                let itemDiscountAmount = itemOriginalTotal * discountRatio;
+                let itemDiscountAmount = itemDiscounts[p.Id] || 0;
                 let itemNewTotal = itemOriginalTotal - itemDiscountAmount;
                 let itemNewUnitPrice = itemNewTotal / p.quantity;
                 
                 return {
                     ...p,
                     discountedUnitPrice: itemNewUnitPrice,
-                    discountedTotal: itemNewTotal
+                    discountedTotal: itemNewTotal,
+                    hasLineDiscount: itemDiscountAmount > 0
                 };
             });
             
