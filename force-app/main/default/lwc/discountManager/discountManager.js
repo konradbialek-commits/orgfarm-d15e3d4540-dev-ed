@@ -29,7 +29,6 @@ export default class DiscountManager extends LightningElement {
     isModalOpen = false;
     @track currentDiscount = {};
 
-    // Expose labels to HTML
     labels = {
         save: LBL_BTN_SAVE,
         cancel: LBL_BTN_CANCEL,
@@ -41,6 +40,33 @@ export default class DiscountManager extends LightningElement {
         btnDeactivate: LBL_DM_BTN_DEACTIVATE,
         btnDelete: LBL_DM_BTN_DELETE
     };
+
+    strategyOptions = [
+        { label: 'Lowest Discount', value: 'Lowest' },
+        { label: 'Highest Discount', value: 'Highest' },
+        { label: 'Cumulative', value: 'Cumulative' }
+    ];
+
+    categoryOptions = [
+        { label: 'One Time Only', value: 'One Time Only' },
+        { label: 'Recurring', value: 'Recurring' },
+        { label: 'Conditional', value: 'Conditional' }
+    ];
+
+    typeOptions = [
+        { label: 'Percent', value: 'Percent' },
+        { label: 'Fixed Amount', value: 'Fixed Amount' }
+    ];
+
+    recurrenceOptions = [
+        { label: 'None', value: 'None' },
+        { label: 'Daily', value: 'Daily' },
+        { label: 'Every Monday', value: 'Every Monday' },
+        { label: 'Every Friday', value: 'Every Friday' },
+        { label: 'First Day of Month', value: 'First Day of Month' },
+        { label: 'First Day of Quarter', value: 'First Day of Quarter' },
+        { label: 'Yearly Custom Date', value: 'Yearly Custom Date'}
+    ];
 
     discountColumns = [
         { label: LBL_DM_COL_NAME, fieldName: 'Name' },
