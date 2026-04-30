@@ -24,7 +24,7 @@ private class DiscountServiceTest {
             Name = '15 Fixed Off',
             Active__c = true,
             Discount_Category__c = 'Conditional',
-            Condition_Type__c = 'MinimumOrderValue',
+            Condition_Type__c = 'Minimum Order Value',
             Minimum_Order_Value__c = 50.0,
             Discount_Type__c = 'Fixed Amount',
             Value__c = 15.0
