@@ -40,7 +40,7 @@ public class DiscountService {
             List<CartItem> eItems = new List<CartItem>();
             
             Set<Id> targetedProductIds = new Set<Id>();
-            if (d.Target_Type__c == 'Specific Products') {
+            if (d.Target_Type__c == Util.Discount.TARGET_PRODUCTS) {
                 for (Discount_Product__c dp : d.Discount_Products__r) {
                     targetedProductIds.add(dp.Product__c);
                 }
@@ -49,13 +49,13 @@ public class DiscountService {
             for (CartItem item : cartItems) {
                 Boolean isEligible = false;
                 
-                if (d.Target_Type__c == 'All Products' || d.Target_Type__c == null) {
+                if (d.Target_Type__c == Util.Discount.TARGET_ALL || d.Target_Type__c == null) {
                     isEligible = true;
-                } else if (d.Target_Type__c == 'Specific Families' && String.isNotBlank(d.Eligible_Families__c) && String.isNotBlank(item.family)) {
+                } else if (d.Target_Type__c == Util.Discount.TARGET_FAMILIES && String.isNotBlank(d.Eligible_Families__c) && String.isNotBlank(item.family)) {
                     if (d.Eligible_Families__c.contains(item.family)) {
                         isEligible = true;
                     }
-                } else if (d.Target_Type__c == 'Specific Products') {
+                } else if (d.Target_Type__c == Util.Discount.TARGET_PRODUCTS) {
                     if (targetedProductIds.contains(item.productId)) {
                         isEligible = true;
                     }
@@ -72,7 +72,7 @@ public class DiscountService {
 
             OrderContext context = new OrderContext(subtotal, eligibleSubtotal, eligibleQuantity, today);
             
-            String criteria = d.Discount_Category__c == 'Conditional' ? d.Condition_Type__c : d.Recurrence__c;
+            String criteria = d.Discount_Category__c == Util.Discount.CAT_CONDITIONAL ? d.Condition_Type__c : d.Recurrence__c;
             
             Boolean isApplicable = false;
             if (String.isNotBlank(criteria)) {
@@ -80,13 +80,13 @@ public class DiscountService {
                 if (evaluator.isApplicable(d, context)) {
                     isApplicable = true;
                 }
-            } else if (d.Discount_Category__c == 'One Time Only') {
+            } else if (d.Discount_Category__c == Util.Discount.CAT_ONETIME) {
                 isApplicable = true;
             }
 
             if (isApplicable) {
                 applicableDiscounts.add(d);
-                Decimal dValue = d.Discount_Type__c == 'Percent' ? eligibleSubtotal * (d.Value__c / 100) : d.Value__c;
+                Decimal dValue = d.Discount_Type__c == Util.Discount.TYPE_PERCENT ? eligibleSubtotal * (d.Value__c / 100) : d.Value__c;
                 
                 if (dValue > eligibleSubtotal) {
                     dValue = eligibleSubtotal;
@@ -98,7 +98,7 @@ public class DiscountService {
 
         List<Discount__c> winningDiscounts = new List<Discount__c>();
         if (!applicableDiscounts.isEmpty()) {
-            if (settings.Strategy__c == 'Cumulative') {
+            if (settings.Strategy__c == Util.Settings.STRATEGY_CUMULATIVE) {
                 winningDiscounts.addAll(applicableDiscounts);
             } else {
                 Discount__c selectedDiscount = applicableDiscounts[0];
@@ -107,11 +107,11 @@ public class DiscountService {
                 for (Discount__c d : applicableDiscounts) {
                     Decimal currentVal = discountToValueMap.get(d.Id);
                     
-                    if (settings.Strategy__c == 'Highest' && currentVal > selectedVal) {
+                    if (settings.Strategy__c == Util.Settings.STRATEGY_HIGHEST && currentVal > selectedVal) {
                         selectedDiscount = d;
                         selectedVal = currentVal;
                     }
-                    if (settings.Strategy__c == 'Lowest' && currentVal < selectedVal) {
+                    if (settings.Strategy__c == Util.Settings.STRATEGY_LOWEST && currentVal < selectedVal) {
                         selectedDiscount = d;
                         selectedVal = currentVal;
                     }
