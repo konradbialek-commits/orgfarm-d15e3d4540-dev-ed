@@ -10,15 +10,8 @@ import getAvailableFamilies from '@salesforce/apex/DiscountManagerController.get
 import getAvailableProducts from '@salesforce/apex/DiscountManagerController.getAvailableProducts';
 import getDiscountProducts from '@salesforce/apex/DiscountManagerController.getDiscountProducts';
 
-import {
-    STRAT_LOWEST, STRAT_HIGHEST, STRAT_CUMULATIVE,
-    CAT_ONETIME, CAT_RECURRING, CAT_CONDITIONAL,
-    COND_MIN_ORDER, COND_TWO_FOR_ONE, COND_VOLUME,
-    TYPE_PERCENT, TYPE_FIXED,
-    REC_NONE, REC_DAILY, REC_MONDAY, REC_FRIDAY, REC_FIRST_MONTH, REC_FIRST_QUARTER, REC_YEARLY_CUSTOM,
-    TARGET_ALL, TARGET_FAMILIES, TARGET_PRODUCTS,
-    OBJ_DISCOUNT, FLD_NAME, FLD_ACTIVE, FLD_TARGET, FLD_TYPE, FLD_VALUE, FLD_RECURRENCE, FLD_FAMILY, ACTION_EDIT
-} from 'c/discountConstants';
+// --- NEW SINGLE IMPORT ---
+import { Util } from 'c/discountConstants';
 
 import LBL_BTN_SAVE from '@salesforce/label/c.Btn_Save';
 import LBL_BTN_CANCEL from '@salesforce/label/c.Btn_Cancel';
@@ -151,57 +144,57 @@ export default class DiscountManager extends LightningElement {
     };
 
     strategyOptions = [
-        { label: DM_Opt_Lowest, value: STRAT_LOWEST },
-        { label: DM_Opt_Highest, value: STRAT_HIGHEST },
-        { label: DM_Opt_Cumulative, value: STRAT_CUMULATIVE }
+        { label: DM_Opt_Lowest, value: Util.Strategy.LOWEST },
+        { label: DM_Opt_Highest, value: Util.Strategy.HIGHEST },
+        { label: DM_Opt_Cumulative, value: Util.Strategy.CUMULATIVE }
     ];
 
     categoryOptions = [
-        { label: DM_Opt_OneTime, value: CAT_ONETIME },
-        { label: DM_Opt_Recurring, value: CAT_RECURRING },
-        { label: DM_Opt_Conditional, value: CAT_CONDITIONAL }
+        { label: DM_Opt_OneTime, value: Util.Discount.CAT_ONETIME },
+        { label: DM_Opt_Recurring, value: Util.Discount.CAT_RECURRING },
+        { label: DM_Opt_Conditional, value: Util.Discount.CAT_CONDITIONAL }
     ];
 
     conditionOptions = [
-        { label: DM_Opt_MinOrder, value: COND_MIN_ORDER },
-        { label: DM_Opt_TwoForOne, value: COND_TWO_FOR_ONE },
-        { label: DM_Opt_VolumeTier, value: COND_VOLUME }
+        { label: DM_Opt_MinOrder, value: Util.Discount.COND_MIN_ORDER },
+        { label: DM_Opt_TwoForOne, value: Util.Discount.COND_TWO_FOR_ONE },
+        { label: DM_Opt_VolumeTier, value: Util.Discount.COND_VOLUME }
     ];
 
     typeOptions = [
-        { label: DM_Opt_Percent, value: TYPE_PERCENT },
-        { label: DM_Opt_Fixed, value: TYPE_FIXED }
+        { label: DM_Opt_Percent, value: Util.Discount.TYPE_PERCENT },
+        { label: DM_Opt_Fixed, value: Util.Discount.TYPE_FIXED }
     ];
 
     recurrenceOptions = [
-        { label: DM_Opt_None, value: REC_NONE },
-        { label: DM_Opt_Daily, value: REC_DAILY },
-        { label: DM_Opt_Monday, value: REC_MONDAY },
-        { label: DM_Opt_Friday, value: REC_FRIDAY },
-        { label: DM_Opt_FirstMonth, value: REC_FIRST_MONTH },
-        { label: DM_Opt_FirstQuarter, value: REC_FIRST_QUARTER },
-        { label: DM_Opt_YearlyCustom, value: REC_YEARLY_CUSTOM }
+        { label: DM_Opt_None, value: Util.Discount.REC_NONE },
+        { label: DM_Opt_Daily, value: Util.Discount.REC_DAILY },
+        { label: DM_Opt_Monday, value: Util.Discount.REC_MONDAY },
+        { label: DM_Opt_Friday, value: Util.Discount.REC_FRIDAY },
+        { label: DM_Opt_FirstMonth, value: Util.Discount.REC_FIRST_MONTH },
+        { label: DM_Opt_FirstQuarter, value: Util.Discount.REC_FIRST_QUARTER },
+        { label: DM_Opt_YearlyCustom, value: Util.Discount.REC_YEARLY_CUSTOM }
     ];
 
     targetOptions = [
-        { label: DM_Opt_AllProducts, value: TARGET_ALL },
-        { label: DM_Opt_SpecificFamilies, value: TARGET_FAMILIES },
-        { label: DM_Opt_SpecificProducts, value: TARGET_PRODUCTS }
+        { label: DM_Opt_AllProducts, value: Util.Discount.TARGET_ALL },
+        { label: DM_Opt_SpecificFamilies, value: Util.Discount.TARGET_FAMILIES },
+        { label: DM_Opt_SpecificProducts, value: Util.Discount.TARGET_PRODUCTS }
     ];
 
     discountColumns = [
-        { label: LBL_DM_COL_NAME, fieldName: FLD_NAME },
-        { label: DM_Col_Active, fieldName: FLD_ACTIVE, type: 'boolean' },
-        { label: DM_Col_Target, fieldName: FLD_TARGET },
-        { label: DM_Col_Type, fieldName: FLD_TYPE },
-        { label: LBL_DM_COL_VALUE, fieldName: FLD_VALUE, type: 'number' },
-        { label: DM_Col_Recurrence, fieldName: FLD_RECURRENCE },
+        { label: LBL_DM_COL_NAME, fieldName: Util.Schema.FLD_NAME },
+        { label: DM_Col_Active, fieldName: Util.Schema.FLD_ACTIVE, type: 'boolean' },
+        { label: DM_Col_Target, fieldName: Util.Schema.FLD_TARGET },
+        { label: DM_Col_Type, fieldName: Util.Schema.FLD_TYPE },
+        { label: LBL_DM_COL_VALUE, fieldName: Util.Schema.FLD_VALUE, type: 'number' },
+        { label: DM_Col_Recurrence, fieldName: Util.Schema.FLD_RECURRENCE },
         { type: 'action', typeAttributes: { rowActions: this.getRowActions.bind(this) } }
     ];
 
     productColumns = [
-        { label: DM_Col_ProductName, fieldName: FLD_NAME },
-        { label: DM_Col_Family, fieldName: FLD_FAMILY }
+        { label: DM_Col_ProductName, fieldName: Util.Schema.FLD_NAME },
+        { label: DM_Col_Family, fieldName: Util.Schema.FLD_FAMILY }
     ];
 
     @wire(getAvailableFamilies)
@@ -216,15 +209,15 @@ export default class DiscountManager extends LightningElement {
 
     get isStep1() { return this.currentStep === 1; }
     get isStep2() { return this.currentStep === 2; }
-    get isRecurring() { return this.currentDiscount.Discount_Category__c === CAT_RECURRING; }
-    get isConditional() { return this.currentDiscount.Discount_Category__c === CAT_CONDITIONAL; }
-    get isMinimumOrderValue() { return this.currentDiscount.Condition_Type__c === COND_MIN_ORDER; }
-    get isTwoForOne() { return this.currentDiscount.Condition_Type__c === COND_TWO_FOR_ONE; }
-    get isVolumeTier() { return this.currentDiscount.Condition_Type__c === COND_VOLUME; }
-    get isYearlyCustom() { return this.currentDiscount.Recurrence__c === REC_YEARLY_CUSTOM; }
-    get maxDiscountValue() { return this.currentDiscount.Discount_Type__c === TYPE_PERCENT ? 100 : null; }
-    get isTargetFamily() { return this.currentDiscount.Target_Type__c === TARGET_FAMILIES; }
-    get isTargetProduct() { return this.currentDiscount.Target_Type__c === TARGET_PRODUCTS; }
+    get isRecurring() { return this.currentDiscount.Discount_Category__c === Util.Discount.CAT_RECURRING; }
+    get isConditional() { return this.currentDiscount.Discount_Category__c === Util.Discount.CAT_CONDITIONAL; }
+    get isMinimumOrderValue() { return this.currentDiscount.Condition_Type__c === Util.Discount.COND_MIN_ORDER; }
+    get isTwoForOne() { return this.currentDiscount.Condition_Type__c === Util.Discount.COND_TWO_FOR_ONE; }
+    get isVolumeTier() { return this.currentDiscount.Condition_Type__c === Util.Discount.COND_VOLUME; }
+    get isYearlyCustom() { return this.currentDiscount.Recurrence__c === Util.Discount.REC_YEARLY_CUSTOM; }
+    get maxDiscountValue() { return this.currentDiscount.Discount_Type__c === Util.Discount.TYPE_PERCENT ? 100 : null; }
+    get isTargetFamily() { return this.currentDiscount.Target_Type__c === Util.Discount.TARGET_FAMILIES; }
+    get isTargetProduct() { return this.currentDiscount.Target_Type__c === Util.Discount.TARGET_PRODUCTS; }
 
     connectedCallback() { this.loadData(); }
 
@@ -268,7 +261,7 @@ export default class DiscountManager extends LightningElement {
         const actions = [
             {
                 label: DM_Btn_Edit,
-                name: ACTION_EDIT,
+                name: Util.Action.EDIT,
                 disabled: row.Active__c
             }
         ];
@@ -279,22 +272,22 @@ export default class DiscountManager extends LightningElement {
         const actionName = event.detail.action.name;
         const row = event.detail.row;
 
-        if (actionName === ACTION_EDIT) {
+        if (actionName === Util.Action.EDIT) {
             this.openEditModal(row);
         }
     }
 
     openEditModal(row) {
         this.currentStep = 1;
-        this.currentDiscount = { ...row, sObjectType: OBJ_DISCOUNT };
+        this.currentDiscount = { ...row, sObjectType: Util.Schema.OBJ_DISCOUNT };
 
-        if (row.Target_Type__c === TARGET_FAMILIES && row.Eligible_Families__c) {
+        if (row.Target_Type__c === Util.Discount.TARGET_FAMILIES && row.Eligible_Families__c) {
             this.selectedFamilies = row.Eligible_Families__c.split(';');
         } else {
             this.selectedFamilies = [];
         }
 
-        if (row.Target_Type__c === TARGET_PRODUCTS) {
+        if (row.Target_Type__c === Util.Discount.TARGET_PRODUCTS) {
             getDiscountProducts({ discountId: row.Id })
                 .then(result => {
                     this.selectedProductIds = result;
@@ -315,13 +308,13 @@ export default class DiscountManager extends LightningElement {
         this.selectedFamilies = [];
         this.selectedProductIds = [];
         this.currentDiscount = { 
-            sObjectType: OBJ_DISCOUNT, 
+            sObjectType: Util.Schema.OBJ_DISCOUNT, 
             Active__c: true, 
-            Discount_Category__c: CAT_ONETIME, 
-            Discount_Type__c: TYPE_PERCENT, 
-            Recurrence__c: REC_NONE,
-            Condition_Type__c: COND_MIN_ORDER,
-            Target_Type__c: TARGET_ALL
+            Discount_Category__c: Util.Discount.CAT_ONETIME, 
+            Discount_Type__c: Util.Discount.TYPE_PERCENT, 
+            Recurrence__c: Util.Discount.REC_NONE,
+            Condition_Type__c: Util.Discount.COND_MIN_ORDER,
+            Target_Type__c: Util.Discount.TARGET_ALL
         };
         this.isModalOpen = true;
     }
@@ -375,13 +368,13 @@ export default class DiscountManager extends LightningElement {
     }
 
     saveDiscount() {
-        if (this.currentDiscount.Target_Type__c === TARGET_FAMILIES && this.selectedFamilies.length > 0) {
+        if (this.currentDiscount.Target_Type__c === Util.Discount.TARGET_FAMILIES && this.selectedFamilies.length > 0) {
             this.currentDiscount.Eligible_Families__c = this.selectedFamilies.join(';');
         } else {
             this.currentDiscount.Eligible_Families__c = null;
         }
 
-        let productIdsToSave = this.currentDiscount.Target_Type__c === TARGET_PRODUCTS ? this.selectedProductIds : [];
+        let productIdsToSave = this.currentDiscount.Target_Type__c === Util.Discount.TARGET_PRODUCTS ? this.selectedProductIds : [];
 
         upsertDiscount({ discountRecord: this.currentDiscount, selectedProductIds: productIdsToSave })
             .then(() => {
