@@ -8,7 +8,6 @@ import getProducts from '@salesforce/apex/OrderCreationController.getProducts';
 import createOrderWithItems from '@salesforce/apex/OrderCreationController.createOrderWithItems';
 import calculateOrderDiscounts from '@salesforce/apex/DiscountManagerController.calculateOrderDiscounts';
 
-// Custom Label Imports
 import LBL_BTN_NEXT from '@salesforce/label/c.Btn_Next';
 import LBL_BTN_BACK from '@salesforce/label/c.Btn_Back';
 import LBL_MSG_SUCCESS from '@salesforce/label/c.Msg_Success';
@@ -36,7 +35,6 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     @track products = [];
     @track selectedProducts = [];
     @track summaryProducts = [];
-    @track draftValues = [];
     @track discountData = {};
     
     subtotal = 0;
@@ -44,7 +42,6 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     isSummaryPage = false;
     isLoading = false;
 
-    // Expose labels to HTML
     labels = {
         title: LBL_OM_TITLE,
         search: LBL_OM_SEARCH,
@@ -55,13 +52,6 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
         back: LBL_BTN_BACK,
         submit: LBL_OM_SUBMIT
     };
-
-    columns = [
-        { label: 'Product Name', fieldName: 'productName' },
-        { label: 'Family', fieldName: 'family' },
-        { label: 'Unit Price', fieldName: 'unitPrice', type: 'currency' },
-        { label: 'Quantity', fieldName: 'quantity', type: 'number', editable: true } 
-    ];
 
     @wire(getAvailablePricebooks)
     wiredPricebooks({ error, data }) {
@@ -95,14 +85,18 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     @wire(getProducts, { searchTerm: '$searchTerm', pricebookId: '$selectedPricebookId', productFamily: '$selectedFamily' })
     wiredProducts({ error, data }) {
         if (data) {
-            this.products = data.map(pbe => ({
-                Id: pbe.Id,
-                productId: pbe.Product2Id, 
-                productName: pbe.Product2.Name,
-                family: pbe.Product2.Family,
-                unitPrice: pbe.UnitPrice,
-                quantity: 1
-            }));
+            this.products = data.map(pbe => {
+                let existingItem = this.selectedProducts.find(sp => sp.Id === pbe.Id);
+                return {
+                    Id: pbe.Id,
+                    productId: pbe.Product2Id, 
+                    productName: pbe.Product2.Name,
+                    family: pbe.Product2.Family,
+                    unitPrice: pbe.UnitPrice,
+                    quantity: existingItem ? existingItem.quantity : 1,
+                    selected: !!existingItem 
+                };
+            });
         } else if (error) {
             this.showToast(LBL_MSG_ERROR, DM_Err_LoadProducts, 'error');
         }
@@ -115,6 +109,8 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     handlePricebookChange(event) {
         this.selectedPricebookId = event.detail.value;
         this.selectedProducts = [];
+        this.searchTerm = '';
+        this.selectedFamily = '';
     }
 
     handleFamilyChange(event) {
@@ -122,28 +118,47 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
     }
 
     handleSearch(event) {
-    this.searchTerm = event.target.value;
+        this.searchTerm = event.target.value;
     }
 
     handleRowSelection(event) {
-        this.selectedProducts = event.detail.selectedRows;
+        let prodId = event.target.dataset.id;
+        let isChecked = event.target.checked;
+        
+        let index = this.products.findIndex(p => p.Id === prodId);
+        if (index !== -1) {
+            this.products[index].selected = isChecked;
+        }
+        this.syncSelectedProducts();
     }
 
     handleQuantityChange(event) {
-        let drafts = event.detail.draftValues;
+        let prodId = event.target.dataset.id;
+        let qty = parseInt(event.target.value, 10);
         
-        drafts.forEach(draft => {
-            let index = this.products.findIndex(p => p.Id === draft.Id);
-            if (index !== -1) {
-                this.products[index].quantity = draft.quantity;
-            }
-            let selIndex = this.selectedProducts.findIndex(p => p.Id === draft.Id);
-            if(selIndex !== -1) {
-                this.selectedProducts[selIndex].quantity = draft.quantity;
+        let index = this.products.findIndex(p => p.Id === prodId);
+        if (index !== -1) {
+            this.products[index].quantity = isNaN(qty) ? 1 : qty;
+        }
+        this.syncSelectedProducts();
+    }
+
+    syncSelectedProducts() {
+        this.products.forEach(p => {
+            let selIndex = this.selectedProducts.findIndex(sp => sp.Id === p.Id);
+            
+            if (p.selected) {
+                if (selIndex !== -1) {
+                    this.selectedProducts[selIndex].quantity = p.quantity;
+                } else {
+                    this.selectedProducts.push({ ...p });
+                }
+            } else {
+                if (selIndex !== -1) {
+                    this.selectedProducts.splice(selIndex, 1);
+                }
             }
         });
-        
-        this.draftValues = []; 
     }
 
     async goToSummary() {
@@ -163,7 +178,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
             productId: p.productId,
             family: p.family,
             unitPrice: p.unitPrice,
-            quantity: parseInt(p.quantity, 10)
+            quantity: p.quantity
         }));
         
         try {
