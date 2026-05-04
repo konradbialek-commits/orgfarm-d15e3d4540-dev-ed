@@ -368,6 +368,11 @@ export default class DiscountManager extends LightningElement {
     }
 
     saveDiscount() {
+        if (this.isTwoForOne) {
+            this.currentDiscount.Discount_Type__c = Util.Discount.TYPE_PERCENT;
+            this.currentDiscount.Value__c = 50.0;
+        }
+
         if (this.currentDiscount.Target_Type__c === Util.Discount.TARGET_FAMILIES && this.selectedFamilies.length > 0) {
             this.currentDiscount.Eligible_Families__c = this.selectedFamilies.join(';');
         } else {

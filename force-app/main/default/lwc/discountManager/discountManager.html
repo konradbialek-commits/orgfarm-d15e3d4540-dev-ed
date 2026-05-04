@@ -73,8 +73,10 @@
                         </template>
 
                         <div class="slds-m-top_small"></div>
-                        <lightning-combobox label={labels.lblValueType} name="Discount_Type__c" value={currentDiscount.Discount_Type__c} options={typeOptions} onchange={handleFormChange} required></lightning-combobox>
-                        <lightning-input type="number" label={labels.lblDiscountValue} name="Value__c" value={currentDiscount.Value__c} max={maxDiscountValue} onchange={handleFormChange} step="0.01" required></lightning-input>
+                        <template if:false={isTwoForOne}>
+                            <lightning-combobox label={labels.lblValueType} name="Discount_Type__c" value={currentDiscount.Discount_Type__c} options={typeOptions} onchange={handleFormChange} required></lightning-combobox>
+                            <lightning-input type="number" label={labels.lblDiscountValue} name="Value__c" value={currentDiscount.Value__c} max={maxDiscountValue} onchange={handleFormChange} step="0.01" required></lightning-input>
+                        </template>
                         
                         <div class="slds-grid slds-gutters slds-m-top_small">
                             <div class="slds-col slds-size_1-of-2">
