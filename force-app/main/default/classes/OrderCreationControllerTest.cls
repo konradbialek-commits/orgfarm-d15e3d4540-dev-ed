@@ -133,5 +133,8 @@ private class OrderCreationControllerTest {
 
         Discount__c updatedDiscount = [SELECT Active__c FROM Discount__c WHERE Id = :testDiscount.Id];
         Assert.isFalse(updatedDiscount.Active__c, 'One Time Only discount should be deactivated');
+
+        Opportunity updatedOpp = [SELECT StageName FROM Opportunity WHERE Id = :opp.Id];
+        Assert.areEqual('Closed Won', updatedOpp.StageName, 'Opportunity should automatically move to Closed Won');
     }
 }

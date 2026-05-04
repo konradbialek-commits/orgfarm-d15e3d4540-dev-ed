@@ -40,6 +40,9 @@ public with sharing class OrderCreationController {
     public static Id createOrderWithItems(Id oppId, String productData, Id pricebookId, Decimal discountAmount, String appliedDiscounts, List<Id> appliedDiscountIds) {
         Opportunity opp = [SELECT Id, AccountId FROM Opportunity WHERE Id = :oppId LIMIT 1];
         
+        opp.StageName = 'Closed Won';
+        update opp;
+        
         Order newOrder = new Order(
             OpportunityId = opp.Id,
             AccountId = opp.AccountId,
