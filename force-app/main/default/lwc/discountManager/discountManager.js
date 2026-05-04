@@ -84,6 +84,8 @@ import DM_Msg_DiscountsUpdated from '@salesforce/label/c.DM_Msg_DiscountsUpdated
 import DM_Msg_DiscountsDeleted from '@salesforce/label/c.DM_Msg_DiscountsDeleted';
 import DM_Msg_DiscountCreated from '@salesforce/label/c.DM_Msg_DiscountCreated';
 import DM_Msg_FailedLoadProducts from '@salesforce/label/c.DM_Msg_FailedLoadProducts';
+import DM_Opt_VolumeTier from '@salesforce/label/c.DM_Opt_VolumeTier';
+import DM_Lbl_MinQuantity from '@salesforce/label/c.DM_Lbl_MinQuantity';
 
 export default class DiscountManager extends LightningElement {
     @track settings = {};
@@ -134,7 +136,8 @@ export default class DiscountManager extends LightningElement {
         lblName: DM_Lbl_Name,
         lblStep: DM_Lbl_Step,
         lblOf: DM_Lbl_Of,
-        lblSearchProducts: DM_Lbl_SearchProducts
+        lblSearchProducts: DM_Lbl_SearchProducts,
+        lblMinQuantity: DM_Lbl_MinQuantity
     };
 
     strategyOptions = [
@@ -151,7 +154,8 @@ export default class DiscountManager extends LightningElement {
 
     conditionOptions = [
         { label: DM_Opt_MinOrder, value: 'Minimum Order Value' },
-        { label: DM_Opt_TwoForOne, value: 'Two For One' }
+        { label: DM_Opt_TwoForOne, value: 'Two For One' },
+        { label: DM_Opt_VolumeTier, value: 'Volume Tier' }
     ];
 
     typeOptions = [
@@ -206,6 +210,7 @@ export default class DiscountManager extends LightningElement {
     get isConditional() { return this.currentDiscount.Discount_Category__c === 'Conditional'; }
     get isMinimumOrderValue() { return this.currentDiscount.Condition_Type__c === 'Minimum Order Value'; }
     get isTwoForOne() { return this.currentDiscount.Condition_Type__c === 'Two For One'; }
+    get isVolumeTier() { return this.currentDiscount.Condition_Type__c === 'Volume Tier'; }
     get isYearlyCustom() { return this.currentDiscount.Recurrence__c === 'Yearly Custom Date'; }
     get maxDiscountValue() { return this.currentDiscount.Discount_Type__c === 'Percent' ? 100 : null; }
     get isTargetFamily() { return this.currentDiscount.Target_Type__c === 'Specific Families'; }
