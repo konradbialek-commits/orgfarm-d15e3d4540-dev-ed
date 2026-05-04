@@ -15,6 +15,7 @@ public class Util {
 
         public final String COND_MIN_ORDER = 'Minimum Order Value';
         public final String COND_TWO_FOR_ONE = 'Two For One';
+        public final String COND_VOLUME = 'Volume Tier';
 
         public final String TYPE_PERCENT = 'Percent';
         public final String TYPE_FIXED = 'Fixed Amount';
