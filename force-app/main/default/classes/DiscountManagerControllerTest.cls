@@ -6,10 +6,10 @@ private class DiscountManagerControllerTest {
         Discount_Setting__c setting = DiscountManagerController.getGlobalSettings();
         System.assertNotEquals(null, setting);
 
-        setting.Max_Discount_Percent__c = 5.0;
+        setting.Minimum_Price_Floor_Percent__c = 5.0;
         DiscountManagerController.saveGlobalSettings(setting);
         Discount_Setting__c updatedSetting = DiscountManagerController.getGlobalSettings();
-        System.assertEquals(5.0, updatedSetting.Max_Discount_Percent__c);
+        System.assertEquals(5.0, updatedSetting.Minimum_Price_Floor_Percent__c);
 
         Product2 testProd = new Product2(Name = 'Test Product', IsActive = true);
         insert testProd;

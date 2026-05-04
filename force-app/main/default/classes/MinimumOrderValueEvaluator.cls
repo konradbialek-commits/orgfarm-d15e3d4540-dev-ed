@@ -1,8 +1,6 @@
-public class MinimumOrderValueEvaluator implements DiscountEvaluator {
-    public Boolean isApplicable(Discount__c d, OrderContext context) {
-        if (d.Minimum_Order_Value__c != null && context.subtotal < d.Minimum_Order_Value__c) {
-            return false;
-        }
-        return true;
+public class MinimumOrderValueEvaluator extends BaseDiscountEvaluator {
+    
+    public override Boolean isApplicable(Discount__c d, OrderContext context) {
+        return context.eligibleSubtotal >= d.Minimum_Order_Value__c;
     }
 }

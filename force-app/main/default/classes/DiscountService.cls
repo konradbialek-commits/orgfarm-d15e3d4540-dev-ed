@@ -71,22 +71,24 @@ public class DiscountService {
             if (eligibleSubtotal == 0) continue;
 
             OrderContext context = new OrderContext(subtotal, eligibleSubtotal, eligibleQuantity, today);
-            
             String criteria = d.Discount_Category__c == Util.Discount.CAT_CONDITIONAL ? d.Condition_Type__c : d.Recurrence__c;
             
             Boolean isApplicable = false;
+            Decimal dValue = 0;
+
             if (String.isNotBlank(criteria)) {
                 DiscountEvaluator evaluator = DiscountEvaluatorFactory.getEvaluator(criteria);
                 if (evaluator.isApplicable(d, context)) {
                     isApplicable = true;
+                    dValue = evaluator.calculateDiscountValue(d, eItems, eligibleSubtotal);
                 }
             } else if (d.Discount_Category__c == Util.Discount.CAT_ONETIME) {
                 isApplicable = true;
+                dValue = d.Discount_Type__c == Util.Discount.TYPE_PERCENT ? eligibleSubtotal * (d.Value__c / 100) : d.Value__c;
             }
 
-            if (isApplicable) {
+            if (isApplicable && dValue > 0) {
                 applicableDiscounts.add(d);
-                Decimal dValue = d.Discount_Type__c == Util.Discount.TYPE_PERCENT ? eligibleSubtotal * (d.Value__c / 100) : d.Value__c;
                 
                 if (dValue > eligibleSubtotal) {
                     dValue = eligibleSubtotal;
@@ -152,7 +154,7 @@ public class DiscountService {
             }
         }
 
-        Decimal minPriceAllowed = subtotal * (settings.Max_Discount_Percent__c / 100);
+        Decimal minPriceAllowed = subtotal * (settings.Minimum_Price_Floor_Percent__c / 100);
         Decimal maxDiscountAllowed = subtotal - minPriceAllowed;
 
         if (totalDiscountAmount > maxDiscountAllowed) {

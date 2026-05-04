@@ -1,13 +1,13 @@
 public class OrderContext {
-    public Decimal subtotal;
+    public Decimal totalAmount;
     public Decimal eligibleSubtotal;
     public Integer eligibleQuantity;
-    public Date currentDate;
-
-    public OrderContext(Decimal subtotal, Decimal eligibleSubtotal, Integer eligibleQuantity, Date currentDate) {
-        this.subtotal = subtotal;
+    public Date orderDate;
+    
+    public OrderContext(Decimal totalAmount, Decimal eligibleSubtotal, Integer eligibleQuantity, Date orderDate) {
+        this.totalAmount = totalAmount;
         this.eligibleSubtotal = eligibleSubtotal;
         this.eligibleQuantity = eligibleQuantity;
-        this.currentDate = currentDate;
+        this.orderDate = orderDate;
     }
 }

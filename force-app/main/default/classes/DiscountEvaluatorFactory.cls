@@ -1,9 +1,16 @@
 public class DiscountEvaluatorFactory {
-    public static DiscountEvaluator getEvaluator(String criteriaType) {
-        Type evaluatorType = Type.forName(criteriaType.deleteWhitespace() + 'Evaluator');
-        if (evaluatorType != null) {
-            return (DiscountEvaluator) evaluatorType.newInstance();
+    
+    public static DiscountEvaluator getEvaluator(String criteria) {
+        if (criteria == Util.Discount.COND_TWO_FOR_ONE) {
+            return new TwoForOneEvaluator();
+        } else if (criteria == Util.Discount.COND_MIN_ORDER) {
+            return new MinimumOrderValueEvaluator();
+        } else if (criteria == 'First Day of Month') {
+            return new FirstDayOfMonthEvaluator();
+        } else if (criteria == Util.Discount.REC_YEARLY_CUSTOM) {
+            return new YearlyCustomDateEvaluator();
+        } else {
+            return new DefaultEvaluator();
         }
-        return new DefaultEvaluator();
     }
 }
