@@ -4,7 +4,7 @@
             <lightning-tab label={labels.tabGlobal}>
                 <div class="slds-p-around_medium slds-size_1-of-2">
                     <lightning-combobox label={labels.lblGlobalStrategy} value={settings.Strategy__c} options={strategyOptions} onchange={handleSettingChange} name="Strategy__c"></lightning-combobox>
-                    <lightning-input type="number" label={labels.lblMinPriceFloor} value={settings.Max_Discount_Percent__c} onchange={handleSettingChange} name="Max_Discount_Percent__c" step="0.01"></lightning-input>
+                    <lightning-input type="number" label={labels.lblMinPriceFloor} value={settings.Minimum_Price_Floor_Percent__c} onchange={handleSettingChange} name="Minimum_Price_Floor_Percent__c" step="0.01"></lightning-input>
                     <div class="slds-text-color_weak slds-m-top_x-small"><em>{labels.lblFloorHelp}</em></div>
                     <lightning-button label={labels.save} variant="brand" onclick={saveSettings} class="slds-m-top_medium slds-show"></lightning-button>
                 </div>

@@ -2,12 +2,12 @@ public with sharing class DiscountManagerController {
 
     @AuraEnabled
     public static Discount_Setting__c getGlobalSettings() {
-        List<Discount_Setting__c> settings = [SELECT Id, Strategy__c, Max_Discount_Percent__c FROM Discount_Setting__c LIMIT 1];
+        List<Discount_Setting__c> settings = [SELECT Id, Strategy__c, Minimum_Price_Floor_Percent__c FROM Discount_Setting__c LIMIT 1];
         if (settings.isEmpty()) {
             Discount_Setting__c newSetting = new Discount_Setting__c(
                 Name = Util.Settings.DEFAULT_NAME, 
                 Strategy__c = Util.Settings.STRATEGY_CUMULATIVE, 
-                Max_Discount_Percent__c = 0.0
+                Minimum_Price_Floor_Percent__c = 0.0
             );
             insert newSetting;
             return newSetting;

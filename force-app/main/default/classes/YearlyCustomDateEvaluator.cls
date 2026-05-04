@@ -1,9 +1,9 @@
-public class YearlyCustomDateEvaluator implements DiscountEvaluator {
-    public Boolean isApplicable(Discount__c d, OrderContext context) {
-        if (d.Custom_Recurrence_Date__c == null) {
-            return false;
-        }
-        return context.currentDate.month() == d.Custom_Recurrence_Date__c.month() 
-            && context.currentDate.day() == d.Custom_Recurrence_Date__c.day();
+public class YearlyCustomDateEvaluator extends BaseDiscountEvaluator {
+    
+    public override Boolean isApplicable(Discount__c d, OrderContext context) {
+        Date today = context.orderDate != null ? context.orderDate : Date.today();
+        return d.Custom_Recurrence_Date__c != null && 
+               today.month() == d.Custom_Recurrence_Date__c.month() && 
+               today.day() == d.Custom_Recurrence_Date__c.day();
     }
 }
