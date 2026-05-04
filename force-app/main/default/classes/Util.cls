@@ -21,6 +21,7 @@ public class Util {
         public final String TYPE_FIXED = 'Fixed Amount';
 
         public final String REC_YEARLY_CUSTOM = 'Yearly Custom Date';
+        public final String REC_FIRST_DAY_OF_MONTH = 'First Day of Month';
     }
 
     public class SettingsConst {

@@ -7,7 +7,7 @@ public class DiscountEvaluatorFactory {
             return new MinimumOrderValueEvaluator();
         } else if (criteria == Util.Discount.COND_VOLUME) {
             return new VolumeTierEvaluator();
-        } else if (criteria == 'First Day of Month') {
+        } else if (criteria == Util.Discount.REC_FIRST_DAY_OF_MONTH) {
             return new FirstDayOfMonthEvaluator();
         } else if (criteria == Util.Discount.REC_YEARLY_CUSTOM) {
             return new YearlyCustomDateEvaluator();
