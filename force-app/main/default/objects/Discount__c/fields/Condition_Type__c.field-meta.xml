@@ -19,6 +19,11 @@
                 <default>false</default>
                 <label>Two For One</label>
             </value>
+            <value>
+                <fullName>Volume Tier</fullName>
+                <default>false</default>
+                <label>Volume Tier</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

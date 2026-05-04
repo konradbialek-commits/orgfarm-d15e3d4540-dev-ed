@@ -22,7 +22,7 @@ public class DiscountService {
         List<Discount__c> activeDiscounts = [
             SELECT Id, Name, Discount_Category__c, Condition_Type__c, Discount_Type__c, 
                    Value__c, Recurrence__c, Custom_Recurrence_Date__c, Minimum_Order_Value__c,
-                   Target_Type__c, Eligible_Families__c,
+                   Target_Type__c, Eligible_Families__c, Minimum_Quantity__c,
                    (SELECT Product__c FROM Discount_Products__r)
             FROM Discount__c 
             WHERE Active__c = true 

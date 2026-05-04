@@ -89,4 +89,18 @@
     <labels><fullName>DM_Msg_HoldUp</fullName><language>en_US</language><protected>false</protected><shortDescription>Hold Up Warning</shortDescription><value>Hold up!</value></labels>
     <labels><fullName>DM_Err_SelectProduct</fullName><language>en_US</language><protected>false</protected><shortDescription>Select Product Error</shortDescription><value>You must select at least one product.</value></labels>
     <labels><fullName>DM_Err_LoadProducts</fullName><language>en_US</language><protected>false</protected><shortDescription>Load Products Error</shortDescription><value>Failed to load products</value></labels>
+    <labels>
+        <fullName>DM_Lbl_MinQuantity</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Discount Manager Min Quantity Label</shortDescription>
+        <value>Minimum Quantity Required</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_VolumeTier</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Discount Manager Volume Tier Option</shortDescription>
+        <value>Volume Tier</value>
+    </labels>
 </CustomLabels>

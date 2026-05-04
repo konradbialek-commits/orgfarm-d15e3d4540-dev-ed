@@ -52,6 +52,10 @@
                                 <lightning-input type="number" label={labels.lblMinOrderReq} name="Minimum_Order_Value__c" value={currentDiscount.Minimum_Order_Value__c} onchange={handleFormChange} step="0.01" required></lightning-input>
                             </template>
 
+                            <template if:true={isVolumeTier}>
+                                <lightning-input type="number" label={labels.lblMinQuantity} name="Minimum_Quantity__c" value={currentDiscount.Minimum_Quantity__c} onchange={handleFormChange} step="1" min="1" required></lightning-input>
+                            </template>
+
                             <template if:true={isTwoForOne}>
                                 <div class="slds-text-color_weak slds-m-top_x-small"><em>{labels.lblTwoForOneHelp}</em></div>
                             </template>

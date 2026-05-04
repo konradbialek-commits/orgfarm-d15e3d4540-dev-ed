@@ -15,11 +15,13 @@ public class Util {
 
         public final String COND_MIN_ORDER = 'Minimum Order Value';
         public final String COND_TWO_FOR_ONE = 'Two For One';
+        public final String COND_VOLUME = 'Volume Tier';
 
         public final String TYPE_PERCENT = 'Percent';
         public final String TYPE_FIXED = 'Fixed Amount';
 
         public final String REC_YEARLY_CUSTOM = 'Yearly Custom Date';
+        public final String REC_FIRST_DAY_OF_MONTH = 'First Day of Month';
     }
 
     public class SettingsConst {

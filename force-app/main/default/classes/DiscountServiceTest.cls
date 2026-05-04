@@ -69,6 +69,32 @@ private class DiscountServiceTest {
     }
 
     @isTest
+    static void testVolumeTierEvaluator() {
+        Product2 prod = new Product2(Name = 'Bulk Pens', IsActive = true);
+        insert prod;
+
+        Discount__c d = new Discount__c(
+            Name = 'Buy 10 Get 15% Off',
+            Active__c = true,
+            Discount_Category__c = Util.Discount.CAT_CONDITIONAL,
+            Condition_Type__c = Util.Discount.COND_VOLUME,
+            Minimum_Quantity__c = 10,
+            Target_Type__c = Util.Discount.TARGET_ALL,
+            Discount_Type__c = Util.Discount.TYPE_PERCENT,
+            Value__c = 15.0
+        );
+        insert d;
+
+        String payloadFail = getCartPayload('01u000000000004AAA', prod.Id, 5, 2.0);
+        Map<String, Object> resultFail = DiscountService.calculateOrderDiscounts(payloadFail);
+        System.assertEquals(0.0, resultFail.get('discountAmount'), 'Should not discount when under minimum quantity');
+
+        String payloadPass = getCartPayload('01u000000000004AAA', prod.Id, 10, 2.0);
+        Map<String, Object> resultPass = DiscountService.calculateOrderDiscounts(payloadPass);
+        System.assertEquals(3.0, resultPass.get('discountAmount'), 'Should calculate 15% of $20 ($3)');
+    }
+
+    @isTest
     static void testRecurringEvaluator() {
         Product2 prod = new Product2(Name = 'Socks', IsActive = true);
         insert prod;
