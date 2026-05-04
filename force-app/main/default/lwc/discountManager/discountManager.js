@@ -10,6 +10,16 @@ import getAvailableFamilies from '@salesforce/apex/DiscountManagerController.get
 import getAvailableProducts from '@salesforce/apex/DiscountManagerController.getAvailableProducts';
 import getDiscountProducts from '@salesforce/apex/DiscountManagerController.getDiscountProducts';
 
+import {
+    STRAT_LOWEST, STRAT_HIGHEST, STRAT_CUMULATIVE,
+    CAT_ONETIME, CAT_RECURRING, CAT_CONDITIONAL,
+    COND_MIN_ORDER, COND_TWO_FOR_ONE, COND_VOLUME,
+    TYPE_PERCENT, TYPE_FIXED,
+    REC_NONE, REC_DAILY, REC_MONDAY, REC_FRIDAY, REC_FIRST_MONTH, REC_FIRST_QUARTER, REC_YEARLY_CUSTOM,
+    TARGET_ALL, TARGET_FAMILIES, TARGET_PRODUCTS,
+    OBJ_DISCOUNT, FLD_NAME, FLD_ACTIVE, FLD_TARGET, FLD_TYPE, FLD_VALUE, FLD_RECURRENCE, FLD_FAMILY, ACTION_EDIT
+} from 'c/discountConstants';
+
 import LBL_BTN_SAVE from '@salesforce/label/c.Btn_Save';
 import LBL_BTN_CANCEL from '@salesforce/label/c.Btn_Cancel';
 import LBL_BTN_NEXT from '@salesforce/label/c.Btn_Next';
@@ -34,6 +44,7 @@ import DM_Opt_Recurring from '@salesforce/label/c.DM_Opt_Recurring';
 import DM_Opt_Conditional from '@salesforce/label/c.DM_Opt_Conditional';
 import DM_Opt_MinOrder from '@salesforce/label/c.DM_Opt_MinOrder';
 import DM_Opt_TwoForOne from '@salesforce/label/c.DM_Opt_TwoForOne';
+import DM_Opt_VolumeTier from '@salesforce/label/c.DM_Opt_VolumeTier';
 import DM_Opt_Percent from '@salesforce/label/c.DM_Opt_Percent';
 import DM_Opt_Fixed from '@salesforce/label/c.DM_Opt_Fixed';
 import DM_Opt_None from '@salesforce/label/c.DM_Opt_None';
@@ -52,6 +63,7 @@ import DM_Lbl_Active from '@salesforce/label/c.DM_Lbl_Active';
 import DM_Lbl_Category from '@salesforce/label/c.DM_Lbl_Category';
 import DM_Lbl_ConditionType from '@salesforce/label/c.DM_Lbl_ConditionType';
 import DM_Lbl_MinOrderReq from '@salesforce/label/c.DM_Lbl_MinOrderReq';
+import DM_Lbl_MinQuantity from '@salesforce/label/c.DM_Lbl_MinQuantity';
 import DM_Lbl_TwoForOneHelp from '@salesforce/label/c.DM_Lbl_TwoForOneHelp';
 import DM_Lbl_Recurrence from '@salesforce/label/c.DM_Lbl_Recurrence';
 import DM_Lbl_AnnualDate from '@salesforce/label/c.DM_Lbl_AnnualDate';
@@ -84,8 +96,6 @@ import DM_Msg_DiscountsUpdated from '@salesforce/label/c.DM_Msg_DiscountsUpdated
 import DM_Msg_DiscountsDeleted from '@salesforce/label/c.DM_Msg_DiscountsDeleted';
 import DM_Msg_DiscountCreated from '@salesforce/label/c.DM_Msg_DiscountCreated';
 import DM_Msg_FailedLoadProducts from '@salesforce/label/c.DM_Msg_FailedLoadProducts';
-import DM_Opt_VolumeTier from '@salesforce/label/c.DM_Opt_VolumeTier';
-import DM_Lbl_MinQuantity from '@salesforce/label/c.DM_Lbl_MinQuantity';
 
 export default class DiscountManager extends LightningElement {
     @track settings = {};
@@ -121,6 +131,7 @@ export default class DiscountManager extends LightningElement {
         lblCategory: DM_Lbl_Category,
         lblConditionType: DM_Lbl_ConditionType,
         lblMinOrderReq: DM_Lbl_MinOrderReq,
+        lblMinQuantity: DM_Lbl_MinQuantity,
         lblTwoForOneHelp: DM_Lbl_TwoForOneHelp,
         lblRecurrence: DM_Lbl_Recurrence,
         lblAnnualDate: DM_Lbl_AnnualDate,
@@ -136,62 +147,61 @@ export default class DiscountManager extends LightningElement {
         lblName: DM_Lbl_Name,
         lblStep: DM_Lbl_Step,
         lblOf: DM_Lbl_Of,
-        lblSearchProducts: DM_Lbl_SearchProducts,
-        lblMinQuantity: DM_Lbl_MinQuantity
+        lblSearchProducts: DM_Lbl_SearchProducts
     };
 
     strategyOptions = [
-        { label: DM_Opt_Lowest, value: 'Lowest' },
-        { label: DM_Opt_Highest, value: 'Highest' },
-        { label: DM_Opt_Cumulative, value: 'Cumulative' }
+        { label: DM_Opt_Lowest, value: STRAT_LOWEST },
+        { label: DM_Opt_Highest, value: STRAT_HIGHEST },
+        { label: DM_Opt_Cumulative, value: STRAT_CUMULATIVE }
     ];
 
     categoryOptions = [
-        { label: DM_Opt_OneTime, value: 'One Time Only' },
-        { label: DM_Opt_Recurring, value: 'Recurring' },
-        { label: DM_Opt_Conditional, value: 'Conditional' }
+        { label: DM_Opt_OneTime, value: CAT_ONETIME },
+        { label: DM_Opt_Recurring, value: CAT_RECURRING },
+        { label: DM_Opt_Conditional, value: CAT_CONDITIONAL }
     ];
 
     conditionOptions = [
-        { label: DM_Opt_MinOrder, value: 'Minimum Order Value' },
-        { label: DM_Opt_TwoForOne, value: 'Two For One' },
-        { label: DM_Opt_VolumeTier, value: 'Volume Tier' }
+        { label: DM_Opt_MinOrder, value: COND_MIN_ORDER },
+        { label: DM_Opt_TwoForOne, value: COND_TWO_FOR_ONE },
+        { label: DM_Opt_VolumeTier, value: COND_VOLUME }
     ];
 
     typeOptions = [
-        { label: DM_Opt_Percent, value: 'Percent' },
-        { label: DM_Opt_Fixed, value: 'Fixed Amount' }
+        { label: DM_Opt_Percent, value: TYPE_PERCENT },
+        { label: DM_Opt_Fixed, value: TYPE_FIXED }
     ];
 
     recurrenceOptions = [
-        { label: DM_Opt_None, value: 'None' },
-        { label: DM_Opt_Daily, value: 'Daily' },
-        { label: DM_Opt_Monday, value: 'Every Monday' },
-        { label: DM_Opt_Friday, value: 'Every Friday' },
-        { label: DM_Opt_FirstMonth, value: 'First Day of Month' },
-        { label: DM_Opt_FirstQuarter, value: 'First Day of Quarter' },
-        { label: DM_Opt_YearlyCustom, value: 'Yearly Custom Date'}
+        { label: DM_Opt_None, value: REC_NONE },
+        { label: DM_Opt_Daily, value: REC_DAILY },
+        { label: DM_Opt_Monday, value: REC_MONDAY },
+        { label: DM_Opt_Friday, value: REC_FRIDAY },
+        { label: DM_Opt_FirstMonth, value: REC_FIRST_MONTH },
+        { label: DM_Opt_FirstQuarter, value: REC_FIRST_QUARTER },
+        { label: DM_Opt_YearlyCustom, value: REC_YEARLY_CUSTOM }
     ];
 
     targetOptions = [
-        { label: DM_Opt_AllProducts, value: 'All Products' },
-        { label: DM_Opt_SpecificFamilies, value: 'Specific Families' },
-        { label: DM_Opt_SpecificProducts, value: 'Specific Products' }
+        { label: DM_Opt_AllProducts, value: TARGET_ALL },
+        { label: DM_Opt_SpecificFamilies, value: TARGET_FAMILIES },
+        { label: DM_Opt_SpecificProducts, value: TARGET_PRODUCTS }
     ];
 
     discountColumns = [
-        { label: LBL_DM_COL_NAME, fieldName: 'Name' },
-        { label: DM_Col_Active, fieldName: 'Active__c', type: 'boolean' },
-        { label: DM_Col_Target, fieldName: 'Target_Type__c' },
-        { label: DM_Col_Type, fieldName: 'Discount_Type__c' },
-        { label: LBL_DM_COL_VALUE, fieldName: 'Value__c', type: 'number' },
-        { label: DM_Col_Recurrence, fieldName: 'Recurrence__c' },
-        { type: 'action', typeAttributes: { rowActions: this.getRowActions } }
+        { label: LBL_DM_COL_NAME, fieldName: FLD_NAME },
+        { label: DM_Col_Active, fieldName: FLD_ACTIVE, type: 'boolean' },
+        { label: DM_Col_Target, fieldName: FLD_TARGET },
+        { label: DM_Col_Type, fieldName: FLD_TYPE },
+        { label: LBL_DM_COL_VALUE, fieldName: FLD_VALUE, type: 'number' },
+        { label: DM_Col_Recurrence, fieldName: FLD_RECURRENCE },
+        { type: 'action', typeAttributes: { rowActions: this.getRowActions.bind(this) } }
     ];
 
     productColumns = [
-        { label: DM_Col_ProductName, fieldName: 'Name' },
-        { label: DM_Col_Family, fieldName: 'Family' }
+        { label: DM_Col_ProductName, fieldName: FLD_NAME },
+        { label: DM_Col_Family, fieldName: FLD_FAMILY }
     ];
 
     @wire(getAvailableFamilies)
@@ -206,15 +216,15 @@ export default class DiscountManager extends LightningElement {
 
     get isStep1() { return this.currentStep === 1; }
     get isStep2() { return this.currentStep === 2; }
-    get isRecurring() { return this.currentDiscount.Discount_Category__c === 'Recurring'; }
-    get isConditional() { return this.currentDiscount.Discount_Category__c === 'Conditional'; }
-    get isMinimumOrderValue() { return this.currentDiscount.Condition_Type__c === 'Minimum Order Value'; }
-    get isTwoForOne() { return this.currentDiscount.Condition_Type__c === 'Two For One'; }
-    get isVolumeTier() { return this.currentDiscount.Condition_Type__c === 'Volume Tier'; }
-    get isYearlyCustom() { return this.currentDiscount.Recurrence__c === 'Yearly Custom Date'; }
-    get maxDiscountValue() { return this.currentDiscount.Discount_Type__c === 'Percent' ? 100 : null; }
-    get isTargetFamily() { return this.currentDiscount.Target_Type__c === 'Specific Families'; }
-    get isTargetProduct() { return this.currentDiscount.Target_Type__c === 'Specific Products'; }
+    get isRecurring() { return this.currentDiscount.Discount_Category__c === CAT_RECURRING; }
+    get isConditional() { return this.currentDiscount.Discount_Category__c === CAT_CONDITIONAL; }
+    get isMinimumOrderValue() { return this.currentDiscount.Condition_Type__c === COND_MIN_ORDER; }
+    get isTwoForOne() { return this.currentDiscount.Condition_Type__c === COND_TWO_FOR_ONE; }
+    get isVolumeTier() { return this.currentDiscount.Condition_Type__c === COND_VOLUME; }
+    get isYearlyCustom() { return this.currentDiscount.Recurrence__c === REC_YEARLY_CUSTOM; }
+    get maxDiscountValue() { return this.currentDiscount.Discount_Type__c === TYPE_PERCENT ? 100 : null; }
+    get isTargetFamily() { return this.currentDiscount.Target_Type__c === TARGET_FAMILIES; }
+    get isTargetProduct() { return this.currentDiscount.Target_Type__c === TARGET_PRODUCTS; }
 
     connectedCallback() { this.loadData(); }
 
@@ -258,7 +268,7 @@ export default class DiscountManager extends LightningElement {
         const actions = [
             {
                 label: DM_Btn_Edit,
-                name: 'edit',
+                name: ACTION_EDIT,
                 disabled: row.Active__c
             }
         ];
@@ -269,22 +279,22 @@ export default class DiscountManager extends LightningElement {
         const actionName = event.detail.action.name;
         const row = event.detail.row;
 
-        if (actionName === 'edit') {
+        if (actionName === ACTION_EDIT) {
             this.openEditModal(row);
         }
     }
 
     openEditModal(row) {
         this.currentStep = 1;
-        this.currentDiscount = { ...row, sObjectType: 'Discount__c' };
+        this.currentDiscount = { ...row, sObjectType: OBJ_DISCOUNT };
 
-        if (row.Target_Type__c === 'Specific Families' && row.Eligible_Families__c) {
+        if (row.Target_Type__c === TARGET_FAMILIES && row.Eligible_Families__c) {
             this.selectedFamilies = row.Eligible_Families__c.split(';');
         } else {
             this.selectedFamilies = [];
         }
 
-        if (row.Target_Type__c === 'Specific Products') {
+        if (row.Target_Type__c === TARGET_PRODUCTS) {
             getDiscountProducts({ discountId: row.Id })
                 .then(result => {
                     this.selectedProductIds = result;
@@ -305,13 +315,13 @@ export default class DiscountManager extends LightningElement {
         this.selectedFamilies = [];
         this.selectedProductIds = [];
         this.currentDiscount = { 
-            sObjectType: 'Discount__c', 
+            sObjectType: OBJ_DISCOUNT, 
             Active__c: true, 
-            Discount_Category__c: 'One Time Only', 
-            Discount_Type__c: 'Percent', 
-            Recurrence__c: 'None',
-            Condition_Type__c: 'Minimum Order Value',
-            Target_Type__c: 'All Products'
+            Discount_Category__c: CAT_ONETIME, 
+            Discount_Type__c: TYPE_PERCENT, 
+            Recurrence__c: REC_NONE,
+            Condition_Type__c: COND_MIN_ORDER,
+            Target_Type__c: TARGET_ALL
         };
         this.isModalOpen = true;
     }
@@ -365,13 +375,13 @@ export default class DiscountManager extends LightningElement {
     }
 
     saveDiscount() {
-        if (this.currentDiscount.Target_Type__c === 'Specific Families' && this.selectedFamilies.length > 0) {
+        if (this.currentDiscount.Target_Type__c === TARGET_FAMILIES && this.selectedFamilies.length > 0) {
             this.currentDiscount.Eligible_Families__c = this.selectedFamilies.join(';');
         } else {
             this.currentDiscount.Eligible_Families__c = null;
         }
 
-        let productIdsToSave = this.currentDiscount.Target_Type__c === 'Specific Products' ? this.selectedProductIds : [];
+        let productIdsToSave = this.currentDiscount.Target_Type__c === TARGET_PRODUCTS ? this.selectedProductIds : [];
 
         upsertDiscount({ discountRecord: this.currentDiscount, selectedProductIds: productIdsToSave })
             .then(() => {
