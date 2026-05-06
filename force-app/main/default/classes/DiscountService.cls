@@ -94,7 +94,7 @@ public class DiscountService {
                     discountValue = eligibleSubtotal;
                 }
                 discountToValueMap.put(discount.Id, discountValue);
-                discountToEligibleligibleItems.put(discount.Id, eligibleItems);
+                discountToEligibleItems.put(discount.Id, eligibleItems);
             }
         }
 

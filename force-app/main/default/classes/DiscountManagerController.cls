@@ -15,9 +15,9 @@ public with sharing class DiscountManagerController {
                 return newSetting;
             }
             return settings[0];
-        } catch (Exception exception) {
+        } catch (Exception except) {
             Database.rollback(savePoint);
-            ErrorLogger.logException(exception, 'DiscountManagerController', 'getGlobalSettings');
+            ErrorLogger.logException(except, 'DiscountManagerController', 'getGlobalSettings');
             throw new AuraHandledException(System.Label.DM_Err_FetchSettings);
         }
     }
@@ -27,9 +27,9 @@ public with sharing class DiscountManagerController {
         Savepoint savePoint = Database.setSavepoint();
         try {
             update setting;
-        } catch (Exception exception) {
+        } catch (Exception except) {
             Database.rollback(savePoint);
-            ErrorLogger.logException(exception, 'DiscountManagerController', 'saveGlobalSettings');
+            ErrorLogger.logException(except, 'DiscountManagerController', 'saveGlobalSettings');
             throw new AuraHandledException(System.Label.DM_Err_SaveSettings);
         }
     }
@@ -54,9 +54,9 @@ public with sharing class DiscountManagerController {
                 toUpdate.add(new Discount__c(Id = dId, Active__c = isActive));
             }
             update toUpdate;
-        } catch (Exception exception) {
+        } catch (Exception except) {
             Database.rollback(savePoint);
-            ErrorLogger.logException(exception, 'DiscountManagerController', 'toggleDiscounts');
+            ErrorLogger.logException(except, 'DiscountManagerController', 'toggleDiscounts');
             throw new AuraHandledException(System.Label.DM_Err_ToggleDiscounts);
         }
     }
@@ -66,9 +66,9 @@ public with sharing class DiscountManagerController {
         Savepoint savePoint = Database.setSavepoint();
         try {
             delete [SELECT Id FROM Discount__c WHERE Id IN :discountIds];
-        } catch (Exception exception) {
+        } catch (Exception except) {
             Database.rollback(savePoint);
-            ErrorLogger.logException(exception, 'DiscountManagerController', 'deleteDiscounts');
+            ErrorLogger.logException(except, 'DiscountManagerController', 'deleteDiscounts');
             throw new AuraHandledException(System.Label.DM_Err_DeleteDiscounts);
         }
     }
@@ -97,9 +97,9 @@ public with sharing class DiscountManagerController {
                 }
                 insert junctionRecords;
             }
-        } catch (Exception exception) {
+        } catch (Exception except) {
             Database.rollback(savePoint);
-            ErrorLogger.logException(exception, 'DiscountManagerController', 'upsertDiscount');
+            ErrorLogger.logException(except, 'DiscountManagerController', 'upsertDiscount');
             throw new AuraHandledException(System.Label.DM_Err_SaveDiscount);
         }
     }
@@ -126,8 +126,8 @@ public with sharing class DiscountManagerController {
     public static Map<String, Object> calculateOrderDiscounts(String cartPayload) {
         try {
             return DiscountService.calculateOrderDiscounts(cartPayload);
-        } catch (Exception exception) {
-            ErrorLogger.logException(exception, 'DiscountManagerController', 'calculateOrderDiscounts');
+        } catch (Exception except) {
+            ErrorLogger.logException(except, 'DiscountManagerController', 'calculateOrderDiscounts');
             throw new AuraHandledException(System.Label.DM_Err_CalcDiscount);
         }
     }
