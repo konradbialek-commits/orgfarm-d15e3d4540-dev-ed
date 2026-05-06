@@ -1,94 +1,616 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
-    <labels><fullName>Btn_Save</fullName><language>en_US</language><protected>false</protected><shortDescription>Save</shortDescription><value>Save</value></labels>
-    <labels><fullName>Btn_Cancel</fullName><language>en_US</language><protected>false</protected><shortDescription>Cancel</shortDescription><value>Cancel</value></labels>
-    <labels><fullName>Btn_Next</fullName><language>en_US</language><protected>false</protected><shortDescription>Next</shortDescription><value>Next</value></labels>
-    <labels><fullName>Btn_Back</fullName><language>en_US</language><protected>false</protected><shortDescription>Back</shortDescription><value>Back</value></labels>
-    <labels><fullName>Msg_Success</fullName><language>en_US</language><protected>false</protected><shortDescription>Success</shortDescription><value>Success</value></labels>
-    <labels><fullName>Msg_Error</fullName><language>en_US</language><protected>false</protected><shortDescription>Error</shortDescription><value>Error</value></labels>
-    
-    <labels><fullName>DM_Title</fullName><language>en_US</language><protected>false</protected><shortDescription>Discount Manager Title</shortDescription><value>Discount Manager</value></labels>
-    <labels><fullName>DM_Tab_Global</fullName><language>en_US</language><protected>false</protected><shortDescription>Global Settings</shortDescription><value>Global Settings</value></labels>
-    <labels><fullName>DM_Tab_Discounts</fullName><language>en_US</language><protected>false</protected><shortDescription>Discounts</shortDescription><value>Discounts</value></labels>
-    <labels><fullName>DM_Btn_New</fullName><language>en_US</language><protected>false</protected><shortDescription>New Discount</shortDescription><value>New Discount</value></labels>
-    <labels><fullName>DM_Btn_Activate</fullName><language>en_US</language><protected>false</protected><shortDescription>Activate</shortDescription><value>Activate</value></labels>
-    <labels><fullName>DM_Btn_Deactivate</fullName><language>en_US</language><protected>false</protected><shortDescription>Deactivate</shortDescription><value>Deactivate</value></labels>
-    <labels><fullName>DM_Btn_Delete</fullName><language>en_US</language><protected>false</protected><shortDescription>Delete Selected</shortDescription><value>Delete Selected</value></labels>
-    <labels><fullName>DM_Col_Name</fullName><language>en_US</language><protected>false</protected><shortDescription>Name</shortDescription><value>Name</value></labels>
-    <labels><fullName>DM_Col_Value</fullName><language>en_US</language><protected>false</protected><shortDescription>Value</shortDescription><value>Value</value></labels>
-    
-    <labels><fullName>OM_Title</fullName><language>en_US</language><protected>false</protected><shortDescription>Create Order</shortDescription><value>Create Order</value></labels>
-    <labels><fullName>OM_Search</fullName><language>en_US</language><protected>false</protected><shortDescription>Search Name</shortDescription><value>Search Name</value></labels>
-    <labels><fullName>OM_Review</fullName><language>en_US</language><protected>false</protected><shortDescription>Review Your Order</shortDescription><value>Review Your Order</value></labels>
-    <labels><fullName>OM_Subtotal</fullName><language>en_US</language><protected>false</protected><shortDescription>Subtotal</shortDescription><value>Subtotal</value></labels>
-    <labels><fullName>OM_Final_Total</fullName><language>en_US</language><protected>false</protected><shortDescription>Final Total</shortDescription><value>Final Total</value></labels>
-    <labels><fullName>OM_Submit</fullName><language>en_US</language><protected>false</protected><shortDescription>Submit Order</shortDescription><value>Submit &amp; Create Order</value></labels>
-    <labels><fullName>DM_Opt_Lowest</fullName><language>en_US</language><protected>false</protected><shortDescription>Lowest Discount</shortDescription><value>Lowest Discount</value></labels>
-    <labels><fullName>DM_Opt_Highest</fullName><language>en_US</language><protected>false</protected><shortDescription>Highest Discount</shortDescription><value>Highest Discount</value></labels>
-    <labels><fullName>DM_Opt_Cumulative</fullName><language>en_US</language><protected>false</protected><shortDescription>Cumulative</shortDescription><value>Cumulative</value></labels>
-    <labels><fullName>DM_Opt_OneTime</fullName><language>en_US</language><protected>false</protected><shortDescription>One Time Only</shortDescription><value>One Time Only</value></labels>
-    <labels><fullName>DM_Opt_Recurring</fullName><language>en_US</language><protected>false</protected><shortDescription>Recurring</shortDescription><value>Recurring</value></labels>
-    <labels><fullName>DM_Opt_Conditional</fullName><language>en_US</language><protected>false</protected><shortDescription>Conditional</shortDescription><value>Conditional</value></labels>
-    <labels><fullName>DM_Opt_MinOrder</fullName><language>en_US</language><protected>false</protected><shortDescription>Minimum Order Value</shortDescription><value>Minimum Order Value</value></labels>
-    <labels><fullName>DM_Opt_TwoForOne</fullName><language>en_US</language><protected>false</protected><shortDescription>Two For One</shortDescription><value>Two For One</value></labels>
-    <labels><fullName>DM_Opt_Percent</fullName><language>en_US</language><protected>false</protected><shortDescription>Percent</shortDescription><value>Percent</value></labels>
-    <labels><fullName>DM_Opt_Fixed</fullName><language>en_US</language><protected>false</protected><shortDescription>Fixed Amount</shortDescription><value>Fixed Amount</value></labels>
-    <labels><fullName>DM_Opt_None</fullName><language>en_US</language><protected>false</protected><shortDescription>None</shortDescription><value>None</value></labels>
-    <labels><fullName>DM_Opt_Daily</fullName><language>en_US</language><protected>false</protected><shortDescription>Daily</shortDescription><value>Daily</value></labels>
-    <labels><fullName>DM_Opt_Monday</fullName><language>en_US</language><protected>false</protected><shortDescription>Every Monday</shortDescription><value>Every Monday</value></labels>
-    <labels><fullName>DM_Opt_Friday</fullName><language>en_US</language><protected>false</protected><shortDescription>Every Friday</shortDescription><value>Every Friday</value></labels>
-    <labels><fullName>DM_Opt_FirstMonth</fullName><language>en_US</language><protected>false</protected><shortDescription>First Day of Month</shortDescription><value>First Day of Month</value></labels>
-    <labels><fullName>DM_Opt_FirstQuarter</fullName><language>en_US</language><protected>false</protected><shortDescription>First Day of Quarter</shortDescription><value>First Day of Quarter</value></labels>
-    <labels><fullName>DM_Opt_YearlyCustom</fullName><language>en_US</language><protected>false</protected><shortDescription>Yearly Custom Date</shortDescription><value>Yearly Custom Date</value></labels>
-    <labels><fullName>DM_Lbl_GlobalStrategy</fullName><language>en_US</language><protected>false</protected><shortDescription>Global Discount Strategy</shortDescription><value>Global Discount Strategy</value></labels>
-    <labels><fullName>DM_Lbl_MinPriceFloor</fullName><language>en_US</language><protected>false</protected><shortDescription>Minimum Price Floor (%)</shortDescription><value>Minimum Price Floor (%)</value></labels>
-    <labels><fullName>DM_Lbl_FloorHelp</fullName><language>en_US</language><protected>false</protected><shortDescription>Floor Help Text</shortDescription><value>Example: If set to 10%, the final order price can never drop below 10% of the original subtotal, regardless of how many discounts are applied.</value></labels>
-    <labels><fullName>DM_Lbl_ModalTitle</fullName><language>en_US</language><protected>false</protected><shortDescription>New Discount Config</shortDescription><value>New Discount Configuration</value></labels>
-    <labels><fullName>DM_Lbl_Active</fullName><language>en_US</language><protected>false</protected><shortDescription>Active</shortDescription><value>Active</value></labels>
-    <labels><fullName>DM_Lbl_Category</fullName><language>en_US</language><protected>false</protected><shortDescription>Discount Category</shortDescription><value>Discount Category</value></labels>
-    <labels><fullName>DM_Lbl_ConditionType</fullName><language>en_US</language><protected>false</protected><shortDescription>Condition Type</shortDescription><value>Condition Type</value></labels>
-    <labels><fullName>DM_Lbl_MinOrderReq</fullName><language>en_US</language><protected>false</protected><shortDescription>Min Order Requirement</shortDescription><value>Minimum Order Value Requirement</value></labels>
-    <labels><fullName>DM_Lbl_TwoForOneHelp</fullName><language>en_US</language><protected>false</protected><shortDescription>Two For One Help</shortDescription><value>Note: The Two For One discount will automatically apply when 2 or more items are in the cart.</value></labels>
-    <labels><fullName>DM_Lbl_Recurrence</fullName><language>en_US</language><protected>false</protected><shortDescription>Recurrence Schedule</shortDescription><value>Recurrence Schedule</value></labels>
-    <labels><fullName>DM_Lbl_AnnualDate</fullName><language>en_US</language><protected>false</protected><shortDescription>Annual Recurrence Date</shortDescription><value>Annual Recurrence Date</value></labels>
-    <labels><fullName>DM_Lbl_AnnualHelp</fullName><language>en_US</language><protected>false</protected><shortDescription>Annual Help</shortDescription><value>Note: The year selected does not matter. The system will trigger this discount every year on the specified month and day.</value></labels>
-    <labels><fullName>DM_Lbl_RecurringHelp</fullName><language>en_US</language><protected>false</protected><shortDescription>Recurring Help</shortDescription><value>Note: Recurring discounts will run indefinitely unless an End Date is provided below.</value></labels>
-    <labels><fullName>DM_Lbl_ValueType</fullName><language>en_US</language><protected>false</protected><shortDescription>Discount Value Type</shortDescription><value>Discount Value Type</value></labels>
-    <labels><fullName>DM_Lbl_DiscountValue</fullName><language>en_US</language><protected>false</protected><shortDescription>Discount Value</shortDescription><value>Discount Value</value></labels>
-    <labels><fullName>DM_Lbl_StartDate</fullName><language>en_US</language><protected>false</protected><shortDescription>Start Date</shortDescription><value>Start Date</value></labels>
-    <labels><fullName>DM_Lbl_EndDate</fullName><language>en_US</language><protected>false</protected><shortDescription>End Date</shortDescription><value>End Date</value></labels>
-    <labels><fullName>DM_Col_Active</fullName><language>en_US</language><protected>false</protected><shortDescription>Active Col</shortDescription><value>Active</value></labels>
-    <labels><fullName>DM_Col_Category</fullName><language>en_US</language><protected>false</protected><shortDescription>Category Col</shortDescription><value>Category</value></labels>
-    <labels><fullName>DM_Col_Condition</fullName><language>en_US</language><protected>false</protected><shortDescription>Condition Col</shortDescription><value>Condition</value></labels>
-    <labels><fullName>DM_Col_Type</fullName><language>en_US</language><protected>false</protected><shortDescription>Type Col</shortDescription><value>Type</value></labels>
-    <labels><fullName>DM_Col_MinOrder</fullName><language>en_US</language><protected>false</protected><shortDescription>Min Order Col</shortDescription><value>Min Order</value></labels>
-    <labels><fullName>DM_Col_Recurrence</fullName><language>en_US</language><protected>false</protected><shortDescription>Recurrence Col</shortDescription><value>Recurrence</value></labels>
-    <labels><fullName>DM_Lbl_TargetType</fullName><language>en_US</language><protected>false</protected><shortDescription>Target Type</shortDescription><value>Target Application</value></labels>
-    <labels><fullName>DM_Opt_AllProducts</fullName><language>en_US</language><protected>false</protected><shortDescription>All Products</shortDescription><value>All Products</value></labels>
-    <labels><fullName>DM_Opt_SpecificFamilies</fullName><language>en_US</language><protected>false</protected><shortDescription>Specific Families</shortDescription><value>Specific Families</value></labels>
-    <labels><fullName>DM_Opt_SpecificProducts</fullName><language>en_US</language><protected>false</protected><shortDescription>Specific Products</shortDescription><value>Specific Products</value></labels>
-    <labels><fullName>DM_Lbl_SelectFamilies</fullName><language>en_US</language><protected>false</protected><shortDescription>Select Families</shortDescription><value>Select Eligible Families</value></labels>
-    <labels><fullName>DM_Lbl_SelectProducts</fullName><language>en_US</language><protected>false</protected><shortDescription>Select Products</shortDescription><value>Select Eligible Products</value></labels>
-    <labels><fullName>DM_Lbl_Name</fullName><language>en_US</language><protected>false</protected><shortDescription>Name</shortDescription><value>Name</value></labels>
-    <labels><fullName>DM_Lbl_Step</fullName><language>en_US</language><protected>false</protected><shortDescription>Step</shortDescription><value>Step</value></labels>
-    <labels><fullName>DM_Lbl_Of</fullName><language>en_US</language><protected>false</protected><shortDescription>Of</shortDescription><value>of</value></labels>
-    <labels><fullName>DM_Col_Target</fullName><language>en_US</language><protected>false</protected><shortDescription>Target Column</shortDescription><value>Target</value></labels>
-    <labels><fullName>DM_Col_ProductName</fullName><language>en_US</language><protected>false</protected><shortDescription>Product Name Column</shortDescription><value>Product Name</value></labels>
-    <labels><fullName>DM_Col_Family</fullName><language>en_US</language><protected>false</protected><shortDescription>Family Column</shortDescription><value>Family</value></labels>
-    <labels><fullName>DM_Lbl_SearchProducts</fullName><language>en_US</language><protected>false</protected><shortDescription>Search Products</shortDescription><value>Search products...</value></labels>
-    <labels><fullName>DM_Btn_Edit</fullName><language>en_US</language><protected>false</protected><shortDescription>Edit Button</shortDescription><value>Edit</value></labels>
-    <labels><fullName>DM_Msg_SettingsSaved</fullName><language>en_US</language><protected>false</protected><shortDescription>Settings Saved</shortDescription><value>Settings Saved</value></labels>
-    <labels><fullName>DM_Msg_DiscountsUpdated</fullName><language>en_US</language><protected>false</protected><shortDescription>Discounts Updated</shortDescription><value>Discounts Updated</value></labels>
-    <labels><fullName>DM_Msg_DiscountsDeleted</fullName><language>en_US</language><protected>false</protected><shortDescription>Discounts Deleted</shortDescription><value>Discounts Deleted</value></labels>
-    <labels><fullName>DM_Msg_DiscountCreated</fullName><language>en_US</language><protected>false</protected><shortDescription>Discount Created</shortDescription><value>Discount Created</value></labels>
-    <labels><fullName>DM_Msg_FailedLoadProducts</fullName><language>en_US</language><protected>false</protected><shortDescription>Failed to Load Products</shortDescription><value>Failed to load targeted products</value></labels>
-    <labels><fullName>DM_Err_PctExceed</fullName><language>en_US</language><protected>false</protected><shortDescription>Percent Exceed Error</shortDescription><value>Percentage discounts cannot exceed 100%.</value></labels>
-    <labels><fullName>DM_Err_ReqTargetDate</fullName><language>en_US</language><protected>false</protected><shortDescription>Require Target Date Error</shortDescription><value>Please provide a target date for the yearly recurrence.</value></labels>
-    <labels><fullName>DM_Msg_Wait</fullName><language>en_US</language><protected>false</protected><shortDescription>Wait Warning</shortDescription><value>Wait!</value></labels>
-    <labels><fullName>DM_Err_SelectPricebook</fullName><language>en_US</language><protected>false</protected><shortDescription>Select Pricebook Error</shortDescription><value>Please select a Price Book first.</value></labels>
-    <labels><fullName>DM_Msg_HoldUp</fullName><language>en_US</language><protected>false</protected><shortDescription>Hold Up Warning</shortDescription><value>Hold up!</value></labels>
-    <labels><fullName>DM_Err_SelectProduct</fullName><language>en_US</language><protected>false</protected><shortDescription>Select Product Error</shortDescription><value>You must select at least one product.</value></labels>
-    <labels><fullName>DM_Err_LoadProducts</fullName><language>en_US</language><protected>false</protected><shortDescription>Load Products Error</shortDescription><value>Failed to load products</value></labels>
+    <labels>
+        <fullName>Btn_Save</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Save</shortDescription>
+        <value>Save</value>
+    </labels>
+    <labels>
+        <fullName>Btn_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>Btn_Next</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Next</shortDescription>
+        <value>Next</value>
+    </labels>
+    <labels>
+        <fullName>Btn_Back</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Back</shortDescription>
+        <value>Back</value>
+    </labels>
+    <labels>
+        <fullName>Msg_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>Msg_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error</shortDescription>
+        <value>Error</value>
+    </labels>
+
+    <labels>
+        <fullName>DM_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Discount Manager Title</shortDescription>
+        <value>Discount Manager</value>
+    </labels>
+    <labels>
+        <fullName>DM_Tab_Global</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Global Settings</shortDescription>
+        <value>Global Settings</value>
+    </labels>
+    <labels>
+        <fullName>DM_Tab_Discounts</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Discounts</shortDescription>
+        <value>Discounts</value>
+    </labels>
+    <labels>
+        <fullName>DM_Btn_New</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Discount</shortDescription>
+        <value>New Discount</value>
+    </labels>
+    <labels>
+        <fullName>DM_Btn_Activate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Activate</shortDescription>
+        <value>Activate</value>
+    </labels>
+    <labels>
+        <fullName>DM_Btn_Deactivate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Deactivate</shortDescription>
+        <value>Deactivate</value>
+    </labels>
+    <labels>
+        <fullName>DM_Btn_Delete</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Delete Selected</shortDescription>
+        <value>Delete Selected</value>
+    </labels>
+    <labels>
+        <fullName>DM_Col_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Name</shortDescription>
+        <value>Name</value>
+    </labels>
+    <labels>
+        <fullName>DM_Col_Value</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Value</shortDescription>
+        <value>Value</value>
+    </labels>
+
+    <labels>
+        <fullName>OM_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Order</shortDescription>
+        <value>Create Order</value>
+    </labels>
+    <labels>
+        <fullName>OM_Search</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search Name</shortDescription>
+        <value>Search Name</value>
+    </labels>
+    <labels>
+        <fullName>OM_Review</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Review Your Order</shortDescription>
+        <value>Review Your Order</value>
+    </labels>
+    <labels>
+        <fullName>OM_Subtotal</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Subtotal</shortDescription>
+        <value>Subtotal</value>
+    </labels>
+    <labels>
+        <fullName>OM_Final_Total</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Final Total</shortDescription>
+        <value>Final Total</value>
+    </labels>
+    <labels>
+        <fullName>OM_Submit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Submit Order</shortDescription>
+        <value>Submit &amp; Create Order</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_Lowest</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lowest Discount</shortDescription>
+        <value>Lowest Discount</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_Highest</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Highest Discount</shortDescription>
+        <value>Highest Discount</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_Cumulative</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cumulative</shortDescription>
+        <value>Cumulative</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_OneTime</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>One Time Only</shortDescription>
+        <value>One Time Only</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_Recurring</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Recurring</shortDescription>
+        <value>Recurring</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_Conditional</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Conditional</shortDescription>
+        <value>Conditional</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_MinOrder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Minimum Order Value</shortDescription>
+        <value>Minimum Order Value</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_TwoForOne</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Two For One</shortDescription>
+        <value>Two For One</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_Percent</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Percent</shortDescription>
+        <value>Percent</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_Fixed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fixed Amount</shortDescription>
+        <value>Fixed Amount</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_None</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>None</shortDescription>
+        <value>None</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_Daily</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Daily</shortDescription>
+        <value>Daily</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_Monday</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Every Monday</shortDescription>
+        <value>Every Monday</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_Friday</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Every Friday</shortDescription>
+        <value>Every Friday</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_FirstMonth</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>First Day of Month</shortDescription>
+        <value>First Day of Month</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_FirstQuarter</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>First Day of Quarter</shortDescription>
+        <value>First Day of Quarter</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_YearlyCustom</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Yearly Custom Date</shortDescription>
+        <value>Yearly Custom Date</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_GlobalStrategy</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Global Discount Strategy</shortDescription>
+        <value>Global Discount Strategy</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_MinPriceFloor</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Minimum Price Floor (%)</shortDescription>
+        <value>Minimum Price Floor (%)</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_FloorHelp</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Floor Help Text</shortDescription>
+        <value>Example: If set to 10%, the final order price can never drop below 10% of the original subtotal, regardless of how many discounts are applied.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_ModalTitle</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Discount Config</shortDescription>
+        <value>New Discount Configuration</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_Active</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Active</shortDescription>
+        <value>Active</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_Category</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Discount Category</shortDescription>
+        <value>Discount Category</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_ConditionType</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Condition Type</shortDescription>
+        <value>Condition Type</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_MinOrderReq</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Min Order Requirement</shortDescription>
+        <value>Minimum Order Value Requirement</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_TwoForOneHelp</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Two For One Help</shortDescription>
+        <value>Note: The Two For One discount will automatically apply when 2 or more items are in the cart.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_Recurrence</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Recurrence Schedule</shortDescription>
+        <value>Recurrence Schedule</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_AnnualDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Annual Recurrence Date</shortDescription>
+        <value>Annual Recurrence Date</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_AnnualHelp</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Annual Help</shortDescription>
+        <value>Note: The year selected does not matter. The system will trigger this discount every year on the specified month and day.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_RecurringHelp</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Recurring Help</shortDescription>
+        <value>Note: Recurring discounts will run indefinitely unless an End Date is provided below.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_ValueType</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Discount Value Type</shortDescription>
+        <value>Discount Value Type</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_DiscountValue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Discount Value</shortDescription>
+        <value>Discount Value</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_StartDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Start Date</shortDescription>
+        <value>Start Date</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_EndDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>End Date</shortDescription>
+        <value>End Date</value>
+    </labels>
+    <labels>
+        <fullName>DM_Col_Active</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Active Col</shortDescription>
+        <value>Active</value>
+    </labels>
+    <labels>
+        <fullName>DM_Col_Category</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Category Col</shortDescription>
+        <value>Category</value>
+    </labels>
+    <labels>
+        <fullName>DM_Col_Condition</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Condition Col</shortDescription>
+        <value>Condition</value>
+    </labels>
+    <labels>
+        <fullName>DM_Col_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Type Col</shortDescription>
+        <value>Type</value>
+    </labels>
+    <labels>
+        <fullName>DM_Col_MinOrder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Min Order Col</shortDescription>
+        <value>Min Order</value>
+    </labels>
+    <labels>
+        <fullName>DM_Col_Recurrence</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Recurrence Col</shortDescription>
+        <value>Recurrence</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_TargetType</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Target Type</shortDescription>
+        <value>Target Application</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_AllProducts</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>All Products</shortDescription>
+        <value>All Products</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_SpecificFamilies</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Specific Families</shortDescription>
+        <value>Specific Families</value>
+    </labels>
+    <labels>
+        <fullName>DM_Opt_SpecificProducts</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Specific Products</shortDescription>
+        <value>Specific Products</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_SelectFamilies</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Families</shortDescription>
+        <value>Select Eligible Families</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_SelectProducts</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Products</shortDescription>
+        <value>Select Eligible Products</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Name</shortDescription>
+        <value>Name</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_Step</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Step</shortDescription>
+        <value>Step</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_Of</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Of</shortDescription>
+        <value>of</value>
+    </labels>
+    <labels>
+        <fullName>DM_Col_Target</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Target Column</shortDescription>
+        <value>Target</value>
+    </labels>
+    <labels>
+        <fullName>DM_Col_ProductName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Product Name Column</shortDescription>
+        <value>Product Name</value>
+    </labels>
+    <labels>
+        <fullName>DM_Col_Family</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Family Column</shortDescription>
+        <value>Family</value>
+    </labels>
+    <labels>
+        <fullName>DM_Lbl_SearchProducts</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search Products</shortDescription>
+        <value>Search products...</value>
+    </labels>
+    <labels>
+        <fullName>DM_Btn_Edit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Edit Button</shortDescription>
+        <value>Edit</value>
+    </labels>
+    <labels>
+        <fullName>DM_Msg_SettingsSaved</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Settings Saved</shortDescription>
+        <value>Settings Saved</value>
+    </labels>
+    <labels>
+        <fullName>DM_Msg_DiscountsUpdated</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Discounts Updated</shortDescription>
+        <value>Discounts Updated</value>
+    </labels>
+    <labels>
+        <fullName>DM_Msg_DiscountsDeleted</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Discounts Deleted</shortDescription>
+        <value>Discounts Deleted</value>
+    </labels>
+    <labels>
+        <fullName>DM_Msg_DiscountCreated</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Discount Created</shortDescription>
+        <value>Discount Created</value>
+    </labels>
+    <labels>
+        <fullName>DM_Msg_FailedLoadProducts</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed to Load Products</shortDescription>
+        <value>Failed to load targeted products</value>
+    </labels>
+    <labels>
+        <fullName>DM_Err_PctExceed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Percent Exceed Error</shortDescription>
+        <value>Percentage discounts cannot exceed 100%.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Err_ReqTargetDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Require Target Date Error</shortDescription>
+        <value>Please provide a target date for the yearly recurrence.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Msg_Wait</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Wait Warning</shortDescription>
+        <value>Wait!</value>
+    </labels>
+    <labels>
+        <fullName>DM_Err_SelectPricebook</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Pricebook Error</shortDescription>
+        <value>Please select a Price Book first.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Msg_HoldUp</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Up Warning</shortDescription>
+        <value>Hold up!</value>
+    </labels>
+    <labels>
+        <fullName>DM_Err_SelectProduct</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Product Error</shortDescription>
+        <value>You must select at least one product.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Err_LoadProducts</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Load Products Error</shortDescription>
+        <value>Failed to load products</value>
+    </labels>
     <labels>
         <fullName>DM_Lbl_MinQuantity</fullName>
         <language>en_US</language>
@@ -102,5 +624,47 @@
         <protected>false</protected>
         <shortDescription>Discount Manager Volume Tier Option</shortDescription>
         <value>Volume Tier</value>
+    </labels>
+    <labels>
+        <fullName>DM_Err_FetchSettings</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DM Err FetchSettings</shortDescription>
+        <value>There was an error fetching global settings. Please contact your administrator.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Err_SaveSettings</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DM Err SaveSettings</shortDescription>
+        <value>There was an error saving global settings. Please contact your administrator.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Err_ToggleDiscounts</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DM Err ToggleDiscounts</shortDescription>
+        <value>There was an error updating discount statuses. Please contact your administrator.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Err_DeleteDiscounts</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DM Err DeleteDiscounts</shortDescription>
+        <value>There was an error deleting discounts. Please contact your administrator.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Err_SaveDiscount</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DM Err SaveDiscount</shortDescription>
+        <value>There was an error saving the discount record. Please contact your administrator.</value>
+    </labels>
+    <labels>
+        <fullName>DM_Err_CalcDiscount</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DM Err CalcDiscount</shortDescription>
+        <value>There was an error calculating discounts. Please contact your administrator.</value>
     </labels>
 </CustomLabels>

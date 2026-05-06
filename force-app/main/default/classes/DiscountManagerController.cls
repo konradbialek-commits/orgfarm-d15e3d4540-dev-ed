@@ -2,29 +2,43 @@ public with sharing class DiscountManagerController {
 
     @AuraEnabled
     public static Discount_Setting__c getGlobalSettings() {
-        List<Discount_Setting__c> settings = [SELECT Id, Strategy__c, Minimum_Price_Floor_Percent__c FROM Discount_Setting__c LIMIT 1];
-        if (settings.isEmpty()) {
-            Discount_Setting__c newSetting = new Discount_Setting__c(
-                Name = Util.Settings.DEFAULT_NAME, 
-                Strategy__c = Util.Settings.STRATEGY_CUMULATIVE, 
-                Minimum_Price_Floor_Percent__c = 0.0
-            );
-            insert newSetting;
-            return newSetting;
+        Savepoint savePoint = Database.setSavepoint();
+        try {
+            List<Discount_Setting__c> settings = [SELECT Id, Strategy__c, Minimum_Price_Floor_Percent__c FROM Discount_Setting__c LIMIT 1];
+            if (settings.isEmpty()) {
+                Discount_Setting__c newSetting = new Discount_Setting__c(
+                    Name = Util.Settings.DEFAULT_NAME, 
+                    Strategy__c = Util.Settings.STRATEGY_CUMULATIVE, 
+                    Minimum_Price_Floor_Percent__c = 0.0
+                );
+                insert newSetting;
+                return newSetting;
+            }
+            return settings[0];
+        } catch (Exception except) {
+            Database.rollback(savePoint);
+            ErrorLogger.logException(except, 'DiscountManagerController', 'getGlobalSettings');
+            throw new AuraHandledException(System.Label.DM_Err_FetchSettings);
         }
-        return settings[0];
     }
 
     @AuraEnabled
     public static void saveGlobalSettings(Discount_Setting__c setting) {
-        update setting;
+        Savepoint savePoint = Database.setSavepoint();
+        try {
+            update setting;
+        } catch (Exception except) {
+            Database.rollback(savePoint);
+            ErrorLogger.logException(except, 'DiscountManagerController', 'saveGlobalSettings');
+            throw new AuraHandledException(System.Label.DM_Err_SaveSettings);
+        }
     }
 
     @AuraEnabled
     public static List<Discount__c> getDiscounts() {
         return [
-            SELECT Id, Name, Active__c, Discount_Category__c, Condition_Type__c, Discount_Type__c, 
-                   Value__c, Recurrence__c, Custom_Recurrence_Date__c, Minimum_Order_Value__c, 
+            SELECT Id, Name, Active__c, Discount_Category__c, Condition_Type__c, Discount_Type__c,
+                   Value__c, Recurrence__c, Custom_Recurrence_Date__c, Minimum_Order_Value__c,
                    Start_Date__c, End_Date__c, Target_Type__c, Eligible_Families__c 
             FROM Discount__c 
             ORDER BY CreatedDate DESC
@@ -33,16 +47,30 @@ public with sharing class DiscountManagerController {
 
     @AuraEnabled
     public static void toggleDiscounts(List<Id> discountIds, Boolean isActive) {
-        List<Discount__c> toUpdate = new List<Discount__c>();
-        for (Id dId : discountIds) {
-            toUpdate.add(new Discount__c(Id = dId, Active__c = isActive));
+        Savepoint savePoint = Database.setSavepoint();
+        try {
+            List<Discount__c> toUpdate = new List<Discount__c>();
+            for (Id dId : discountIds) {
+                toUpdate.add(new Discount__c(Id = dId, Active__c = isActive));
+            }
+            update toUpdate;
+        } catch (Exception except) {
+            Database.rollback(savePoint);
+            ErrorLogger.logException(except, 'DiscountManagerController', 'toggleDiscounts');
+            throw new AuraHandledException(System.Label.DM_Err_ToggleDiscounts);
         }
-        update toUpdate;
     }
 
     @AuraEnabled
     public static void deleteDiscounts(List<Id> discountIds) {
-        delete [SELECT Id FROM Discount__c WHERE Id IN :discountIds];
+        Savepoint savePoint = Database.setSavepoint();
+        try {
+            delete [SELECT Id FROM Discount__c WHERE Id IN :discountIds];
+        } catch (Exception except) {
+            Database.rollback(savePoint);
+            ErrorLogger.logException(except, 'DiscountManagerController', 'deleteDiscounts');
+            throw new AuraHandledException(System.Label.DM_Err_DeleteDiscounts);
+        }
     }
 
     @AuraEnabled
@@ -50,24 +78,29 @@ public with sharing class DiscountManagerController {
         if (discountRecord.Discount_Type__c == Util.Discount.TYPE_PERCENT && discountRecord.Value__c > 100) {
             throw new AuraHandledException(System.Label.DM_Err_PctExceed);
         }
-        
         if (discountRecord.Recurrence__c == Util.Discount.REC_YEARLY_CUSTOM && discountRecord.Custom_Recurrence_Date__c == null) {
             throw new AuraHandledException(System.Label.DM_Err_ReqTargetDate);
         }
-        
-        upsert discountRecord;
 
-        delete [SELECT Id FROM Discount_Product__c WHERE Discount__c = :discountRecord.Id];
+        Savepoint savePoint = Database.setSavepoint();
+        try {
+            upsert discountRecord;
+            delete [SELECT Id FROM Discount_Product__c WHERE Discount__c = :discountRecord.Id];
 
-        if (discountRecord.Target_Type__c == Util.Discount.TARGET_PRODUCTS && selectedProductIds != null && !selectedProductIds.isEmpty()) {
-            List<Discount_Product__c> junctionRecords = new List<Discount_Product__c>();
-            for (Id pId : selectedProductIds) {
-                junctionRecords.add(new Discount_Product__c(
-                    Discount__c = discountRecord.Id,
-                    Product__c = pId
-                ));
+            if (discountRecord.Target_Type__c == Util.Discount.TARGET_PRODUCTS && selectedProductIds != null && !selectedProductIds.isEmpty()) {
+                List<Discount_Product__c> junctionRecords = new List<Discount_Product__c>();
+                for (Id pId : selectedProductIds) {
+                    junctionRecords.add(new Discount_Product__c(
+                        Discount__c = discountRecord.Id,
+                        Product__c = pId
+                    ));
+                }
+                insert junctionRecords;
             }
-            insert junctionRecords;
+        } catch (Exception except) {
+            Database.rollback(savePoint);
+            ErrorLogger.logException(except, 'DiscountManagerController', 'upsertDiscount');
+            throw new AuraHandledException(System.Label.DM_Err_SaveDiscount);
         }
     }
 
@@ -91,7 +124,12 @@ public with sharing class DiscountManagerController {
 
     @AuraEnabled
     public static Map<String, Object> calculateOrderDiscounts(String cartPayload) {
-        return DiscountService.calculateOrderDiscounts(cartPayload);
+        try {
+            return DiscountService.calculateOrderDiscounts(cartPayload);
+        } catch (Exception except) {
+            ErrorLogger.logException(except, 'DiscountManagerController', 'calculateOrderDiscounts');
+            throw new AuraHandledException(System.Label.DM_Err_CalcDiscount);
+        }
     }
     
     @AuraEnabled

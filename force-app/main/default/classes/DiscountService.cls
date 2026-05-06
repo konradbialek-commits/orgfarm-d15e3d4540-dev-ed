@@ -34,28 +34,28 @@ public class DiscountService {
         Map<Id, Decimal> discountToValueMap = new Map<Id, Decimal>();
         Map<Id, List<CartItem>> discountToEligibleItems = new Map<Id, List<CartItem>>();
         
-        for (Discount__c d : activeDiscounts) {
+        for (Discount__c discount : activeDiscounts) {
             Decimal eligibleSubtotal = 0;
             Integer eligibleQuantity = 0;
-            List<CartItem> eItems = new List<CartItem>();
+            List<CartItem> eligibleItems = new List<CartItem>();
             
             Set<Id> targetedProductIds = new Set<Id>();
-            if (d.Target_Type__c == Util.Discount.TARGET_PRODUCTS) {
-                for (Discount_Product__c dp : d.Discount_Products__r) {
-                    targetedProductIds.add(dp.Product__c);
+            if (discount.Target_Type__c == Util.Discount.TARGET_PRODUCTS) {
+                for (Discount_Product__c discountProduct : discount.Discount_Products__r) {
+                    targetedProductIds.add(discountProduct.Product__c);
                 }
             }
 
             for (CartItem item : cartItems) {
                 Boolean isEligible = false;
                 
-                if (d.Target_Type__c == Util.Discount.TARGET_ALL || d.Target_Type__c == null) {
+                if (discount.Target_Type__c == Util.Discount.TARGET_ALL || discount.Target_Type__c == null) {
                     isEligible = true;
-                } else if (d.Target_Type__c == Util.Discount.TARGET_FAMILIES && String.isNotBlank(d.Eligible_Families__c) && String.isNotBlank(item.family)) {
-                    if (d.Eligible_Families__c.contains(item.family)) {
+                } else if (discount.Target_Type__c == Util.Discount.TARGET_FAMILIES && String.isNotBlank(discount.Eligible_Families__c) && String.isNotBlank(item.family)) {
+                    if (discount.Eligible_Families__c.contains(item.family)) {
                         isEligible = true;
                     }
-                } else if (d.Target_Type__c == Util.Discount.TARGET_PRODUCTS) {
+                } else if (discount.Target_Type__c == Util.Discount.TARGET_PRODUCTS) {
                     if (targetedProductIds.contains(item.productId)) {
                         isEligible = true;
                     }
@@ -64,37 +64,37 @@ public class DiscountService {
                 if (isEligible) {
                     eligibleSubtotal += (item.unitPrice * item.quantity);
                     eligibleQuantity += item.quantity;
-                    eItems.add(item);
+                    eligibleItems.add(item);
                 }
             }
 
             if (eligibleSubtotal == 0) continue;
 
             OrderContext context = new OrderContext(subtotal, eligibleSubtotal, eligibleQuantity, today);
-            String criteria = d.Discount_Category__c == Util.Discount.CAT_CONDITIONAL ? d.Condition_Type__c : d.Recurrence__c;
+            String criteria = discount.Discount_Category__c == Util.Discount.CAT_CONDITIONAL ? discount.Condition_Type__c : discount.Recurrence__c;
             
             Boolean isApplicable = false;
-            Decimal dValue = 0;
+            Decimal discountValue = 0;
 
             if (String.isNotBlank(criteria)) {
                 DiscountEvaluator evaluator = DiscountEvaluatorFactory.getEvaluator(criteria);
-                if (evaluator.isApplicable(d, context)) {
+                if (evaluator.isApplicable(discount, context)) {
                     isApplicable = true;
-                    dValue = evaluator.calculateDiscountValue(d, eItems, eligibleSubtotal);
+                    discountValue = evaluator.calculateDiscountValue(discount, eligibleItems, eligibleSubtotal);
                 }
-            } else if (d.Discount_Category__c == Util.Discount.CAT_ONETIME) {
+            } else if (discount.Discount_Category__c == Util.Discount.CAT_ONETIME) {
                 isApplicable = true;
-                dValue = d.Discount_Type__c == Util.Discount.TYPE_PERCENT ? eligibleSubtotal * (d.Value__c / 100) : d.Value__c;
+                discountValue = discount.Discount_Type__c == Util.Discount.TYPE_PERCENT ? eligibleSubtotal * (discount.Value__c / 100) : discount.Value__c;
             }
 
-            if (isApplicable && dValue > 0) {
-                applicableDiscounts.add(d);
+            if (isApplicable && discountValue > 0) {
+                applicableDiscounts.add(discount);
                 
-                if (dValue > eligibleSubtotal) {
-                    dValue = eligibleSubtotal;
+                if (discountValue > eligibleSubtotal) {
+                    discountValue = eligibleSubtotal;
                 }
-                discountToValueMap.put(d.Id, dValue);
-                discountToEligibleItems.put(d.Id, eItems);
+                discountToValueMap.put(discount.Id, discountValue);
+                discountToEligibleItems.put(discount.Id, eligibleItems);
             }
         }
 
@@ -106,15 +106,15 @@ public class DiscountService {
                 Discount__c selectedDiscount = applicableDiscounts[0];
                 Decimal selectedVal = discountToValueMap.get(selectedDiscount.Id);
                 
-                for (Discount__c d : applicableDiscounts) {
-                    Decimal currentVal = discountToValueMap.get(d.Id);
+                for (Discount__c discount : applicableDiscounts) {
+                    Decimal currentVal = discountToValueMap.get(discount.Id);
                     
                     if (settings.Strategy__c == Util.Settings.STRATEGY_HIGHEST && currentVal > selectedVal) {
-                        selectedDiscount = d;
+                        selectedDiscount = discount;
                         selectedVal = currentVal;
                     }
                     if (settings.Strategy__c == Util.Settings.STRATEGY_LOWEST && currentVal < selectedVal) {
-                        selectedDiscount = d;
+                        selectedDiscount = discount;
                         selectedVal = currentVal;
                     }
                 }
@@ -131,23 +131,23 @@ public class DiscountService {
         List<String> appliedNames = new List<String>();
         List<Id> appliedIds = new List<Id>();
 
-        for (Discount__c d : winningDiscounts) {
-            appliedNames.add(d.Name);
-            appliedIds.add(d.Id);
+        for (Discount__c discount : winningDiscounts) {
+            appliedNames.add(discount.Name);
+            appliedIds.add(discount.Id);
             
-            Decimal dTotalValue = discountToValueMap.get(d.Id);
-            totalDiscountAmount += dTotalValue;
+            Decimal discountTotalValue = discountToValueMap.get(discount.Id);
+            totalDiscountAmount += discountTotalValue;
             
-            List<CartItem> eItems = discountToEligibleItems.get(d.Id);
+            List<CartItem> eligibleItems = discountToEligibleItems.get(discount.Id);
             Decimal dEligibleSubtotal = 0;
-            for (CartItem item : eItems) {
+            for (CartItem item : eligibleItems) {
                 dEligibleSubtotal += (item.unitPrice * item.quantity);
             }
             
-            for (CartItem item : eItems) {
+            for (CartItem item : eligibleItems) {
                 Decimal itemLineTotal = item.unitPrice * item.quantity;
                 Decimal proportion = dEligibleSubtotal > 0 ? (itemLineTotal / dEligibleSubtotal) : 0;
-                Decimal itemDiscount = dTotalValue * proportion;
+                Decimal itemDiscount = discountTotalValue * proportion;
                 
                 Decimal currentVal = itemDiscounts.get((String)item.pricebookEntryId);
                 itemDiscounts.put((String)item.pricebookEntryId, currentVal + itemDiscount);
