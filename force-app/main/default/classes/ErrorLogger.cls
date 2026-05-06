@@ -37,7 +37,15 @@ public without sharing class ErrorLogger {
         publishLog(LogLevel.WARNING, className, methodName, message, null, UserInfo.getUserId());
     }
 
+    public static void logWarning(String message) {
+        logWarning(message, 'Anonymous', 'Anonymous');
+    }
+
     public static void logInfo(String message, String className, String methodName) {
         publishLog(LogLevel.INFO, className, methodName, message, null, UserInfo.getUserId());
+    }
+
+    public static void logInfo(String message) {
+        logInfo(message, 'Anonymous', 'Anonymous');
     }
 }
