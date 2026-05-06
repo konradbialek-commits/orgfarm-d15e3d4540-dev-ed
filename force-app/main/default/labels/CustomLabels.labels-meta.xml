@@ -434,7 +434,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Target Type</shortDescription>
-        <value>Target Application</value>
+        <value>Target Products</value>
     </labels>
     <labels>
         <fullName>DM_Opt_AllProducts</fullName>
@@ -674,5 +674,37 @@
         <protected>false</protected>
         <shortDescription>Generic Error Message</shortDescription>
         <value>Something went wrong processing your request. Please contact your system administrator.</value>
+    </labels>
+    <labels>
+        <fullName>OM_Err_FetchPricebooks</fullName>
+        <categories>Error Handling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Order Modal Fetch Pricebooks Error</shortDescription>
+        <value>We couldn't load the available Price Books. Please try again or contact support.</value>
+    </labels>
+    <labels>
+        <fullName>OM_Err_FetchFamilies</fullName>
+        <categories>Error Handling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Order Modal Fetch Families Error</shortDescription>
+        <value>We couldn't load the Product Families. Please try again or contact support.</value>
+    </labels>
+    <labels>
+        <fullName>OM_Err_FetchProducts</fullName>
+        <categories>Error Handling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Order Modal Fetch Products Error</shortDescription>
+        <value>We couldn't load the Products for the selected Price Book. Please try again or contact support.</value>
+    </labels>
+    <labels>
+        <fullName>OM_Err_CreateOrder</fullName>
+        <categories>Error Handling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Order Modal Create Order Error</shortDescription>
+        <value>An error occurred while attempting to create your order. Please contact your system administrator.</value>
     </labels>
 </CustomLabels>
