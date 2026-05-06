@@ -23,8 +23,8 @@ public with sharing class OrderCreationController {
                 });
             }
             return options;
-        } catch (Exception e) {
-            ErrorLogger.logException(e, 'OrderCreationController', 'getProductFamilies');
+        } catch (Exception except) {
+            ErrorLogger.logException(except, 'OrderCreationController', 'getProductFamilies');
             throw new AuraHandledException(System.Label.Generic_Error_Message);
         }
     }
