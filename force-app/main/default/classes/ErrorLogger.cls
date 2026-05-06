@@ -1,6 +1,6 @@
 public without sharing class ErrorLogger {
 
-    public static void logException(Exception except, String className, String methodName) {
+    public static void logException(Exception except, String className, String methodName, Id userId) {
 
         Error_Event__e newEvent = new Error_Event__e(
             Class_Name__c = className,
@@ -16,5 +16,13 @@ public without sharing class ErrorLogger {
                 System.debug(error.getStatusCode() + ' - ' + error.getMessage());
             }
         }
+    }
+
+    public static void logException(Exception except, String className, String methodName) {
+        logException(except, className, methodName, UserInfo.getUserId());
+    }
+
+    public static void logException(Exception except) {
+        logException(except, 'Anonymous', 'Anonymous', UserInfo.getUserId());
     }
 }
