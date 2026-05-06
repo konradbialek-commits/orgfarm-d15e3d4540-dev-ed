@@ -6,7 +6,8 @@ public without sharing class ErrorLogger {
             Class_Name__c = className,
             Method_Name__c = methodName,
             Error_Message__c = except.getMessage(),
-            Stack_Trace__c = except.getStackTraceString()
+            Stack_Trace__c = except.getStackTraceString(),
+            User_Id__c = userId
         );
 
         Database.SaveResult saveResult = EventBus.publish(newEvent);

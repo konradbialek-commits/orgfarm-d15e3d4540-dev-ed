@@ -667,4 +667,12 @@
         <shortDescription>DM Err CalcDiscount</shortDescription>
         <value>There was an error calculating discounts. Please contact your administrator.</value>
     </labels>
+    <labels>
+        <fullName>Generic_Error_Message</fullName>
+        <categories>Error Handling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Generic Error Message</shortDescription>
+        <value>Something went wrong processing your request. Please contact your system administrator.</value>
+    </labels>
 </CustomLabels>
