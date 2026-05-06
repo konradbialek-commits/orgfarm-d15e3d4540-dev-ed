@@ -2,6 +2,7 @@ public with sharing class DiscountManagerController {
 
     @AuraEnabled
     public static Discount_Setting__c getGlobalSettings() {
+        Savepoint savePoint = Database.setSavepoint();
         try {
             List<Discount_Setting__c> settings = [SELECT Id, Strategy__c, Minimum_Price_Floor_Percent__c FROM Discount_Setting__c LIMIT 1];
             if (settings.isEmpty()) {
@@ -13,22 +14,13 @@ public with sharing class DiscountManagerController {
                 insert newSetting;
                 return newSetting;
             }
-        } catch (Exception exception) {
-            Error_Event__e newEvent = new Error_Event__e(
-                Class_Name__c = 'DiscountManagerController', 
-                Method_Name__c = 'getGlobalSettings',
-                Error_Message__c = exception.getMessage(),
-                Stack_Trace__c = exception.getStackTraceString()
-            );
-            Database.SaveResult saveResult = EventBus.publish(newEvent);
 
-            if (!saveResult.isSuccess()) {
-                for (Database.Error error : saveResult.getErrors()) {
-                    System.debug('Error publishing event: ' + error.getStatusCode() + ' - ' + error.getMessage());
-                }
-            }
+            return settings[0];
+        } catch (Exception exception) {
+            Database.rollback(savePoint);
+            ErrorLogger.logException(exception, 'DiscountManagerController', 'getGlobalSettings');
+            throw new AuraHandledException('There was an error fetching global settings. Please contact your administrator.');
         }
-        return settings[0];
     }
 
     @AuraEnabled

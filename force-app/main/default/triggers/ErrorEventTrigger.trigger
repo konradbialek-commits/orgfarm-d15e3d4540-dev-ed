@@ -11,6 +11,12 @@ trigger ErrorEventTrigger on Error_Event__e (after insert) {
     }
     
     if (!logsToInsert.isEmpty()) {
-        insert logsToInsert;
+        try {
+            insert logsToInsert;
+        } catch (Exception e) {
+            System.debug(LoggingLevel.ERROR, 'CRITICAL FAILURE: Error Logger Trigger failed to insert logs.');
+            System.debug(LoggingLevel.ERROR, 'Reason: ' + e.getMessage());
+            System.debug(LoggingLevel.ERROR, 'Stack Trace: ' + e.getStackTraceString());
+        }
     }
 }
