@@ -100,26 +100,8 @@ public class DiscountService {
 
         List<Discount__c> winningDiscounts = new List<Discount__c>();
         if (!applicableDiscounts.isEmpty()) {
-            if (settings.Strategy__c == Util.Settings.STRATEGY_CUMULATIVE) {
-                winningDiscounts.addAll(applicableDiscounts);
-            } else {
-                Discount__c selectedDiscount = applicableDiscounts[0];
-                Decimal selectedVal = discountToValueMap.get(selectedDiscount.Id);
-                
-                for (Discount__c discount : applicableDiscounts) {
-                    Decimal currentVal = discountToValueMap.get(discount.Id);
-                    
-                    if (settings.Strategy__c == Util.Settings.STRATEGY_HIGHEST && currentVal > selectedVal) {
-                        selectedDiscount = discount;
-                        selectedVal = currentVal;
-                    }
-                    if (settings.Strategy__c == Util.Settings.STRATEGY_LOWEST && currentVal < selectedVal) {
-                        selectedDiscount = discount;
-                        selectedVal = currentVal;
-                    }
-                }
-                winningDiscounts.add(selectedDiscount);
-            }
+            DiscountStrategy strategy = DiscountStrategyFactory.getStrategy(settings.Strategy__c);
+            winningDiscounts = strategy.getWinningDiscounts(applicableDiscounts, discountToValueMap);
         }
 
         Map<String, Decimal> itemDiscounts = new Map<String, Decimal>();
