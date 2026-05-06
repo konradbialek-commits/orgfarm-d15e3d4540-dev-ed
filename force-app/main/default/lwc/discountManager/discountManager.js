@@ -10,7 +10,6 @@ import getAvailableFamilies from '@salesforce/apex/DiscountManagerController.get
 import getAvailableProducts from '@salesforce/apex/DiscountManagerController.getAvailableProducts';
 import getDiscountProducts from '@salesforce/apex/DiscountManagerController.getDiscountProducts';
 
-// --- NEW SINGLE IMPORT ---
 import { Util } from 'c/discountConstants';
 
 import LBL_BTN_SAVE from '@salesforce/label/c.Btn_Save';
@@ -222,8 +221,13 @@ export default class DiscountManager extends LightningElement {
     connectedCallback() { this.loadData(); }
 
     loadData() {
-        getGlobalSettings().then(result => { this.settings = result; });
-        getDiscounts().then(result => { this.discounts = result; });
+        getGlobalSettings()
+            .then(result => { this.settings = result; })
+            .catch(err => this.showToast(LBL_MSG_ERROR, err.body ? err.body.message : err.message, 'error'));
+            
+        getDiscounts()
+            .then(result => { this.discounts = result; })
+            .catch(err => this.showToast(LBL_MSG_ERROR, err.body ? err.body.message : err.message, 'error'));
     }
 
     handleSettingChange(event) { this.settings[event.target.name] = event.target.value; }
@@ -231,7 +235,7 @@ export default class DiscountManager extends LightningElement {
     saveSettings() {
         saveGlobalSettings({ setting: this.settings })
             .then(() => this.showToast(LBL_MSG_SUCCESS, DM_Msg_SettingsSaved, 'success'))
-            .catch(err => this.showToast(LBL_MSG_ERROR, err.body.message, 'error'));
+            .catch(err => this.showToast(LBL_MSG_ERROR, err.body ? err.body.message : err.message, 'error'));
     }
 
     handleRowSelection(event) { this.selectedRows = event.detail.selectedRows.map(row => row.Id); }
@@ -244,7 +248,8 @@ export default class DiscountManager extends LightningElement {
             .then(() => {
                 this.showToast(LBL_MSG_SUCCESS, DM_Msg_DiscountsUpdated, 'success');
                 this.loadData();
-            });
+            })
+            .catch(err => this.showToast(LBL_MSG_ERROR, err.body ? err.body.message : err.message, 'error'));
     }
 
     deleteSelected() {
@@ -254,7 +259,7 @@ export default class DiscountManager extends LightningElement {
                 this.showToast(LBL_MSG_SUCCESS, DM_Msg_DiscountsDeleted, 'success');
                 this.loadData();
             })
-            .catch(err => this.showToast(LBL_MSG_ERROR, err.body.message, 'error'));
+            .catch(err => this.showToast(LBL_MSG_ERROR, err.body ? err.body.message : err.message, 'error'));
     }
 
     getRowActions(row, doneCallback) {
@@ -294,7 +299,7 @@ export default class DiscountManager extends LightningElement {
                     this.isModalOpen = true;
                 })
                 .catch(err => {
-                    this.showToast(LBL_MSG_ERROR, DM_Msg_FailedLoadProducts, 'error');
+                    this.showToast(LBL_MSG_ERROR, err.body ? err.body.message : err.message, 'error');
                     this.isModalOpen = true;
                 });
         } else {
@@ -387,7 +392,7 @@ export default class DiscountManager extends LightningElement {
                 this.closeModal();
                 this.loadData();
             })
-            .catch(err => this.showToast(LBL_MSG_ERROR, err.body.message, 'error'));
+            .catch(err => this.showToast(LBL_MSG_ERROR, err.body ? err.body.message : err.message, 'error'));
     }
 
     showToast(title, message, variant) {
