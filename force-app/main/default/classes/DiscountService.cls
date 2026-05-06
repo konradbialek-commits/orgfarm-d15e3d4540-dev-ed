@@ -159,9 +159,9 @@ public class DiscountService {
 
         if (totalDiscountAmount > maxDiscountAllowed) {
             Decimal scaleFactor = totalDiscountAmount > 0 ? (maxDiscountAllowed / totalDiscountAmount) : 0;
-            for (String pbeId : itemDiscounts.keySet()) {
-                Decimal scaledVal = itemDiscounts.get(pbeId) * scaleFactor;
-                itemDiscounts.put(pbeId, scaledVal);
+            for (String itemDiscountId : itemDiscounts.keySet()) {
+                Decimal scaledVal = itemDiscounts.get(itemDiscountId) * scaleFactor;
+                itemDiscounts.put(itemDiscountId, scaledVal);
             }
             totalDiscountAmount = maxDiscountAllowed;
             appliedNames.add('(Price Floor Adjusted)');

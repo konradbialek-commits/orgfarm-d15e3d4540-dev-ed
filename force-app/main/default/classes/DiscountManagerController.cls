@@ -50,8 +50,8 @@ public with sharing class DiscountManagerController {
         Savepoint savePoint = Database.setSavepoint();
         try {
             List<Discount__c> toUpdate = new List<Discount__c>();
-            for (Id dId : discountIds) {
-                toUpdate.add(new Discount__c(Id = dId, Active__c = isActive));
+            for (Id discountId : discountIds) {
+                toUpdate.add(new Discount__c(Id = discountId, Active__c = isActive));
             }
             update toUpdate;
         } catch (Exception except) {
@@ -89,10 +89,10 @@ public with sharing class DiscountManagerController {
 
             if (discountRecord.Target_Type__c == Util.Discount.TARGET_PRODUCTS && selectedProductIds != null && !selectedProductIds.isEmpty()) {
                 List<Discount_Product__c> junctionRecords = new List<Discount_Product__c>();
-                for (Id pId : selectedProductIds) {
+                for (Id productId : selectedProductIds) {
                     junctionRecords.add(new Discount_Product__c(
                         Discount__c = discountRecord.Id,
-                        Product__c = pId
+                        Product__c = productId
                     ));
                 }
                 insert junctionRecords;
@@ -108,10 +108,10 @@ public with sharing class DiscountManagerController {
     public static List<Map<String, String>> getAvailableFamilies() {
         List<Map<String, String>> options = new List<Map<String, String>>();
         Schema.DescribeFieldResult fieldResult = Product2.Family.getDescribe();
-        for(Schema.PicklistEntry f : fieldResult.getPicklistValues()) {
+        for(Schema.PicklistEntry field : fieldResult.getPicklistValues()) {
             options.add(new Map<String, String>{
-                'label' => f.getLabel(),
-                'value' => f.getValue()
+                'label' => field.getLabel(),
+                'value' => field.getValue()
             });
         }
         return options;
@@ -135,8 +135,8 @@ public with sharing class DiscountManagerController {
     @AuraEnabled
     public static List<Id> getDiscountProducts(Id discountId) {
         List<Id> productIds = new List<Id>();
-        for (Discount_Product__c dp : [SELECT Product__c FROM Discount_Product__c WHERE Discount__c = :discountId]) {
-            productIds.add(dp.Product__c);
+        for (Discount_Product__c discountProduct : [SELECT Product__c FROM Discount_Product__c WHERE Discount__c = :discountId]) {
+            productIds.add(discountProduct.Product__c);
         }
         return productIds;
     }
