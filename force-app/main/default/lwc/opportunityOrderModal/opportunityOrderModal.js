@@ -22,7 +22,7 @@ import DM_Msg_Wait from '@salesforce/label/c.DM_Msg_Wait';
 import DM_Err_SelectPricebook from '@salesforce/label/c.DM_Err_SelectPricebook';
 import DM_Msg_HoldUp from '@salesforce/label/c.DM_Msg_HoldUp';
 import DM_Err_SelectProduct from '@salesforce/label/c.DM_Err_SelectProduct';
-import DM_Err_LoadProducts from '@salesforce/label/c.DM_Err_LoadProducts';
+import GENERIC_ERROR from '@salesforce/label/c.Generic_Error_Message';
 
 export default class OpportunityOrderModal extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -68,7 +68,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
                 this.selectedPricebookId = data[0].Id;
             }
         } else if (error) {
-            this.showToast(LBL_MSG_ERROR, 'Failed to load price books', 'error');
+            this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : GENERIC_ERROR, 'error');
         }
     }
 
@@ -78,7 +78,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
             let options = [{ label: 'All Families', value: '' }];
             this.familyOptions = [...options, ...data];
         } else if (error) {
-            this.showToast(LBL_MSG_ERROR, 'Failed to load product families', 'error');
+            this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : GENERIC_ERROR, 'error');
         }
     }
 
@@ -98,7 +98,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
                 };
             });
         } else if (error) {
-            this.showToast(LBL_MSG_ERROR, DM_Err_LoadProducts, 'error');
+            this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : GENERIC_ERROR, 'error');
         }
     }
 
@@ -203,7 +203,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
             
             this.isSummaryPage = true;
         } catch(error) {
-            this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : error.message, 'error');
+            this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : GENERIC_ERROR, 'error');
         }
     }
 
@@ -243,7 +243,7 @@ export default class OpportunityOrderModal extends NavigationMixin(LightningElem
                 }
             });
         } catch (error) {
-            this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : error.message, 'error');
+            this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : GENERIC_ERROR, 'error');
         } finally {
             this.isLoading = false;
         }
