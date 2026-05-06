@@ -6,7 +6,7 @@ public with sharing class OrderCreationController {
             return [SELECT Id, Name, IsStandard FROM Pricebook2 WHERE IsActive = true];
         } catch (Exception except) {
             ErrorLogger.logException(except, 'OrderCreationController', 'getAvailablePricebooks');
-            throw new AuraHandledException(System.Label.Generic_Error_Message);
+            throw new AuraHandledException(System.Label.OM_Err_FetchPricebooks);
         }
     }
 
@@ -25,7 +25,7 @@ public with sharing class OrderCreationController {
             return options;
         } catch (Exception except) {
             ErrorLogger.logException(except, 'OrderCreationController', 'getProductFamilies');
-            throw new AuraHandledException(System.Label.Generic_Error_Message);
+            throw new AuraHandledException(System.Label.OM_Err_FetchFamilies);
         }
     }
 
@@ -47,7 +47,7 @@ public with sharing class OrderCreationController {
             return Database.query(query);
         } catch (Exception except) {
             ErrorLogger.logException(except, 'OrderCreationController', 'getProducts');
-            throw new AuraHandledException(System.Label.Generic_Error_Message);
+            throw new AuraHandledException(System.Label.OM_Err_FetchProducts);
         }
     }
 
@@ -106,7 +106,7 @@ public with sharing class OrderCreationController {
         } catch (Exception except) {
             Database.rollback(savePoint);
             ErrorLogger.logException(except, 'OrderCreationController', 'createOrderWithItems');
-            throw new AuraHandledException(System.Label.Generic_Error_Message);
+            throw new AuraHandledException(System.Label.OM_Err_CreateOrder);
         }
     }
 }
