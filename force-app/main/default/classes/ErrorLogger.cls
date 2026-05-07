@@ -2,14 +2,10 @@ public without sharing class ErrorLogger {
 
     public enum LogLevel { ERROR, WARNING, INFO }
 
-    private static void publishLog(LogLevel level, String className, String methodName, String message, String stackTrace, Id userId) {
+    public static void log(SObject recordToLog) {
         Error_Event__e newEvent = new Error_Event__e(
-            Log_Level__c = level.name(),
-            Class_Name__c = className,
-            Method_Name__c = methodName,
-            Error_Message__c = message,
-            Stack_Trace__c = stackTrace,
-            User_Id__c = userId
+            SObject_Type__c = String.valueOf(recordToLog.getSObjectType()),
+            Payload__c = JSON.serialize(recordToLog)
         );
 
         Database.SaveResult saveResult = EventBus.publish(newEvent);
@@ -21,8 +17,21 @@ public without sharing class ErrorLogger {
         }
     }
 
+    private static void prepareAndLog(LogLevel level, String className, String methodName, String message, String stackTrace, Id userId) {
+        Error_Log__c logRecord = new Error_Log__c(
+            Log_Level__c = level.name(),
+            Class_Name__c = className,
+            Method_Name__c = methodName,
+            Error_Message__c = message,
+            Stack_Trace__c = stackTrace,
+            User__c = userId 
+        );
+        
+        log(logRecord);
+    }
+
     public static void logException(Exception except, String className, String methodName, Id userId) {
-        publishLog(LogLevel.ERROR, className, methodName, except.getMessage(), except.getStackTraceString(), userId);
+        prepareAndLog(LogLevel.ERROR, className, methodName, except.getMessage(), except.getStackTraceString(), userId);
     }
 
     public static void logException(Exception except, String className, String methodName) {
@@ -34,7 +43,7 @@ public without sharing class ErrorLogger {
     }
 
     public static void logWarning(String message, String className, String methodName) {
-        publishLog(LogLevel.WARNING, className, methodName, message, null, UserInfo.getUserId());
+        prepareAndLog(LogLevel.WARNING, className, methodName, message, null, UserInfo.getUserId());
     }
 
     public static void logWarning(String message) {
@@ -42,7 +51,7 @@ public without sharing class ErrorLogger {
     }
 
     public static void logInfo(String message, String className, String methodName) {
-        publishLog(LogLevel.INFO, className, methodName, message, null, UserInfo.getUserId());
+        prepareAndLog(LogLevel.INFO, className, methodName, message, null, UserInfo.getUserId());
     }
 
     public static void logInfo(String message) {

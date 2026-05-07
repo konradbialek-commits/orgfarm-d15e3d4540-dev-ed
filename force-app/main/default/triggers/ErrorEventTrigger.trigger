@@ -1,29 +1,29 @@
 trigger ErrorEventTrigger on Error_Event__e (after insert) {
-    List<Error_Log__c> logsToInsert = new List<Error_Log__c>();
     
-    for (Error_Event__e event : Trigger.new) {
-        Error_Log__c log = new Error_Log__c(
-            Class_Name__c = event.Class_Name__c,
-            Method_Name__c = event.Method_Name__c,
-            Error_Message__c = event.Error_Message__c,
-            Stack_Trace__c = event.Stack_Trace__c,
-            Log_Level__c = event.Log_Level__c
-        );
-        
-        if (String.isNotBlank(event.User_Id__c)) {
-            log.User__c = event.User_Id__c; 
-        }
+    Map<Type, List<SObject>> recordsToInsertByType = new Map<Type, List<SObject>>();
 
-        logsToInsert.add(log);
+    for (Error_Event__e event : Trigger.new) {
+        if (String.isNotBlank(event.Payload__c) && String.isNotBlank(event.SObject_Type__c)) {
+            try {
+                Type targetType = Type.forName(event.SObject_Type__c);
+                
+                if (targetType != null) {
+                    SObject record = (SObject) JSON.deserialize(event.Payload__c, targetType);
+                    
+                    if (!recordsToInsertByType.containsKey(targetType)) {
+                        recordsToInsertByType.put(targetType, new List<SObject>());
+                    }
+                    recordsToInsertByType.get(targetType).add(record);
+                }
+            } catch (Exception e) {
+                System.debug(e.getMessage());
+            }
+        }
     }
-    
-    if (!logsToInsert.isEmpty()) {
-        try {
-            insert logsToInsert;
-        } catch (Exception except) {
-            System.debug(LoggingLevel.ERROR, 'CRITICAL FAILURE: Error Logger Trigger failed to insert logs.');
-            System.debug(LoggingLevel.ERROR, 'Reason: ' + except.getMessage());
-            System.debug(LoggingLevel.ERROR, 'Stack Trace: ' + except.getStackTraceString());
+
+    for (List<SObject> records : recordsToInsertByType.values()) {
+        if (!records.isEmpty()) {
+            insert records;
         }
     }
 }
