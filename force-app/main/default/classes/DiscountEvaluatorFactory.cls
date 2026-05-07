@@ -1,18 +1,17 @@
 public class DiscountEvaluatorFactory {
     
     public static DiscountEvaluator getEvaluator(String criteria) {
-        if (criteria == Util.Discount.COND_TWO_FOR_ONE) {
-            return new TwoForOneEvaluator();
-        } else if (criteria == Util.Discount.COND_MIN_ORDER) {
-            return new MinimumOrderValueEvaluator();
-        } else if (criteria == Util.Discount.COND_VOLUME) {
-            return new VolumeTierEvaluator();
-        } else if (criteria == Util.Discount.REC_FIRST_DAY_OF_MONTH) {
-            return new FirstDayOfMonthEvaluator();
-        } else if (criteria == Util.Discount.REC_YEARLY_CUSTOM) {
-            return new YearlyCustomDateEvaluator();
-        } else {
+        if (String.isBlank(criteria)) {
             return new DefaultEvaluator();
         }
+
+        String className = criteria.replaceAll('\\s+', '') + 'Evaluator';
+        Type evaluatorType = Type.forName(className);
+        
+        if (evaluatorType != null) {
+            return (DiscountEvaluator) evaluatorType.newInstance();
+        }
+        
+        return new DefaultEvaluator();
     }
 }
