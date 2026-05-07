@@ -2,12 +2,20 @@
   "packageDirectories": [
     {
       "path": "force-app",
-      "default": true
+      "default": true,
+      "dependencies": [
+        {
+          "package": "TriggerActionsFramework@0.3.4.1" 
+        }
+      ]
     }
   ],
   "name": "orgfarm-d15e3d4540-dev-ed",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "66.0",
-  "defaultLwcLanguage": "javascript"
+  "defaultLwcLanguage": "javascript",
+  "packageAliases": {
+    "TriggerActionsFramework@0.3.4.1": "04tKY000000R0yHYAS" 
+  }
 }
