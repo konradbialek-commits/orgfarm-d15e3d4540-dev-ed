@@ -21,14 +21,14 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
 
             HttpRequest req = new HttpRequest();
 
-            if (item.Operation__c == 'DELETE') {
+            if (item.Operation__c == Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION) {
                 Map<String, Object> payloadMap = (Map<String, Object>) JSON.deserializeUntyped(item.Payload__c);
                 String extId = (String) payloadMap.get('externalProductId');
                 
-                req.setEndpoint('callout:Szymon_Org_API/services/apexrest/v1/products/' + extId);
+                req.setEndpoint(Util.PRODUCT_SYNC_QUEUE.ENDPOINT_URL + extId);
                 req.setMethod('DELETE');
             } else {
-                req.setEndpoint('callout:Szymon_Org_API/services/apexrest/v1/products');
+                req.setEndpoint(Util.PRODUCT_SYNC_QUEUE.ENDPOINT_URL);
                 req.setMethod('POST');
                 req.setHeader('Content-Type', 'application/json');
                 req.setBody(item.Payload__c);
@@ -36,7 +36,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
 
             try {
                 String requestLog = 'OUTBOUND ' + item.Operation__c + ' REQUEST | Endpoint: ' + req.getEndpoint();
-                if (item.Operation__c != 'DELETE') {
+                if (item.Operation__c != Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION) {
                     requestLog += ' | Body: ' + item.Payload__c;
                 }
                 ErrorLogger.logInfo(requestLog, 'ProductSyncQueueable', 'execute');
@@ -44,7 +44,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
                 HttpResponse res = http.send(req);
 
                 if (res.getStatusCode() == 200 || res.getStatusCode() == 201) {
-                    item.Status__c = 'Success';
+                    item.Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.SUCCESS;
                     item.Error_Message__c = '';
                     
                     ErrorLogger.logInfo(
@@ -53,7 +53,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
                         'execute'
                     );
                 } else {
-                    item.Status__c = 'Failed';
+                    item.Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.FAILED;
                     item.Error_Message__c = 'HTTP ' + res.getStatusCode() + ': ' + res.getBody();
                     
                     ErrorLogger.logWarning(
