@@ -1,4 +1,4 @@
-public class ProductEnqueueSyncAction implements TriggerAction.AfterInsert, TriggerAction.AfterUpdate {
+public class ProductEnqueueSyncAction implements TriggerAction.AfterInsert, TriggerAction.AfterUpdate, TriggerAction.BeforeDelete {
     
     public void afterInsert(List<Product2> newList) {
         enqueueProducts(newList, 'INSERT');
@@ -8,22 +8,27 @@ public class ProductEnqueueSyncAction implements TriggerAction.AfterInsert, Trig
         enqueueProducts(newList, 'UPDATE');
     }
 
-    private void enqueueProducts(List<Product2> newList, String operation) {
+    public void beforeDelete(List<Product2> oldList) {
+        enqueueProducts(oldList, 'DELETE');
+    }
+
+    private void enqueueProducts(List<Product2> recordList, String operation) {
         List<Product_Sync_Queue__c> queueItemsToInsert = new List<Product_Sync_Queue__c>();
         
-        for (Product2 prod : newList) {
+        for (Product2 prod : recordList) {
             if (prod.Is_External__c == true) {
                 continue;
             }
             
+            String extId = String.isNotBlank(prod.External_Product_Id__c) ? prod.External_Product_Id__c : prod.Id;
+
             Map<String, String> payloadMap = new Map<String, String>{
-                'externalProductId' => prod.Id,
+                'externalProductId' => extId,
                 'externalOrgId' => UserInfo.getOrganizationId(),
                 'name' => prod.Name,
                 'description' => prod.Description,
                 'productCode' => prod.ProductCode,
-                'family' => prod.Family,
-                'language' => prod.Language__c
+                'family' => prod.Family
             };
             
             Product_Sync_Queue__c queueItem = new Product_Sync_Queue__c(

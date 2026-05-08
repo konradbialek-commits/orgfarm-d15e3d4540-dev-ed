@@ -22,7 +22,9 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
             HttpRequest req = new HttpRequest();
 
             if (item.Operation__c == 'DELETE') {
-                String extId = String.isNotBlank(item.Product__r.External_Product_Id__c) ? item.Product__r.External_Product_Id__c : item.Product__c;
+                Map<String, Object> payloadMap = (Map<String, Object>) JSON.deserializeUntyped(item.Payload__c);
+                String extId = (String) payloadMap.get('externalProductId');
+                
                 req.setEndpoint('callout:Szymon_Org_API/services/apexrest/v1/products/' + extId);
                 req.setMethod('DELETE');
             } else {
@@ -44,7 +46,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
                 if (res.getStatusCode() == 200 || res.getStatusCode() == 201) {
                     item.Status__c = 'Success';
                     item.Error_Message__c = '';
-
+                    
                     ErrorLogger.logInfo(
                         'OUTBOUND ' + item.Operation__c + ' SUCCESS | Status: ' + res.getStatusCode() + ' | Response: ' + res.getBody(),
                         'ProductSyncQueueable',
@@ -53,7 +55,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
                 } else {
                     item.Status__c = 'Failed';
                     item.Error_Message__c = 'HTTP ' + res.getStatusCode() + ': ' + res.getBody();
-
+                    
                     ErrorLogger.logWarning(
                         'OUTBOUND ' + item.Operation__c + ' REJECTED | Status: ' + res.getStatusCode() + ' | Response: ' + res.getBody(),
                         'ProductSyncQueueable',
@@ -63,7 +65,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
             } catch (Exception e) {
                 item.Status__c = 'Failed';
                 item.Error_Message__c = e.getMessage();
-
+                
                 ErrorLogger.logException(e, 'ProductSyncQueueable', 'execute');
             }
         }
