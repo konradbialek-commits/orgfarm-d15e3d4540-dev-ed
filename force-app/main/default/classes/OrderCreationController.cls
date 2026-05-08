@@ -32,7 +32,7 @@ public with sharing class OrderCreationController {
     @AuraEnabled(cacheable=true)
     public static List<PricebookEntry> getProducts(String searchTerm, Id pricebookId, String productFamily) {
         try {
-            String query = 'SELECT Id, Product2Id, Product2.Name, Product2.Family, UnitPrice FROM PricebookEntry WHERE Pricebook2Id = :pricebookId AND IsActive = true';
+            String query = 'SELECT Id, Product2Id, Product2.Name, Product2.Family, UnitPrice FROM PricebookEntry WHERE Pricebook2Id = :pricebookId AND IsActive = true AND Product2.Is_External__c = false AND Product2.Is_Deleted__c = false';
             
             if (String.isNotBlank(searchTerm)) {
                 String searchLike = '%' + searchTerm + '%';
