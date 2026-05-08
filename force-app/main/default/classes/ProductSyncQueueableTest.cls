@@ -29,7 +29,7 @@ private class ProductSyncQueueableTest {
 
     @TestSetup
     static void setupData() {
-        Product2 p = new Product2(Name = 'Setup Product', External_Product_Id__c = 'SETUP-001', Language__c = 'en_US');
+        Product2 p = new Product2(Name = 'Setup Product', External_Product_Id__c = 'SETUP-001');
         insert p;
 
         Product_Sync_Queue__c qItemDelete = new Product_Sync_Queue__c(
@@ -37,7 +37,7 @@ private class ProductSyncQueueableTest {
             Operation__c = 'DELETE',
             Payload__c = '',
             Status__c = 'Pending',
-            Attempt_Count__c = 0
+            Attempt_Count__c = 0 
         );
         insert qItemDelete;
     }
@@ -46,14 +46,14 @@ private class ProductSyncQueueableTest {
     static void testQueueablePostSuccess() {
         delete [SELECT Id FROM Product_Sync_Queue__c];
         
-        Product2 p = new Product2(Name = 'Test', External_Product_Id__c = '123', Language__c = 'en_US');
+        Product2 p = new Product2(Name = 'Test', External_Product_Id__c = '123');
         insert p;
         Product_Sync_Queue__c q = new Product_Sync_Queue__c(
             Product__c = p.Id, 
             Operation__c = 'INSERT', 
             Status__c = 'Pending', 
             Payload__c = '{}',
-            Attempt_Count__c = 0
+            Attempt_Count__c = 0 
         );
         insert q;
 
