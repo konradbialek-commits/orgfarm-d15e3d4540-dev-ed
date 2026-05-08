@@ -1,6 +1,16 @@
 @IsTest
 private class ProductSyncActionsTest {
 
+    private class MockHttpResponseGenerator implements HttpCalloutMock {
+        public HTTPResponse respond(HTTPRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setHeader('Content-Type', 'application/json');
+            res.setStatusCode(200);
+            res.setBody('{"status":"success"}');
+            return res;
+        }
+    }
+
     @IsTest
     static void testEnqueueSyncActionInsertLocal() {
         Test.startTest();
@@ -19,8 +29,8 @@ private class ProductSyncActionsTest {
     static void testProductQueueItemAction() {
         Product2 p = new Product2(Name = 'Queue Trigger Test');
         insert p;
-
-        Test.setMock(HttpCalloutMock.class, new ProductSyncQueueableTest.MockHttpResponseGenerator());
+        
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
         Product_Sync_Queue__c qItem = new Product_Sync_Queue__c(
             Product__c = p.Id,
