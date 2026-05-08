@@ -4,5 +4,5 @@ trigger ProductSyncQueueTrigger on Product_Sync_Queue__c (
     before delete, after delete,
     after undelete
 ) {
-    MetadataTriggerHandler.handle();
+    MetadataTriggerHandler.run();
 }

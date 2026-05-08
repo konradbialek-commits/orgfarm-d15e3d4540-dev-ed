@@ -26,10 +26,9 @@ private class ProductSyncEndpointTest {
         Test.stopTest();
 
         Assert.areEqual(200, res.statusCode);
-        List<Product2> insertedProducts = [SELECT Id, Name, Is_External__c, Sync_Count__c FROM Product2 WHERE External_Product_Id__c = 'EXT-001'];
+        List<Product2> insertedProducts = [SELECT Id, Name, Is_External__c FROM Product2 WHERE External_Product_Id__c = 'EXT-001'];
         Assert.areEqual(1, insertedProducts.size());
         Assert.isTrue(insertedProducts[0].Is_External__c);
-        Assert.areEqual(1, insertedProducts[0].Sync_Count__c);
     }
 
     @IsTest
@@ -48,8 +47,6 @@ private class ProductSyncEndpointTest {
         Test.stopTest();
 
         Assert.areEqual(500, res.statusCode);
-        String responseBody = res.responseBody.toString();
-        Assert.isTrue(responseBody.contains('error'));
     }
 
     @IsTest

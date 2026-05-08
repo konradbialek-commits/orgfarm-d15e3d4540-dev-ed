@@ -4,5 +4,5 @@ trigger ProductTrigger on Product2 (
     before delete, after delete,
     after undelete
 ) {
-    MetadataTriggerHandler.handle();
+    MetadataTriggerHandler.run();
 }
