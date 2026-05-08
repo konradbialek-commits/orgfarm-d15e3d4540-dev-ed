@@ -2,6 +2,14 @@
 private class ProductSyncQueueableTest {
 
     private class MockHttpResponseGenerator implements HttpCalloutMock {
+        private Integer statusCode;
+        private String body;
+
+        public MockHttpResponseGenerator(Integer statusCode, String body) {
+            this.statusCode = statusCode;
+            this.body = body;
+        }
+        
         public HTTPResponse respond(HTTPRequest req) {
             HttpResponse res = new HttpResponse();
             res.setHeader('Content-Type', 'application/json');
