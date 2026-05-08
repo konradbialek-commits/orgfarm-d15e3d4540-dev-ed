@@ -39,7 +39,7 @@ jobs:
         run: |
           if grep -q '<types>' package/package.xml; then
             mkdir -p test-results
-            sf project deploy start --manifest package/package.xml --target-org ci-org --dry-run --test-level RunLocalTests --results-dir test-results --wait 60
+            sf project deploy start --manifest package/package.xml --target-org ci-org --dry-run --test-level RunLocalTests --results-dir test-results --junit --wait 60
           else
             echo "No Salesforce metadata changes detected. Skipping deployment."
           fi
