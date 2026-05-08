@@ -17,7 +17,7 @@ global class ProductSyncEndpoint {
             ProductPayload payload = (ProductPayload) JSON.deserialize(body, ProductPayload.class);
 
             List<Product2> existing = [
-                SELECT Id, Sync_Count__c FROM Product2
+                SELECT Id FROM Product2
                 WHERE External_Product_Id__c = :payload.externalProductId
                 AND Is_External__c = true
                 LIMIT 1
@@ -34,7 +34,6 @@ global class ProductSyncEndpoint {
             p.External_Product_Id__c = payload.externalProductId;
             p.External_Org_Id__c = payload.externalOrgId;
             p.Sync_Status__c = 'Success';
-            p.Sync_Count__c = (p.Sync_Count__c == null ? 0 : p.Sync_Count__c) + 1;
 
             upsert p;
 
@@ -82,7 +81,7 @@ global class ProductSyncEndpoint {
 
         try {
             List<Product2> products = [
-                SELECT Id, Sync_Count__c FROM Product2
+                SELECT Id FROM Product2
                 WHERE External_Product_Id__c = :externalProductId
                 AND Is_External__c = true
                 LIMIT 1
@@ -91,7 +90,6 @@ global class ProductSyncEndpoint {
             if (!products.isEmpty()) {
                 products[0].Is_Deleted__c = true;
                 products[0].Sync_Status__c = 'Success';
-                products[0].Sync_Count__c = (products[0].Sync_Count__c == null ? 0 : products[0].Sync_Count__c) + 1;
                 update products[0];
             }
 
