@@ -3,9 +3,9 @@ private class DiscountStrategyTest {
     
     @isTest
     static void testFactory() {
-        System.assert(DiscountStrategyFactory.getStrategy(Util.Settings.STRATEGY_CUMULATIVE) instanceof CumulativeStrategy, 'Should return Cumulative');
-        System.assert(DiscountStrategyFactory.getStrategy(Util.Settings.STRATEGY_HIGHEST) instanceof HighestValueStrategy, 'Should return Highest');
-        System.assert(DiscountStrategyFactory.getStrategy(Util.Settings.STRATEGY_LOWEST) instanceof LowestValueStrategy, 'Should return Lowest');
+        System.assert(DiscountStrategyFactory.getStrategy(Util.SETTINGS.STRATEGY.CUMULATIVE) instanceof CumulativeStrategy, 'Should return Cumulative');
+        System.assert(DiscountStrategyFactory.getStrategy(Util.SETTINGS.STRATEGY.HIGHEST) instanceof HighestValueStrategy, 'Should return Highest');
+        System.assert(DiscountStrategyFactory.getStrategy(Util.SETTINGS.STRATEGY.LOWEST) instanceof LowestValueStrategy, 'Should return Lowest');
         System.assert(DiscountStrategyFactory.getStrategy('Gibberish') instanceof CumulativeStrategy, 'Should default to Cumulative');
     }
 

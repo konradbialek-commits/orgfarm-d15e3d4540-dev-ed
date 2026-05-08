@@ -40,7 +40,7 @@ public class DiscountService {
             List<CartItem> eligibleItems = new List<CartItem>();
             
             Set<Id> targetedProductIds = new Set<Id>();
-            if (discount.Target_Type__c == Util.Discount.TARGET_PRODUCTS) {
+            if (discount.Target_Type__c == Util.DISCOUNT.TARGET.PRODUCTS) {
                 for (Discount_Product__c discountProduct : discount.Discount_Products__r) {
                     targetedProductIds.add(discountProduct.Product__c);
                 }
@@ -49,13 +49,13 @@ public class DiscountService {
             for (CartItem item : cartItems) {
                 Boolean isEligible = false;
                 
-                if (discount.Target_Type__c == Util.Discount.TARGET_ALL || discount.Target_Type__c == null) {
+                if (discount.Target_Type__c == Util.DISCOUNT.TARGET.ALL_PRODUCTS || discount.Target_Type__c == null) {
                     isEligible = true;
-                } else if (discount.Target_Type__c == Util.Discount.TARGET_FAMILIES && String.isNotBlank(discount.Eligible_Families__c) && String.isNotBlank(item.family)) {
+                } else if (discount.Target_Type__c == Util.DISCOUNT.TARGET.FAMILIES && String.isNotBlank(discount.Eligible_Families__c) && String.isNotBlank(item.family)) {
                     if (discount.Eligible_Families__c.contains(item.family)) {
                         isEligible = true;
                     }
-                } else if (discount.Target_Type__c == Util.Discount.TARGET_PRODUCTS) {
+                } else if (discount.Target_Type__c == Util.DISCOUNT.TARGET.PRODUCTS) {
                     if (targetedProductIds.contains(item.productId)) {
                         isEligible = true;
                     }
@@ -71,7 +71,7 @@ public class DiscountService {
             if (eligibleSubtotal == 0) continue;
 
             OrderContext context = new OrderContext(subtotal, eligibleSubtotal, eligibleQuantity, today);
-            String criteria = discount.Discount_Category__c == Util.Discount.CAT_CONDITIONAL ? discount.Condition_Type__c : discount.Recurrence__c;
+            String criteria = discount.Discount_Category__c == Util.DISCOUNT.CATEGORY.CONDITIONAL ? discount.Condition_Type__c : discount.Recurrence__c;
             
             Boolean isApplicable = false;
             Decimal discountValue = 0;
@@ -82,9 +82,9 @@ public class DiscountService {
                     isApplicable = true;
                     discountValue = evaluator.calculateDiscountValue(discount, eligibleItems, eligibleSubtotal);
                 }
-            } else if (discount.Discount_Category__c == Util.Discount.CAT_ONETIME) {
+            } else if (discount.Discount_Category__c == Util.DISCOUNT.CATEGORY.ONETIME) {
                 isApplicable = true;
-                discountValue = discount.Discount_Type__c == Util.Discount.TYPE_PERCENT ? eligibleSubtotal * (discount.Value__c / 100) : discount.Value__c;
+                discountValue = discount.Discount_Type__c == Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL ? eligibleSubtotal * (discount.Value__c / 100) : discount.Value__c;
             }
 
             if (isApplicable && discountValue > 0) {

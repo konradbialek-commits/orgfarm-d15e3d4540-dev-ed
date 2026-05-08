@@ -64,7 +64,7 @@ public with sharing class OrderCreationController {
                 OpportunityId = opp.Id,
                 AccountId = opp.AccountId,
                 Pricebook2Id = pricebookId,
-                Status = Util.Order.STATUS_DRAFT,
+                Status = Util.ORDER.STATUS.DRAFT,
                 EffectiveDate = Date.today(),
                 Discount_Amount__c = discountAmount,
                 Applied_Discounts__c = appliedDiscounts
@@ -91,7 +91,7 @@ public with sharing class OrderCreationController {
                     SELECT Id, Active__c 
                     FROM Discount__c 
                     WHERE Id IN :appliedDiscountIds 
-                    AND Discount_Category__c = :Util.Discount.CAT_ONETIME
+                    AND Discount_Category__c = :Util.DISCOUNT.CATEGORY.ONETIME
                 ];
                 
                 if (!usedDiscounts.isEmpty()) {

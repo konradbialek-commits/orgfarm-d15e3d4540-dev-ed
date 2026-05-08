@@ -7,8 +7,8 @@ public with sharing class DiscountManagerController {
             List<Discount_Setting__c> settings = [SELECT Id, Strategy__c, Minimum_Price_Floor_Percent__c FROM Discount_Setting__c LIMIT 1];
             if (settings.isEmpty()) {
                 Discount_Setting__c newSetting = new Discount_Setting__c(
-                    Name = Util.Settings.DEFAULT_NAME, 
-                    Strategy__c = Util.Settings.STRATEGY_CUMULATIVE, 
+                    Name = Util.SETTINGS.DEFAULT_NAME, 
+                    Strategy__c = Util.SETTINGS.STRATEGY.CUMULATIVE, 
                     Minimum_Price_Floor_Percent__c = 0.0
                 );
                 insert newSetting;
@@ -75,10 +75,10 @@ public with sharing class DiscountManagerController {
 
     @AuraEnabled
     public static void upsertDiscount(Discount__c discountRecord, List<Id> selectedProductIds) {
-        if (discountRecord.Discount_Type__c == Util.Discount.TYPE_PERCENT && discountRecord.Value__c > 100) {
+        if (discountRecord.Discount_Type__c == Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL && discountRecord.Value__c > 100) {
             throw new AuraHandledException(System.Label.DM_Err_PctExceed);
         }
-        if (discountRecord.Recurrence__c == Util.Discount.REC_YEARLY_CUSTOM && discountRecord.Custom_Recurrence_Date__c == null) {
+        if (discountRecord.Recurrence__c == Util.DISCOUNT.RECURRENCE.YEARLY_CUSTOM && discountRecord.Custom_Recurrence_Date__c == null) {
             throw new AuraHandledException(System.Label.DM_Err_ReqTargetDate);
         }
 
@@ -87,7 +87,7 @@ public with sharing class DiscountManagerController {
             upsert discountRecord;
             delete [SELECT Id FROM Discount_Product__c WHERE Discount__c = :discountRecord.Id];
 
-            if (discountRecord.Target_Type__c == Util.Discount.TARGET_PRODUCTS && selectedProductIds != null && !selectedProductIds.isEmpty()) {
+            if (discountRecord.Target_Type__c == Util.DISCOUNT.TARGET.PRODUCTS && selectedProductIds != null && !selectedProductIds.isEmpty()) {
                 List<Discount_Product__c> junctionRecords = new List<Discount_Product__c>();
                 for (Id productId : selectedProductIds) {
                     junctionRecords.add(new Discount_Product__c(

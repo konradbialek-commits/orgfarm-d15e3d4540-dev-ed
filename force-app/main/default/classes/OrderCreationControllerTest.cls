@@ -37,8 +37,8 @@ private class OrderCreationControllerTest {
         Discount__c d = new Discount__c(
             Name = 'One Time 10',
             Active__c = true,
-            Discount_Category__c = Util.Discount.CAT_ONETIME,
-            Discount_Type__c = Util.Discount.TYPE_PERCENT,
+            Discount_Category__c = Util.DISCOUNT.CATEGORY.ONETIME,
+            Discount_Type__c = Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL,
             Value__c = 10.0
         );
         insert d;
@@ -123,7 +123,7 @@ private class OrderCreationControllerTest {
         Order insertedOrder = [SELECT AccountId, OpportunityId, Status, Pricebook2Id, Discount_Amount__c, Applied_Discounts__c FROM Order WHERE Id = :newOrderId];
         Assert.areEqual(opp.AccountId, insertedOrder.AccountId, 'Order should be linked to the correct Account');
         Assert.areEqual(opp.Id, insertedOrder.OpportunityId, 'Order should be linked to the Opportunity');
-        Assert.areEqual(Util.Order.STATUS_DRAFT, insertedOrder.Status, 'Order status should be Draft via Util');
+        Assert.areEqual(Util.ORDER.STATUS.DRAFT, insertedOrder.Status, 'Order status should be Draft via Util');
         Assert.areEqual(stdPricebookId, insertedOrder.Pricebook2Id, 'Pricebook should match the selected one');
         Assert.areEqual(10.00, insertedOrder.Discount_Amount__c, 'Discount amount should be saved');
         Assert.areEqual('One Time 10', insertedOrder.Applied_Discounts__c, 'Applied Discounts should be saved');
