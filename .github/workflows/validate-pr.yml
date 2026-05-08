@@ -8,6 +8,11 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      checks: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -22,13 +27,8 @@ jobs:
 
       - name: Authenticate to Salesforce via JWT
         run: |
-          # 1. Dump the private key secret into a temporary file
           echo "${{ secrets.SF_JWT_KEY }}" > server.key
-          
-          # 2. Authenticate using the JWT flow
           sf org login jwt --client-id ${{ secrets.SF_CLIENT_ID }} --jwt-key-file server.key --username ${{ secrets.SF_USERNAME }} --alias ci-org --set-default
-          
-          # 3. Clean up the key file for security
           rm server.key
 
       - name: Generate Delta package.xml
@@ -38,7 +38,14 @@ jobs:
       - name: Validate Source
         run: |
           if grep -q '<types>' package/package.xml; then
-            sf project deploy start --manifest package/package.xml --target-org ci-org --dry-run --test-level RunLocalTests
+            mkdir -p test-results
+            sf project deploy start --manifest package/package.xml --target-org ci-org --dry-run --test-level RunLocalTests --results-dir test-results --wait 60
           else
             echo "No Salesforce metadata changes detected. Skipping deployment."
           fi
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: 'test-results/**/*.xml'
