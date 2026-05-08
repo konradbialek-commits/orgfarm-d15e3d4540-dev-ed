@@ -5,6 +5,8 @@ private class ProductSyncQueueableTest {
         private Integer statusCode;
         private String body;
 
+        public MockHttpResponseGenerator() {}
+
         public MockHttpResponseGenerator(Integer statusCode, String body) {
             this.statusCode = statusCode;
             this.body = body;
