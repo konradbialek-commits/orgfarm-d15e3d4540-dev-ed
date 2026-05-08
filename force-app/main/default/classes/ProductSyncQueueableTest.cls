@@ -29,7 +29,7 @@ private class ProductSyncQueueableTest {
 
     @TestSetup
     static void setupData() {
-        Product2 p = new Product2(Name = 'Setup Product', External_Product_Id__c = 'SETUP-001');
+        Product2 p = new Product2(Name = 'Setup Product', External_Product_Id__c = 'SETUP-001', Language__c = 'en_US');
         insert p;
 
         Product_Sync_Queue__c qItemDelete = new Product_Sync_Queue__c(
@@ -46,9 +46,15 @@ private class ProductSyncQueueableTest {
     static void testQueueablePostSuccess() {
         delete [SELECT Id FROM Product_Sync_Queue__c];
         
-        Product2 p = new Product2(Name = 'Test', External_Product_Id__c = '123');
+        Product2 p = new Product2(Name = 'Test', External_Product_Id__c = '123', Language__c = 'en_US');
         insert p;
-        Product_Sync_Queue__c q = new Product_Sync_Queue__c(Product__c = p.Id, Operation__c = 'INSERT', Status__c = 'Pending', Payload__c = '{}');
+        Product_Sync_Queue__c q = new Product_Sync_Queue__c(
+            Product__c = p.Id, 
+            Operation__c = 'INSERT', 
+            Status__c = 'Pending', 
+            Payload__c = '{}',
+            Attempt_Count__c = 0
+        );
         insert q;
 
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());

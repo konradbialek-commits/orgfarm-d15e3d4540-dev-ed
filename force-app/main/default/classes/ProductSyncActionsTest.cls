@@ -16,7 +16,8 @@ private class ProductSyncActionsTest {
         Test.startTest();
         Product2 localProduct = new Product2(
             Name = 'Local Action Test',
-            Is_External__c = false
+            Is_External__c = false,
+            Language__c = 'en_US'
         );
         insert localProduct;
         Test.stopTest();
@@ -27,16 +28,17 @@ private class ProductSyncActionsTest {
 
     @IsTest
     static void testProductQueueItemAction() {
-        Product2 p = new Product2(Name = 'Queue Trigger Test');
+        Product2 p = new Product2(Name = 'Queue Trigger Test', Language__c = 'en_US');
         insert p;
-        
+
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
         Product_Sync_Queue__c qItem = new Product_Sync_Queue__c(
             Product__c = p.Id,
             Status__c = 'Pending',
             Operation__c = 'INSERT',
-            Payload__c = '{}'
+            Payload__c = '{}',
+            Attempt_Count__c = 0
         );
 
         Test.startTest();

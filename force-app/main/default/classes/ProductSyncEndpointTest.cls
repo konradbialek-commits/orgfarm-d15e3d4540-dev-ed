@@ -13,7 +13,8 @@ private class ProductSyncEndpointTest {
             'externalOrgId' => 'ORG-TEST-001',
             'name' => 'Test Product',
             'productCode' => 'TS-001',
-            'family' => 'Other'
+            'family' => 'Other',
+            'language' => 'en_US'
         };
 
         req.requestBody = Blob.valueOf(JSON.serialize(payload));
@@ -52,7 +53,8 @@ private class ProductSyncEndpointTest {
         Product2 p = new Product2(
             Name = 'To Be Deleted',
             External_Product_Id__c = 'EXT-002',
-            Is_External__c = true
+            Is_External__c = true,
+            Language__c = 'en_US'
         );
         insert p;
 
