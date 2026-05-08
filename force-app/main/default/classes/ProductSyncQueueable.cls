@@ -33,18 +33,37 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
             }
 
             try {
+                String requestLog = 'OUTBOUND ' + item.Operation__c + ' REQUEST | Endpoint: ' + req.getEndpoint();
+                if (item.Operation__c != 'DELETE') {
+                    requestLog += ' | Body: ' + item.Payload__c;
+                }
+                ErrorLogger.logInfo(requestLog, 'ProductSyncQueueable', 'execute');
+
                 HttpResponse res = http.send(req);
 
                 if (res.getStatusCode() == 200 || res.getStatusCode() == 201) {
                     item.Status__c = 'Success';
                     item.Error_Message__c = '';
+
+                    ErrorLogger.logInfo(
+                        'OUTBOUND ' + item.Operation__c + ' SUCCESS | Status: ' + res.getStatusCode() + ' | Response: ' + res.getBody(),
+                        'ProductSyncQueueable',
+                        'execute'
+                    );
                 } else {
                     item.Status__c = 'Failed';
                     item.Error_Message__c = 'HTTP ' + res.getStatusCode() + ': ' + res.getBody();
+
+                    ErrorLogger.logWarning(
+                        'OUTBOUND ' + item.Operation__c + ' REJECTED | Status: ' + res.getStatusCode() + ' | Response: ' + res.getBody(),
+                        'ProductSyncQueueable',
+                        'execute'
+                    );
                 }
             } catch (Exception e) {
                 item.Status__c = 'Failed';
                 item.Error_Message__c = e.getMessage();
+
                 ErrorLogger.logException(e, 'ProductSyncQueueable', 'execute');
             }
         }
