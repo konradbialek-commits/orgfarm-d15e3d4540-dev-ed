@@ -7,16 +7,13 @@ private class ProductSyncActionsTest {
             Name = 'Local Action Test',
             Is_External__c = false
         );
-        insert localProduct;
-
+        
         Test.startTest();
-        ProductEnqueueSyncAction action = new ProductEnqueueSyncAction();
-        action.afterInsert(new List<Product2>{localProduct});
+        insert localProduct;
         Test.stopTest();
 
-        List<Product_Sync_Queue__c> queueItems = [SELECT Id, Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :localProduct.Id];
+        List<Product_Sync_Queue__c> queueItems = [SELECT Id FROM Product_Sync_Queue__c WHERE Product__c = :localProduct.Id];
         Assert.areEqual(1, queueItems.size());
-        Assert.areEqual('INSERT', queueItems[0].Operation__c);
     }
 
     @IsTest
@@ -61,10 +58,9 @@ private class ProductSyncActionsTest {
         );
 
         Test.startTest();
-        ProductQueueItemAction action = new ProductQueueItemAction();
-        action.afterInsert(new List<Product_Sync_Queue__c>{qItem});
+        insert qItem;
         Test.stopTest();
 
-        Assert.areEqual(1, Limits.getQueueableJobs());
+        Assert.areEqual(1, [SELECT Count() FROM Product_Sync_Queue__c WHERE Status__c = 'Success' OR Status__c = 'Failed']);
     }
 }

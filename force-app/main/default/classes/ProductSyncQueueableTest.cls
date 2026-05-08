@@ -2,19 +2,17 @@
 private class ProductSyncQueueableTest {
 
     private class MockHttpResponseGenerator implements HttpCalloutMock {
-        private Integer statusCode;
-        private String body;
-
-        public MockHttpResponseGenerator(Integer statusCode, String body) {
-            this.statusCode = statusCode;
-            this.body = body;
-        }
-
         public HTTPResponse respond(HTTPRequest req) {
             HttpResponse res = new HttpResponse();
             res.setHeader('Content-Type', 'application/json');
-            res.setBody(this.body);
-            res.setStatusCode(this.statusCode);
+            
+            if (req.getEndpoint().contains('error')) {
+                res.setStatusCode(500);
+                res.setBody('{"status":"error"}');
+            } else {
+                res.setStatusCode(200);
+                res.setBody('{"status":"success"}');
+            }
             return res;
         }
     }
@@ -45,14 +43,18 @@ private class ProductSyncQueueableTest {
 
     @IsTest
     static void testQueueablePostSuccess() {
-        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator(200, '{"status":"success"}'));
+        Product2 p = new Product2(Name = 'Test', External_Product_Id__c = '123');
+        insert p;
+        Product_Sync_Queue__c q = new Product_Sync_Queue__c(Product__c = p.Id, Operation__c = 'INSERT', Status__c = 'Pending', Payload__c = '{}');
+        insert q;
+
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
         Test.startTest();
         System.enqueueJob(new ProductSyncQueueable());
         Test.stopTest();
 
-        List<Product_Sync_Queue__c> updatedItems = [SELECT Status__c, Operation__c FROM Product_Sync_Queue__c WHERE Operation__c = 'INSERT'];
-        Assert.areEqual('Success', updatedItems[0].Status__c);
+        Assert.areEqual('Success', [SELECT Status__c FROM Product_Sync_Queue__c WHERE Id = :q.Id].Status__c);
     }
 
     @IsTest
