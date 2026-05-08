@@ -1,18 +1,6 @@
-public class ProductEnqueueSyncAction implements TriggerAction.AfterInsert, TriggerAction.AfterUpdate, TriggerAction.BeforeDelete {
+public class ProductSyncService {
     
-    public void afterInsert(List<Product2> newList) {
-        enqueueProducts(newList, 'INSERT');
-    }
-
-    public void afterUpdate(List<Product2> newList, List<Product2> oldList) {
-        enqueueProducts(newList, 'UPDATE');
-    }
-
-    public void beforeDelete(List<Product2> oldList) {
-        enqueueProducts(oldList, 'DELETE');
-    }
-
-    private void enqueueProducts(List<Product2> recordList, String operation) {
+    public static void enqueueProducts(List<Product2> recordList, String operation) {
         List<Product_Sync_Queue__c> queueItemsToInsert = new List<Product_Sync_Queue__c>();
         
         for (Product2 prod : recordList) {
@@ -48,11 +36,11 @@ public class ProductEnqueueSyncAction implements TriggerAction.AfterInsert, Trig
                 insert queueItemsToInsert;
                 ErrorLogger.logInfo(
                     'Enqueued ' + queueItemsToInsert.size() + ' products for sync operation: ' + operation, 
-                    'ProductEnqueueSyncAction', 
+                    'ProductSyncService', 
                     'enqueueProducts'
                 );
             } catch (Exception e) {
-                ErrorLogger.logException(e, 'ProductEnqueueSyncAction', 'enqueueProducts');
+                ErrorLogger.logException(e, 'ProductSyncService', 'enqueueProducts');
             }
         }
     }

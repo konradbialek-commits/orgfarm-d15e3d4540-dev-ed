@@ -12,33 +12,63 @@ private class ProductSyncActionsTest {
     }
 
     @IsTest
-    static void testEnqueueSyncActionInsertLocal() {
+    static void testAfterInsertAction() {
+        Product2 p = new Product2(Name = 'Insert Test', Is_External__c = false);
+        insert p;
+        
+        delete [SELECT Id FROM Product_Sync_Queue__c];
+
         Test.startTest();
-        Product2 localProduct = new Product2(
-            Name = 'Local Action Test',
-            Is_External__c = false
-        );
-        insert localProduct;
+        new ProductAfterInsertSyncAction().afterInsert(new List<Product2>{p});
         Test.stopTest();
 
-        List<Product_Sync_Queue__c> queueItems = [SELECT Id FROM Product_Sync_Queue__c WHERE Product__c = :localProduct.Id];
+        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :p.Id AND Operation__c = 'INSERT'];
         Assert.areEqual(1, queueItems.size());
     }
-    
+
     @IsTest
-    static void testEnqueueSyncActionDeleteLocal() {
-        Product2 localProduct = new Product2(
-            Name = 'Local Delete Action Test',
-            Is_External__c = false
-        );
-        insert localProduct;
+    static void testAfterUpdateAction() {
+        Product2 p = new Product2(Name = 'Update Test', Is_External__c = false);
+        insert p;
         
+        delete [SELECT Id FROM Product_Sync_Queue__c];
+
         Test.startTest();
-        delete localProduct;
+        new ProductAfterUpdateSyncAction().afterUpdate(new List<Product2>{p}, new List<Product2>{p});
         Test.stopTest();
 
-        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Operation__c = 'DELETE'];
+        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :p.Id AND Operation__c = 'UPDATE'];
         Assert.areEqual(1, queueItems.size());
+    }
+
+    @IsTest
+    static void testBeforeDeleteAction() {
+        Product2 p = new Product2(Name = 'Delete Test', Is_External__c = false);
+        insert p;
+        
+        delete [SELECT Id FROM Product_Sync_Queue__c];
+
+        Test.startTest();
+        new ProductBeforeDeleteSyncAction().beforeDelete(new List<Product2>{p});
+        Test.stopTest();
+
+        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :p.Id AND Operation__c = 'DELETE'];
+        Assert.areEqual(1, queueItems.size());
+    }
+
+    @IsTest
+    static void testExternalProductIgnored() {
+        Product2 p = new Product2(Name = 'External Test', Is_External__c = true);
+        insert p;
+        
+        delete [SELECT Id FROM Product_Sync_Queue__c];
+
+        Test.startTest();
+        new ProductAfterInsertSyncAction().afterInsert(new List<Product2>{p});
+        Test.stopTest();
+
+        List<Product_Sync_Queue__c> queueItems = [SELECT Id FROM Product_Sync_Queue__c WHERE Product__c = :p.Id];
+        Assert.areEqual(0, queueItems.size());
     }
 
     @IsTest
