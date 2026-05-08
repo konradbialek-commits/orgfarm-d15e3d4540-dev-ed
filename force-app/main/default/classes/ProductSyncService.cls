@@ -23,9 +23,9 @@ public class ProductSyncService {
                 Product__c = prod.Id,
                 Operation__c = operation,
                 Payload__c = JSON.serialize(payloadMap),
-                Status__c = 'Pending',
+                Status__c = Util.PRODUCT.SYNC_STATUS.PENDING,
                 Attempt_Count__c = 0,
-                Target_Org__c = 'Szymon_Org'
+                Target_Org__c = Util.PRODUCT_SYNC_QUEUE.TARGET_ORG.SZYMON_ORG
             );
             
             queueItemsToInsert.add(queueItem);

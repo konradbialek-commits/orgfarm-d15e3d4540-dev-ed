@@ -23,23 +23,23 @@ global class ProductSyncEndpoint {
                 LIMIT 1
             ];
 
-            Product2 p = existing.isEmpty() ? new Product2() : existing[0];
-            p.Name = payload.name;
-            p.Description = payload.description;
-            p.ProductCode = payload.productCode;
-            p.Family = payload.family;
-            p.Language__c = payload.language;
-            p.Is_External__c = true;
-            p.Is_Deleted__c = false;
-            p.External_Product_Id__c = payload.externalProductId;
-            p.External_Org_Id__c = payload.externalOrgId;
-            p.Sync_Status__c = 'Success';
+            Product2 product = existing.isEmpty() ? new Product2() : existing[0];
+            product.Name = payload.name;
+            product.Description = payload.description;
+            product.ProductCode = payload.productCode;
+            product.Family = payload.family;
+            product.Language__c = payload.language;
+            product.Is_External__c = true;
+            product.Is_Deleted__c = false;
+            product.External_Product_Id__c = payload.externalProductId;
+            product.External_Org_Id__c = payload.externalOrgId;
+            product.Sync_Status__c = Util.PRODUCT.SYNC_STATUS.SUCCESS;
 
-            upsert p;
+            upsert product;
 
             String responseBody = JSON.serialize(new Map<String, String>{
                 'status' => 'success',
-                'productId' => p.Id
+                'productId' => product.Id
             });
 
             res.statusCode = 200;
@@ -89,7 +89,7 @@ global class ProductSyncEndpoint {
 
             if (!products.isEmpty()) {
                 products[0].Is_Deleted__c = true;
-                products[0].Sync_Status__c = 'Success';
+                products[0].Sync_Status__c = Util.PRODUCT.SYNC_STATUS.SUCCESS;
                 update products[0];
             }
 

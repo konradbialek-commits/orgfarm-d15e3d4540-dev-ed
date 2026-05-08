@@ -4,8 +4,8 @@ private class DiscountServiceTest {
     @testSetup
     static void setupData() {
         Discount_Setting__c setting = new Discount_Setting__c(
-            Name = Util.Settings.DEFAULT_NAME,
-            Strategy__c = Util.Settings.STRATEGY_CUMULATIVE,
+            Name = Util.SETTINGS.DEFAULT_NAME,
+            Strategy__c = Util.SETTINGS.STRATEGY.CUMULATIVE,
             Minimum_Price_Floor_Percent__c = 0.0
         );
         insert setting;
@@ -23,10 +23,10 @@ private class DiscountServiceTest {
         Discount__c d = new Discount__c(
             Name = 'Buy 2 Get 1',
             Active__c = true,
-            Discount_Category__c = Util.Discount.CAT_CONDITIONAL,
-            Condition_Type__c = Util.Discount.COND_TWO_FOR_ONE,
-            Target_Type__c = Util.Discount.TARGET_PRODUCTS,
-            Discount_Type__c = Util.Discount.TYPE_PERCENT,
+            Discount_Category__c = Util.DISCOUNT.CATEGORY.CONDITIONAL,
+            Condition_Type__c = Util.DISCOUNT.CONDITION.TWO_FOR_ONE,
+            Target_Type__c = Util.DISCOUNT.TARGET.PRODUCTS,
+            Discount_Type__c = Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL,
             Value__c = 100.0
         );
         insert d;
@@ -50,11 +50,11 @@ private class DiscountServiceTest {
         Discount__c d = new Discount__c(
             Name = 'Min 100 Get 20',
             Active__c = true,
-            Discount_Category__c = Util.Discount.CAT_CONDITIONAL,
-            Condition_Type__c = Util.Discount.COND_MIN_ORDER,
+            Discount_Category__c = Util.DISCOUNT.CATEGORY.CONDITIONAL,
+            Condition_Type__c = Util.DISCOUNT.CONDITION.MIN_ORDER,
             Minimum_Order_Value__c = 100.0,
-            Target_Type__c = Util.Discount.TARGET_ALL,
-            Discount_Type__c = Util.Discount.TYPE_FIXED,
+            Target_Type__c = Util.DISCOUNT.TARGET.ALL_PRODUCTS,
+            Discount_Type__c = Util.DISCOUNT.DISCOUNT_TYPE.FIXED,
             Value__c = 20.0
         );
         insert d;
@@ -76,11 +76,11 @@ private class DiscountServiceTest {
         Discount__c d = new Discount__c(
             Name = 'Buy 10 Get 15% Off',
             Active__c = true,
-            Discount_Category__c = Util.Discount.CAT_CONDITIONAL,
-            Condition_Type__c = Util.Discount.COND_VOLUME,
+            Discount_Category__c = Util.DISCOUNT.CATEGORY.CONDITIONAL,
+            Condition_Type__c = Util.DISCOUNT.CONDITION.VOLUME,
             Minimum_Quantity__c = 10,
-            Target_Type__c = Util.Discount.TARGET_ALL,
-            Discount_Type__c = Util.Discount.TYPE_PERCENT,
+            Target_Type__c = Util.DISCOUNT.TARGET.ALL_PRODUCTS,
+            Discount_Type__c = Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL,
             Value__c = 15.0
         );
         insert d;
@@ -102,10 +102,10 @@ private class DiscountServiceTest {
         Discount__c d = new Discount__c(
             Name = 'Daily 10%',
             Active__c = true,
-            Discount_Category__c = Util.Discount.CAT_RECURRING,
+            Discount_Category__c = Util.DISCOUNT.CATEGORY.RECURRING,
             Recurrence__c = 'Daily',
-            Target_Type__c = Util.Discount.TARGET_ALL,
-            Discount_Type__c = Util.Discount.TYPE_PERCENT,
+            Target_Type__c = Util.DISCOUNT.TARGET.ALL_PRODUCTS,
+            Discount_Type__c = Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL,
             Value__c = 10.0
         );
         insert d;

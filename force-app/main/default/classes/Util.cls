@@ -1,9 +1,7 @@
 public class Util {
-    private static final DiscountUtil discountInstance = new DiscountUtil();
-    private static final SettingsUtil settingsInstance = new SettingsUtil();
-    private static final OrderUtil orderInstance = new OrderUtil();
-
-    public static DiscountUtil Discount { get { return discountInstance; } }
-    public static SettingsUtil Settings { get { return settingsInstance; } }
-    public static OrderUtil Order { get { return orderInstance; } }
+    public static DiscountConst DISCOUNT { get { return new DiscountConst(); } }
+    public static SettingsConst SETTINGS { get { return new SettingsConst(); } }
+    public static OrderConst ORDER { get { return new OrderConst(); } }
+    public static ProductConst PRODUCT { get { return new ProductConst(); } }
+    public static ProductSyncQueueConst PRODUCT_SYNC_QUEUE { get { return new ProductSyncQueueConst(); } }
 }
