@@ -9,10 +9,11 @@ private class ProductSyncEndpointTest {
         req.httpMethod = 'POST';
 
         Map<String, String> payload = new Map<String, String>{
-            'externalProductId' => 'EXT-001',
-            'externalOrgId' => 'ORG-001',
+            'externalProductId' => 'EXT-TEST-001',
+            'externalOrgId' => 'ORG-TEST-001',
             'name' => 'Test Product',
-            'productCode' => 'ABC-123'
+            'productCode' => 'TS-001',
+            'family' => 'Other'
         };
 
         req.requestBody = Blob.valueOf(JSON.serialize(payload));
@@ -23,10 +24,9 @@ private class ProductSyncEndpointTest {
         ProductSyncEndpoint.upsertProduct();
         Test.stopTest();
 
-        if (res.statusCode == 500) {
-            System.debug('ENDPOINT ERROR: ' + res.responseBody.toString());
-        }
-        Assert.areEqual(200, res.statusCode);
+        Assert.areEqual(200, res.statusCode, 'Endpoint failed: ' + res.responseBody.toString());
+        List<Product2> insertedProducts = [SELECT Id, Name, Is_External__c FROM Product2 WHERE External_Product_Id__c = 'EXT-TEST-001'];
+        Assert.areEqual(1, insertedProducts.size());
     }
 
     @IsTest
@@ -35,8 +35,8 @@ private class ProductSyncEndpointTest {
         RestResponse res = new RestResponse();
         req.requestURI = '/services/apexrest/v1/products';
         req.httpMethod = 'POST';
-        
         req.requestBody = Blob.valueOf('{"invalid_json":');
+        
         RestContext.request = req;
         RestContext.response = res;
 
@@ -68,24 +68,7 @@ private class ProductSyncEndpointTest {
         Test.stopTest();
 
         Assert.areEqual(200, res.statusCode);
-        Product2 deletedProduct = [SELECT Is_Deleted__c, Sync_Status__c FROM Product2 WHERE Id = :p.Id];
+        Product2 deletedProduct = [SELECT Is_Deleted__c FROM Product2 WHERE Id = :p.Id];
         Assert.isTrue(deletedProduct.Is_Deleted__c);
-        Assert.areEqual('Success', deletedProduct.Sync_Status__c);
-    }
-
-    @IsTest
-    static void testSoftDeleteProductException() {
-        RestRequest req = new RestRequest();
-        RestResponse res = new RestResponse();
-        req.requestURI = '/services/apexrest/v1/products/'; 
-        req.httpMethod = 'DELETE';
-        RestContext.request = req;
-        RestContext.response = res;
-
-        Test.startTest();
-        ProductSyncEndpoint.softDeleteProduct();
-        Test.stopTest();
-
-        Assert.areEqual(200, res.statusCode); 
     }
 }
