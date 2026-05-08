@@ -24,6 +24,22 @@ private class ProductSyncActionsTest {
         List<Product_Sync_Queue__c> queueItems = [SELECT Id FROM Product_Sync_Queue__c WHERE Product__c = :localProduct.Id];
         Assert.areEqual(1, queueItems.size());
     }
+    
+    @IsTest
+    static void testEnqueueSyncActionDeleteLocal() {
+        Product2 localProduct = new Product2(
+            Name = 'Local Delete Action Test',
+            Is_External__c = false
+        );
+        insert localProduct;
+        
+        Test.startTest();
+        delete localProduct;
+        Test.stopTest();
+
+        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Operation__c = 'DELETE'];
+        Assert.areEqual(1, queueItems.size());
+    }
 
     @IsTest
     static void testProductQueueItemAction() {
@@ -36,7 +52,7 @@ private class ProductSyncActionsTest {
             Product__c = p.Id,
             Status__c = 'Pending',
             Operation__c = 'INSERT',
-            Payload__c = '{}',
+            Payload__c = '{"externalProductId":"123"}',
             Attempt_Count__c = 0 
         );
 

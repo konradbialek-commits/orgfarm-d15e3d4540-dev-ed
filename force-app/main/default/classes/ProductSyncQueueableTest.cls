@@ -35,7 +35,7 @@ private class ProductSyncQueueableTest {
         Product_Sync_Queue__c qItemDelete = new Product_Sync_Queue__c(
             Product__c = p.Id,
             Operation__c = 'DELETE',
-            Payload__c = '',
+            Payload__c = '{"externalProductId":"SETUP-001"}',
             Status__c = 'Pending',
             Attempt_Count__c = 0 
         );
@@ -52,7 +52,7 @@ private class ProductSyncQueueableTest {
             Product__c = p.Id, 
             Operation__c = 'INSERT', 
             Status__c = 'Pending', 
-            Payload__c = '{}',
+            Payload__c = '{"externalProductId":"123"}',
             Attempt_Count__c = 0 
         );
         insert q;
