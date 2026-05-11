@@ -19,25 +19,13 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
             item.Attempt_Count__c = (item.Attempt_Count__c == null ? 0 : item.Attempt_Count__c) + 1;
             item.Last_Attempt__c = System.now();
 
-            HttpRequest req = new HttpRequest();
-
-            if (item.Operation__c == Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION) {
-                Map<String, Object> payloadMap = (Map<String, Object>) JSON.deserializeUntyped(item.Payload__c);
-                String extId = (String) payloadMap.get('externalProductId');
-                
-                req.setEndpoint(Util.PRODUCT_SYNC_QUEUE.ENDPOINT_URL + extId);
-                req.setMethod('DELETE');
-            } else {
-                req.setEndpoint(Util.PRODUCT_SYNC_QUEUE.ENDPOINT_URL);
-                req.setMethod('POST');
-                req.setHeader('Content-Type', 'application/json');
-                req.setBody(item.Payload__c);
-            }
-
             try {
+                SyncOperationHandler handler = SyncOperationHandlerFactory.getHandler(item.Operation__c);
+                HttpRequest req = handler.createRequest(item);
+
                 String requestLog = 'OUTBOUND ' + item.Operation__c + ' REQUEST | Endpoint: ' + req.getEndpoint();
-                if (item.Operation__c != Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION) {
-                    requestLog += ' | Body: ' + item.Payload__c;
+                if (String.isNotBlank(req.getBody())) {
+                    requestLog += ' | Body: ' + req.getBody();
                 }
                 ErrorLogger.logInfo(requestLog, 'ProductSyncQueueable', 'execute');
 
@@ -63,7 +51,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
                     );
                 }
             } catch (Exception e) {
-                item.Status__c = 'Failed';
+                item.Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.FAILED;
                 item.Error_Message__c = e.getMessage();
                 
                 ErrorLogger.logException(e, 'ProductSyncQueueable', 'execute');
