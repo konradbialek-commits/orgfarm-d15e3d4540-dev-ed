@@ -27,6 +27,14 @@ private class ProductSyncQueueableTest {
         }
     }
 
+    private class MockHttpExceptionGenerator implements HttpCalloutMock {
+        public HTTPResponse respond(HTTPRequest req) {
+            CalloutException e = (CalloutException)CalloutException.class.newInstance();
+            e.setMessage('Simulated Callout Exception');
+            throw e;
+        }
+    }
+
     @TestSetup
     static void setupData() {
         Product2 p = new Product2(Name = 'Setup Product', External_Product_Id__c = 'SETUP-001');
@@ -115,24 +123,43 @@ private class ProductSyncQueueableTest {
     }
 
     @IsTest
-    static void testQueueableInvalidOperation() {
+    static void testQueueableException() {
         delete [SELECT Id FROM Product_Sync_Queue__c];
         
-        Product2 p = new Product2(Name = 'Test Invalid');
+        Product2 p = new Product2(Name = 'Test Exception');
         insert p;
         Product_Sync_Queue__c q = new Product_Sync_Queue__c(
             Product__c = p.Id, 
-            Operation__c = 'INVALID_OP', 
+            Operation__c = Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION, 
             Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, 
-            Payload__c = '{}',
+            Payload__c = '{"externalProductId":"123"}',
             Attempt_Count__c = 0 
         );
         insert q;
+
+        Test.setMock(HttpCalloutMock.class, new MockHttpExceptionGenerator());
 
         Test.startTest();
         System.enqueueJob(new ProductSyncQueueable());
         Test.stopTest();
 
         Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.STATUS.FAILED, [SELECT Status__c FROM Product_Sync_Queue__c WHERE Id = :q.Id].Status__c);
+    }
+
+    @IsTest
+    static void testFactoryInvalidOperation() {
+        try {
+            SyncOperationHandlerFactory.getHandler('INVALID_OP');
+            Assert.fail();
+        } catch (IllegalArgumentException e) {
+            Assert.isTrue(e.getMessage().contains('No handler found'));
+        }
+
+        try {
+            SyncOperationHandlerFactory.getHandler('');
+            Assert.fail();
+        } catch (IllegalArgumentException e) {
+            Assert.isTrue(e.getMessage().contains('Operation cannot be blank'));
+        }
     }
 }
