@@ -1,5 +1,5 @@
 public class ProductSyncService {
-    
+
     public static void enqueueProducts(List<Product2> recordList, String operation) {
         List<Product_Sync_Queue__c> queueItemsToInsert = new List<Product_Sync_Queue__c>();
         
@@ -9,21 +9,14 @@ public class ProductSyncService {
             }
             
             String extId = String.isNotBlank(prod.External_Product_Id__c) ? prod.External_Product_Id__c : prod.Id;
-
-            Map<String, String> payloadMap = new Map<String, String>{
-                'externalProductId' => extId,
-                'externalOrgId' => UserInfo.getOrganizationId(),
-                'name' => prod.Name,
-                'description' => prod.Description,
-                'productCode' => prod.ProductCode,
-                'family' => prod.Family
-            };
+            
+            ProductPayload payload = new ProductPayload(prod, extId);
             
             Product_Sync_Queue__c queueItem = new Product_Sync_Queue__c(
                 Product__c = prod.Id,
                 Operation__c = operation,
-                Payload__c = JSON.serialize(payloadMap),
-                Status__c = Util.PRODUCT.SYNC_STATUS.PENDING,
+                Payload__c = JSON.serialize(payload),
+                Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING,
                 Attempt_Count__c = 0,
                 Target_Org__c = Util.PRODUCT_SYNC_QUEUE.TARGET_ORG.SZYMON_ORG
             );
