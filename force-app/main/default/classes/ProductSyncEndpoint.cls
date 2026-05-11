@@ -28,7 +28,6 @@ global class ProductSyncEndpoint {
             product.Description = payload.description;
             product.ProductCode = payload.productCode;
             product.Family = payload.family;
-            product.Language__c = payload.language;
             product.Is_External__c = true;
             product.Is_Deleted__c = false;
             product.External_Product_Id__c = payload.externalProductId;
@@ -117,15 +116,5 @@ global class ProductSyncEndpoint {
 
             ErrorLogger.logException(e, 'ProductSyncEndpoint', 'softDeleteProduct');
         }
-    }
-
-    global class ProductPayload {
-        public String externalProductId;
-        public String externalOrgId;
-        public String name;
-        public String description;
-        public String productCode;
-        public String family;
-        public String language;
     }
 }

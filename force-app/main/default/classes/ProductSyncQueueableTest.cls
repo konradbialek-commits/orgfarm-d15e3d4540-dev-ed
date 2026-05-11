@@ -27,6 +27,14 @@ private class ProductSyncQueueableTest {
         }
     }
 
+    private class MockHttpExceptionGenerator implements HttpCalloutMock {
+        public HTTPResponse respond(HTTPRequest req) {
+            CalloutException e = (CalloutException)CalloutException.class.newInstance();
+            e.setMessage('Simulated Callout Exception');
+            throw e;
+        }
+    }
+
     @TestSetup
     static void setupData() {
         Product2 p = new Product2(Name = 'Setup Product', External_Product_Id__c = 'SETUP-001');
@@ -34,9 +42,9 @@ private class ProductSyncQueueableTest {
 
         Product_Sync_Queue__c qItemDelete = new Product_Sync_Queue__c(
             Product__c = p.Id,
-            Operation__c = 'DELETE',
+            Operation__c = Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION,
             Payload__c = '{"externalProductId":"SETUP-001"}',
-            Status__c = 'Pending',
+            Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING,
             Attempt_Count__c = 0 
         );
         insert qItemDelete;
@@ -50,8 +58,8 @@ private class ProductSyncQueueableTest {
         insert p;
         Product_Sync_Queue__c q = new Product_Sync_Queue__c(
             Product__c = p.Id, 
-            Operation__c = 'INSERT', 
-            Status__c = 'Pending', 
+            Operation__c = Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION, 
+            Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, 
             Payload__c = '{"externalProductId":"123"}',
             Attempt_Count__c = 0 
         );
@@ -63,7 +71,31 @@ private class ProductSyncQueueableTest {
         System.enqueueJob(new ProductSyncQueueable());
         Test.stopTest();
 
-        Assert.areEqual('Success', [SELECT Status__c FROM Product_Sync_Queue__c WHERE Id = :q.Id].Status__c);
+        Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.STATUS.SUCCESS, [SELECT Status__c FROM Product_Sync_Queue__c WHERE Id = :q.Id].Status__c);
+    }
+
+    @IsTest
+    static void testQueueableUpdateSuccess() {
+        delete [SELECT Id FROM Product_Sync_Queue__c];
+        
+        Product2 p = new Product2(Name = 'Test Update', External_Product_Id__c = '123');
+        insert p;
+        Product_Sync_Queue__c q = new Product_Sync_Queue__c(
+            Product__c = p.Id, 
+            Operation__c = Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION, 
+            Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, 
+            Payload__c = '{"externalProductId":"123"}',
+            Attempt_Count__c = 0 
+        );
+        insert q;
+
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
+
+        Test.startTest();
+        System.enqueueJob(new ProductSyncQueueable());
+        Test.stopTest();
+
+        Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.STATUS.SUCCESS, [SELECT Status__c FROM Product_Sync_Queue__c WHERE Id = :q.Id].Status__c);
     }
 
     @IsTest
@@ -74,8 +106,8 @@ private class ProductSyncQueueableTest {
         System.enqueueJob(new ProductSyncQueueable());
         Test.stopTest();
 
-        Product_Sync_Queue__c updated = [SELECT Status__c FROM Product_Sync_Queue__c WHERE Operation__c = 'DELETE' LIMIT 1];
-        Assert.areEqual('Success', updated.Status__c);
+        Product_Sync_Queue__c updated = [SELECT Status__c FROM Product_Sync_Queue__c WHERE Operation__c = :Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION LIMIT 1];
+        Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.STATUS.SUCCESS, updated.Status__c);
     }
 
     @IsTest
@@ -86,7 +118,48 @@ private class ProductSyncQueueableTest {
         System.enqueueJob(new ProductSyncQueueable());
         Test.stopTest();
 
-        List<Product_Sync_Queue__c> failedItems = [SELECT Status__c FROM Product_Sync_Queue__c WHERE Status__c = 'Failed'];
+        List<Product_Sync_Queue__c> failedItems = [SELECT Status__c FROM Product_Sync_Queue__c WHERE Status__c = :Util.PRODUCT_SYNC_QUEUE.STATUS.FAILED];
         Assert.isTrue(failedItems.size() > 0);
+    }
+
+    @IsTest
+    static void testQueueableException() {
+        delete [SELECT Id FROM Product_Sync_Queue__c];
+        
+        Product2 p = new Product2(Name = 'Test Exception');
+        insert p;
+        Product_Sync_Queue__c q = new Product_Sync_Queue__c(
+            Product__c = p.Id, 
+            Operation__c = Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION, 
+            Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, 
+            Payload__c = '{"externalProductId":"123"}',
+            Attempt_Count__c = 0 
+        );
+        insert q;
+
+        Test.setMock(HttpCalloutMock.class, new MockHttpExceptionGenerator());
+
+        Test.startTest();
+        System.enqueueJob(new ProductSyncQueueable());
+        Test.stopTest();
+
+        Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.STATUS.FAILED, [SELECT Status__c FROM Product_Sync_Queue__c WHERE Id = :q.Id].Status__c);
+    }
+
+    @IsTest
+    static void testFactoryInvalidOperation() {
+        try {
+            SyncOperationHandlerFactory.getHandler('INVALID_OP');
+            Assert.fail();
+        } catch (IllegalArgumentException e) {
+            Assert.isTrue(e.getMessage().contains('No handler found'));
+        }
+
+        try {
+            SyncOperationHandlerFactory.getHandler('');
+            Assert.fail();
+        } catch (IllegalArgumentException e) {
+            Assert.isTrue(e.getMessage().contains('Operation cannot be blank'));
+        }
     }
 }
