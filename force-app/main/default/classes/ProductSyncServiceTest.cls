@@ -10,7 +10,6 @@ private class ProductSyncServiceTest {
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION);
-        Test.stopTest();
 
         List<Product_Sync_Queue__c> queueItems = [
             SELECT Operation__c, Product__c, Target_Org__c, Status__c, Attempt_Count__c 
@@ -23,6 +22,8 @@ private class ProductSyncServiceTest {
         Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.TARGET_ORG.SZYMON_ORG, queueItems[0].Target_Org__c);
         Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, queueItems[0].Status__c);
         Assert.areEqual(0, queueItems[0].Attempt_Count__c);
+        
+        Test.stopTest();
     }
 
     @IsTest
@@ -34,7 +35,6 @@ private class ProductSyncServiceTest {
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION);
-        Test.stopTest();
 
         List<Product_Sync_Queue__c> queueItems = [
             SELECT Operation__c 
@@ -44,6 +44,8 @@ private class ProductSyncServiceTest {
 
         Assert.areEqual(1, queueItems.size());
         Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION, queueItems[0].Operation__c);
+        
+        Test.stopTest();
     }
 
     @IsTest
@@ -55,7 +57,6 @@ private class ProductSyncServiceTest {
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION);
-        Test.stopTest();
 
         List<Product_Sync_Queue__c> queueItems = [
             SELECT Operation__c 
@@ -65,6 +66,8 @@ private class ProductSyncServiceTest {
 
         Assert.areEqual(1, queueItems.size());
         Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION, queueItems[0].Operation__c);
+        
+        Test.stopTest();
     }
 
     @IsTest
@@ -76,7 +79,6 @@ private class ProductSyncServiceTest {
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{externalProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION);
-        Test.stopTest();
 
         List<Product_Sync_Queue__c> queueItems = [
             SELECT Id 
@@ -85,5 +87,7 @@ private class ProductSyncServiceTest {
         ];
 
         Assert.isTrue(queueItems.isEmpty());
+        
+        Test.stopTest();
     }
 }
