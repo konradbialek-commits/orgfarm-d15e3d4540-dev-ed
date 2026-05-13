@@ -13,7 +13,8 @@ private class ProductSyncActionsTest {
 
     @IsTest
     static void testAfterInsertAction() {
-        Product2 testProduct = TestDataFactory.createAndInsertProduct('Insert Test', 'EXT-ACT-001', false);
+        Product2 testProduct = TestDataFactory.createProduct('Insert Test', 'EXT-ACT-001', false);
+        insert testProduct;
         
         delete [SELECT Id FROM Product_Sync_Queue__c];
 
@@ -27,7 +28,8 @@ private class ProductSyncActionsTest {
 
     @IsTest
     static void testAfterUpdateAction() {
-        Product2 testProduct = TestDataFactory.createAndInsertProduct('Update Test', 'EXT-ACT-002', false);
+        Product2 testProduct = TestDataFactory.createProduct('Update Test', 'EXT-ACT-002', false);
+        insert testProduct;
         
         delete [SELECT Id FROM Product_Sync_Queue__c];
 
@@ -41,7 +43,8 @@ private class ProductSyncActionsTest {
 
     @IsTest
     static void testBeforeDeleteAction() {
-        Product2 testProduct = TestDataFactory.createAndInsertProduct('Delete Test', 'EXT-ACT-003', false);
+        Product2 testProduct = TestDataFactory.createProduct('Delete Test', 'EXT-ACT-003', false);
+        insert testProduct;
         
         delete [SELECT Id FROM Product_Sync_Queue__c];
 
@@ -55,7 +58,9 @@ private class ProductSyncActionsTest {
 
     @IsTest
     static void testProductQueueItemAction() {
-        Product2 testProduct = TestDataFactory.createAndInsertProduct('Queue Trigger Test', 'EXT-ACT-004', false);
+        Product2 testProduct = TestDataFactory.createProduct('Queue Trigger Test', 'EXT-ACT-004', false);
+        insert testProduct;
+        
         String payloadJson = TestDataFactory.createProductPayloadJson(testProduct);
 
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());

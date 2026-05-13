@@ -3,7 +3,8 @@ private class ProductSyncServiceTest {
 
     @IsTest
     static void testEnqueueInsertOperation() {
-        Product2 testProduct = TestDataFactory.createAndInsertProduct('Test Insert', 'EXT-SRV-001', false);
+        Product2 testProduct = TestDataFactory.createProduct('Test Insert', 'EXT-SRV-001', false);
+        insert testProduct;
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION);
@@ -24,7 +25,8 @@ private class ProductSyncServiceTest {
 
     @IsTest
     static void testEnqueueUpdateOperation() {
-        Product2 testProduct = TestDataFactory.createAndInsertProduct('Test Update', 'EXT-SRV-002', false);
+        Product2 testProduct = TestDataFactory.createProduct('Test Update', 'EXT-SRV-002', false);
+        insert testProduct;
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION);
@@ -42,7 +44,8 @@ private class ProductSyncServiceTest {
 
     @IsTest
     static void testEnqueueDeleteOperation() {
-        Product2 testProduct = TestDataFactory.createAndInsertProduct('Test Delete', 'EXT-SRV-003', false);
+        Product2 testProduct = TestDataFactory.createProduct('Test Delete', 'EXT-SRV-003', false);
+        insert testProduct;
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION);
@@ -60,7 +63,8 @@ private class ProductSyncServiceTest {
 
     @IsTest
     static void testExternalProductsAreIgnored() {
-        Product2 externalProduct = TestDataFactory.createAndInsertProduct('External Product', 'EXT-SRV-004', true);
+        Product2 externalProduct = TestDataFactory.createProduct('External Product', 'EXT-SRV-004', true);
+        insert externalProduct;
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{externalProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION);
