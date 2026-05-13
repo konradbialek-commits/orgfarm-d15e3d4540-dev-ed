@@ -5,15 +5,16 @@ global class ProductSyncEndpoint {
     global static void upsertProduct() {
         RestRequest req = RestContext.request;
         RestResponse res = RestContext.response;
-        String body = req.requestBody.toString();
-
-        ErrorLogger.logInfo(
-            'INBOUND POST | URI: ' + req.requestURI + ' | Body: ' + body,
-            'ProductSyncEndpoint',
-            'upsertProduct'
-        );
 
         try {
+            String body = req.requestBody.toString();
+
+            ErrorLogger.logInfo(
+                'INBOUND POST | URI: ' + req.requestURI + ' | Body: ' + body,
+                'ProductSyncEndpoint',
+                'upsertProduct'
+            );
+
             ProductPayload payload = (ProductPayload) JSON.deserialize(body, ProductPayload.class);
 
             List<Product2> existing = [
@@ -68,17 +69,17 @@ global class ProductSyncEndpoint {
         RestRequest req = RestContext.request;
         RestResponse res = RestContext.response;
 
-        String externalProductId = req.requestURI.substring(
-            req.requestURI.lastIndexOf('/') + 1
-        );
-
-        ErrorLogger.logInfo(
-            'INBOUND DELETE | ExternalProductId: ' + externalProductId,
-            'ProductSyncEndpoint',
-            'softDeleteProduct'
-        );
-
         try {
+            String externalProductId = req.requestURI.substring(
+                req.requestURI.lastIndexOf('/') + 1
+            );
+
+            ErrorLogger.logInfo(
+                'INBOUND DELETE | ExternalProductId: ' + externalProductId,
+                'ProductSyncEndpoint',
+                'softDeleteProduct'
+            );
+
             List<Product2> products = [
                 SELECT Id FROM Product2
                 WHERE External_Product_Id__c = :externalProductId

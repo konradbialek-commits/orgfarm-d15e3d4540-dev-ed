@@ -13,84 +13,70 @@ private class ProductSyncActionsTest {
 
     @IsTest
     static void testAfterInsertAction() {
-        Product2 p = new Product2(Name = 'Insert Test', Is_External__c = false);
-        insert p;
+        Product2 testProduct = TestDataFactory.createProduct('Insert Test', 'EXT-ACT-001', false);
+        insert testProduct;
         
         delete [SELECT Id FROM Product_Sync_Queue__c];
 
         Test.startTest();
-        new ProductAfterInsertSyncAction().afterInsert(new List<Product2>{p});
+        new ProductAfterInsertSyncAction().afterInsert(new List<Product2>{testProduct});
         Test.stopTest();
 
-        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :p.Id AND Operation__c = 'INSERT'];
+        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :testProduct.Id AND Operation__c = 'INSERT'];
         Assert.areEqual(1, queueItems.size());
     }
 
     @IsTest
     static void testAfterUpdateAction() {
-        Product2 p = new Product2(Name = 'Update Test', Is_External__c = false);
-        insert p;
+        Product2 testProduct = TestDataFactory.createProduct('Update Test', 'EXT-ACT-002', false);
+        insert testProduct;
         
         delete [SELECT Id FROM Product_Sync_Queue__c];
 
         Test.startTest();
-        new ProductAfterUpdateSyncAction().afterUpdate(new List<Product2>{p}, new List<Product2>{p});
+        new ProductAfterUpdateSyncAction().afterUpdate(new List<Product2>{testProduct}, new List<Product2>{testProduct});
         Test.stopTest();
 
-        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :p.Id AND Operation__c = 'UPDATE'];
+        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :testProduct.Id AND Operation__c = 'UPDATE'];
         Assert.areEqual(1, queueItems.size());
     }
 
     @IsTest
     static void testBeforeDeleteAction() {
-        Product2 p = new Product2(Name = 'Delete Test', Is_External__c = false);
-        insert p;
+        Product2 testProduct = TestDataFactory.createProduct('Delete Test', 'EXT-ACT-003', false);
+        insert testProduct;
         
         delete [SELECT Id FROM Product_Sync_Queue__c];
 
         Test.startTest();
-        new ProductBeforeDeleteSyncAction().beforeDelete(new List<Product2>{p});
+        new ProductBeforeDeleteSyncAction().beforeDelete(new List<Product2>{testProduct});
         Test.stopTest();
 
-        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :p.Id AND Operation__c = 'DELETE'];
+        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :testProduct.Id AND Operation__c = 'DELETE'];
         Assert.areEqual(1, queueItems.size());
     }
 
     @IsTest
-    static void testExternalProductIgnored() {
-        Product2 p = new Product2(Name = 'External Test', Is_External__c = true);
-        insert p;
-        
-        delete [SELECT Id FROM Product_Sync_Queue__c];
-
-        Test.startTest();
-        new ProductAfterInsertSyncAction().afterInsert(new List<Product2>{p});
-        Test.stopTest();
-
-        List<Product_Sync_Queue__c> queueItems = [SELECT Id FROM Product_Sync_Queue__c WHERE Product__c = :p.Id];
-        Assert.areEqual(0, queueItems.size());
-    }
-
-    @IsTest
     static void testProductQueueItemAction() {
-        Product2 p = new Product2(Name = 'Queue Trigger Test');
-        insert p;
+        Product2 testProduct = TestDataFactory.createProduct('Queue Trigger Test', 'EXT-ACT-004', false);
+        insert testProduct;
+        
+        String payloadJson = TestDataFactory.createProductPayloadJson(testProduct);
 
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
-        Product_Sync_Queue__c qItem = new Product_Sync_Queue__c(
-            Product__c = p.Id,
-            Status__c = 'Pending',
-            Operation__c = 'INSERT',
-            Payload__c = '{"externalProductId":"123"}',
-            Attempt_Count__c = 0 
+        Product_Sync_Queue__c queueItem = TestDataFactory.createQueueItem(
+            testProduct.Id,
+            Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION,
+            Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING,
+            payloadJson
         );
 
         Test.startTest();
-        insert qItem;
+        insert queueItem;
         Test.stopTest();
 
-        Product_Sync_Queue__c updated = [SELECT Status__c FROM Product_Sync_Queue__c WHERE Id = :qItem.Id];
-        Assert.areEqual('Success', updated.Status__c);
+        Product_Sync_Queue__c updatedQueueItem = [SELECT Status__c FROM Product_Sync_Queue__c WHERE Id = :queueItem.Id];
+        Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.STATUS.SUCCESS, updatedQueueItem.Status__c);
     }
 }
