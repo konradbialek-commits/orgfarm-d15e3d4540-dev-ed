@@ -6,6 +6,8 @@ private class ProductSyncServiceTest {
         Product2 testProduct = TestDataFactory.createProduct('Test Insert', 'EXT-SRV-001', false);
         insert testProduct;
         
+        delete [SELECT Id FROM Product_Sync_Queue__c];
+        
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION);
         Test.stopTest();
@@ -28,6 +30,8 @@ private class ProductSyncServiceTest {
         Product2 testProduct = TestDataFactory.createProduct('Test Update', 'EXT-SRV-002', false);
         insert testProduct;
         
+        delete [SELECT Id FROM Product_Sync_Queue__c];
+        
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION);
         Test.stopTest();
@@ -47,6 +51,8 @@ private class ProductSyncServiceTest {
         Product2 testProduct = TestDataFactory.createProduct('Test Delete', 'EXT-SRV-003', false);
         insert testProduct;
         
+        delete [SELECT Id FROM Product_Sync_Queue__c];
+        
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION);
         Test.stopTest();
@@ -65,6 +71,8 @@ private class ProductSyncServiceTest {
     static void testExternalProductsAreIgnored() {
         Product2 externalProduct = TestDataFactory.createProduct('External Product', 'EXT-SRV-004', true);
         insert externalProduct;
+        
+        delete [SELECT Id FROM Product_Sync_Queue__c];
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{externalProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION);
