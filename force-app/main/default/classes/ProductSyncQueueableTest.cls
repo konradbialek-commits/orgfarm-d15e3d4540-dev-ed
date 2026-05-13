@@ -30,13 +30,17 @@ private class ProductSyncQueueableTest {
     @IsTest
     static void testQueueableInsertSuccessAndPayloadRefresh() {
         Product2 testProduct = TestDataFactory.createProduct('Old Name', '123', false);
+        insert testProduct;
+        
+        String payloadJson = TestDataFactory.createProductPayloadJson(testProduct);
         
         Product_Sync_Queue__c queueItem = TestDataFactory.createQueueItem(
             testProduct.Id, 
             Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION, 
             Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, 
-            '{"name":"Old Name"}'
+            payloadJson
         );
+        insert queueItem;
 
         testProduct.Name = 'New Fresh Name';
         update testProduct;
@@ -56,13 +60,17 @@ private class ProductSyncQueueableTest {
     @IsTest
     static void testPhantomProductDeletion() {
         Product2 testProduct = TestDataFactory.createProduct('Phantom Product', '456', false);
+        insert testProduct;
+        
+        String payloadJson = TestDataFactory.createProductPayloadJson(testProduct);
         
         Product_Sync_Queue__c queueItem = TestDataFactory.createQueueItem(
             testProduct.Id, 
             Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION, 
             Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, 
-            '{"name":"Phantom Product"}'
+            payloadJson
         );
+        insert queueItem;
 
         delete testProduct;
 
@@ -77,13 +85,17 @@ private class ProductSyncQueueableTest {
     @IsTest
     static void testQueueableDeleteSuccess() {
         Product2 testProduct = TestDataFactory.createProduct('To Delete', '789', false);
+        insert testProduct;
+        
+        String payloadJson = TestDataFactory.createProductPayloadJson(testProduct);
         
         Product_Sync_Queue__c queueItem = TestDataFactory.createQueueItem(
             testProduct.Id, 
             Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION, 
             Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, 
-            '{"externalProductId":"789"}'
+            payloadJson
         );
+        insert queueItem;
 
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator(200, '{"status":"success"}'));
 
@@ -98,13 +110,17 @@ private class ProductSyncQueueableTest {
     @IsTest
     static void testQueueableFailure() {
         Product2 testProduct = TestDataFactory.createProduct('Fail Test', '999', false);
+        insert testProduct;
+        
+        String payloadJson = TestDataFactory.createProductPayloadJson(testProduct);
         
         Product_Sync_Queue__c queueItem = TestDataFactory.createQueueItem(
             testProduct.Id, 
             Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION, 
             Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, 
-            '{"externalProductId":"999"}'
+            payloadJson
         );
+        insert queueItem;
 
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator(500, '{"status":"error"}'));
 
@@ -119,13 +135,17 @@ private class ProductSyncQueueableTest {
     @IsTest
     static void testQueueableException() {
         Product2 testProduct = TestDataFactory.createProduct('Exception Test', '000', false);
+        insert testProduct;
+        
+        String payloadJson = TestDataFactory.createProductPayloadJson(testProduct);
         
         Product_Sync_Queue__c queueItem = TestDataFactory.createQueueItem(
             testProduct.Id, 
             Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION, 
             Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, 
-            '{"externalProductId":"000"}'
+            payloadJson
         );
+        insert queueItem;
 
         Test.setMock(HttpCalloutMock.class, new MockHttpExceptionGenerator());
 

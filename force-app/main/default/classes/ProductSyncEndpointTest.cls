@@ -18,7 +18,8 @@ private class ProductSyncEndpointTest {
 
     @IsTest
     static void testUpsertProductInsertSuccess() {
-        String payloadJson = TestDataFactory.createProductPayloadJson('EXT-TEST-001', 'ORG-TEST-001', 'Test Product', 'TS-001', 'Other');
+        Product2 payloadProduct = TestDataFactory.createProduct('Test Product', 'EXT-TEST-001', true);
+        String payloadJson = TestDataFactory.createProductPayloadJson(payloadProduct);
         setupRestContext('POST', '/services/apexrest/v1/products', payloadJson);
 
         Test.startTest();
@@ -33,7 +34,10 @@ private class ProductSyncEndpointTest {
     @IsTest
     static void testUpsertProductUpdateSuccess() {
         Product2 existingProduct = TestDataFactory.createProduct('Old Name', 'EXT-TEST-002', true);
-        String payloadJson = TestDataFactory.createProductPayloadJson('EXT-TEST-002', 'ORG-TEST-001', 'Updated Name', 'TS-002', 'Other');
+        insert existingProduct;
+        
+        Product2 payloadProduct = TestDataFactory.createProduct('Updated Name', 'EXT-TEST-002', true);
+        String payloadJson = TestDataFactory.createProductPayloadJson(payloadProduct);
         setupRestContext('POST', '/services/apexrest/v1/products', payloadJson);
 
         Test.startTest();
@@ -59,6 +63,8 @@ private class ProductSyncEndpointTest {
     @IsTest
     static void testSoftDeleteProductSuccess() {
         Product2 testProduct = TestDataFactory.createProduct('To Be Deleted', 'EXT-003', true);
+        insert testProduct;
+        
         setupRestContext('DELETE', '/services/apexrest/v1/products/EXT-003', null);
 
         Test.startTest();
