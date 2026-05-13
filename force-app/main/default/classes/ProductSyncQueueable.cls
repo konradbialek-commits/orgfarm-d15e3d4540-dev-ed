@@ -7,8 +7,12 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
             return;
         }
 
-        processQueueItems(queueItems);
-        update queueItems;
+        List<Product_Sync_Queue__c> itemsToUpdate = processQueueItems(queueItems);
+        
+        if (!itemsToUpdate.isEmpty()) {
+            update itemsToUpdate;
+        }
+        
         enqueueNextJobIfNeeded();
     }
 
@@ -22,11 +26,50 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
         ];
     }
 
-    private void processQueueItems(List<Product_Sync_Queue__c> queueItems) {
-        Http http = new Http();
+    private List<Product_Sync_Queue__c> processQueueItems(List<Product_Sync_Queue__c> queueItems) {
+        Set<Id> productIdsToRefresh = new Set<Id>();
         for (Product_Sync_Queue__c item : queueItems) {
+            if (item.Operation__c != Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION) {
+                productIdsToRefresh.add(item.Product__c);
+            }
+        }
+
+        Map<Id, Product2> freshProductsMap = new Map<Id, Product2>([
+            SELECT Id, Name, Description, ProductCode, Family, External_Product_Id__c 
+            FROM Product2 
+            WHERE Id IN :productIdsToRefresh
+        ]);
+
+        Http http = new Http();
+        List<Product_Sync_Queue__c> itemsToUpdate = new List<Product_Sync_Queue__c>();
+        List<Product_Sync_Queue__c> itemsToDelete = new List<Product_Sync_Queue__c>();
+
+        for (Product_Sync_Queue__c item : queueItems) {
+            if (item.Operation__c != Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION) {
+                if (freshProductsMap.containsKey(item.Product__c)) {
+                    Product2 freshProd = freshProductsMap.get(item.Product__c);
+                    String extId = String.isNotBlank(freshProd.External_Product_Id__c) ? freshProd.External_Product_Id__c : freshProd.Id;
+                    
+                    ProductPayload freshPayload = new ProductPayload(freshProd, extId);
+                    item.Payload__c = JSON.serialize(freshPayload);
+                    itemsToUpdate.add(item);
+                } else {
+                    itemsToDelete.add(item);
+                }
+            } else {
+                itemsToUpdate.add(item);
+            }
+        }
+
+        for (Product_Sync_Queue__c item : itemsToUpdate) {
             processSingleItem(item, http);
         }
+
+        if (!itemsToDelete.isEmpty()) {
+            delete itemsToDelete;
+        }
+
+        return itemsToUpdate;
     }
 
     private void processSingleItem(Product_Sync_Queue__c item, Http http) {
