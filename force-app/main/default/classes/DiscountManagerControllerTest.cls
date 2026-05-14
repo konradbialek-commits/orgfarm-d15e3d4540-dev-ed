@@ -32,15 +32,15 @@ private class DiscountManagerControllerTest {
 
     @IsTest
     static void testToggleDiscounts() {
-        Discount__c d = TestDataFactory.createDefaultDiscount();
-        d.Active__c = false;
-        insert d;
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        discount.Active__c = false;
+        insert discount;
 
         Test.startTest();
-        DiscountManagerController.toggleDiscounts(new List<Id>{d.Id}, true);
+        DiscountManagerController.toggleDiscounts(new List<Id>{discount.Id}, true);
         Test.stopTest();
 
-        Assert.isTrue([SELECT Active__c FROM Discount__c WHERE Id = :d.Id].Active__c);
+        Assert.isTrue([SELECT Active__c FROM Discount__c WHERE Id = :discount.Id].Active__c);
     }
 
     @IsTest
@@ -49,11 +49,11 @@ private class DiscountManagerControllerTest {
         Product2 testProd = TestDataFactory.createDefaultProduct();
         insert testProd;
 
-        Discount__c d = TestDataFactory.createDefaultDiscount();
-        d.Target_Type__c = Util.DISCOUNT.TARGET.PRODUCTS;
-        insert d;
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        discount.Target_Type__c = Util.DISCOUNT.TARGET.PRODUCTS;
+        insert discount;
 
-        insert TestDataFactory.createDiscountProduct(d.Id, testProd.Id);
+        insert TestDataFactory.createDiscountProduct(discount.Id, testProd.Id);
 
         String cartPayload = TestDataFactory.createCartPayload('01u000000000000', testProd.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 100.0, 1);
         
@@ -70,13 +70,13 @@ private class DiscountManagerControllerTest {
         Product2 testProd = TestDataFactory.createDefaultProduct();
         insert testProd;
 
-        Discount__c d = TestDataFactory.createDefaultDiscount();
-        insert d;
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        insert discount;
 
-        insert TestDataFactory.createDiscountProduct(d.Id, testProd.Id);
+        insert TestDataFactory.createDiscountProduct(discount.Id, testProd.Id);
 
         Test.startTest();
-        List<Id> fetchedProductIds = DiscountManagerController.getDiscountProducts(d.Id);
+        List<Id> fetchedProductIds = DiscountManagerController.getDiscountProducts(discount.Id);
         Test.stopTest();
 
         Assert.areEqual(1, fetchedProductIds.size());
@@ -85,11 +85,11 @@ private class DiscountManagerControllerTest {
 
     @IsTest
     static void testDeleteDiscounts() {
-        Discount__c d = TestDataFactory.createDefaultDiscount();
-        insert d;
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        insert discount;
 
         Test.startTest();
-        DiscountManagerController.deleteDiscounts(new List<Id>{d.Id});
+        DiscountManagerController.deleteDiscounts(new List<Id>{discount.Id});
         Test.stopTest();
 
         Assert.areEqual(0, [SELECT Count() FROM Discount__c]);
@@ -97,22 +97,22 @@ private class DiscountManagerControllerTest {
     
     @IsTest
     static void testUpsertExceptions() {
-        Discount__c dTooHigh = TestDataFactory.createDefaultDiscount();
-        dTooHigh.Value__c = 110.0;
+        Discount__c discountTooHigh = TestDataFactory.createDefaultDiscount();
+        discountTooHigh.Value__c = 110.0;
         
         try {
-            DiscountManagerController.upsertDiscount(dTooHigh, null);
+            DiscountManagerController.upsertDiscount(discountTooHigh, null);
             Assert.isTrue(false);
         } catch (Exception e) {
             Assert.isTrue(true);
         }
 
-        Discount__c dMissingDate = TestDataFactory.createDefaultDiscount();
-        dMissingDate.Discount_Category__c = Util.DISCOUNT.CATEGORY.RECURRING;
-        dMissingDate.Recurrence__c = Util.DISCOUNT.RECURRENCE.YEARLY_CUSTOM;
+        Discount__c discountMissingDate = TestDataFactory.createDefaultDiscount();
+        discountMissingDate.Discount_Category__c = Util.DISCOUNT.CATEGORY.RECURRING;
+        discountMissingDate.Recurrence__c = Util.DISCOUNT.RECURRENCE.YEARLY_CUSTOM;
         
         try {
-            DiscountManagerController.upsertDiscount(dMissingDate, null);
+            DiscountManagerController.upsertDiscount(discountMissingDate, null);
             Assert.isTrue(false);
         } catch (Exception e) {
             Assert.isTrue(true);
