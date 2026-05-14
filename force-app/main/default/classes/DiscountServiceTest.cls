@@ -1,121 +1,97 @@
-@isTest
+@IsTest
 private class DiscountServiceTest {
     
-    @testSetup
+    @TestSetup
     static void setupData() {
-        Discount_Setting__c setting = new Discount_Setting__c(
-            Name = Util.SETTINGS.DEFAULT_NAME,
-            Strategy__c = Util.SETTINGS.STRATEGY.CUMULATIVE,
-            Minimum_Price_Floor_Percent__c = 0.0
-        );
-        insert setting;
+        insert TestDataFactory.createDefaultDiscountSetting();
     }
 
-    static String getCartPayload(Id pbeId, Id pId, Integer qty, Decimal price) {
-        return '[{"pricebookEntryId":"' + pbeId + '","productId":"' + pId + '","family":"Test","unitPrice":' + price + ',"quantity":' + qty + '}]';
-    }
-
-    @isTest
+    @IsTest
     static void testTwoForOneEvaluatorMath() {
-        Product2 prod = new Product2(Name = 'T-Shirt', IsActive = true);
+        Product2 prod = TestDataFactory.createDefaultProduct();
         insert prod;
         
-        Discount__c d = new Discount__c(
-            Name = 'Buy 2 Get 1',
-            Active__c = true,
-            Discount_Category__c = Util.DISCOUNT.CATEGORY.CONDITIONAL,
-            Condition_Type__c = Util.DISCOUNT.CONDITION.TWO_FOR_ONE,
-            Target_Type__c = Util.DISCOUNT.TARGET.PRODUCTS,
-            Discount_Type__c = Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL,
-            Value__c = 100.0
-        );
-        insert d;
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        discount.Name = 'Buy 2 Get 1';
+        discount.Discount_Category__c = Util.DISCOUNT.CATEGORY.CONDITIONAL;
+        discount.Condition_Type__c = Util.DISCOUNT.CONDITION.TWO_FOR_ONE;
+        discount.Target_Type__c = Util.DISCOUNT.TARGET.PRODUCTS;
+        discount.Value__c = 100.0;
+        insert discount;
         
-        insert new Discount_Product__c(Discount__c = d.Id, Product__c = prod.Id);
+        insert TestDataFactory.createDiscountProduct(discount.Id, prod.Id);
 
-        String payload = getCartPayload('01u000000000001AAA', prod.Id, 3, 50.0);
+        String payload = TestDataFactory.createCartPayload('01u000000000001AAA', prod.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 50.0, 3);
         
         Map<String, Object> result = DiscountService.calculateOrderDiscounts(payload);
         
-        System.assertEquals(150.0, result.get('originalTotal'));
-        System.assertEquals(50.0, result.get('discountAmount'));
-        System.assertEquals(100.0, result.get('finalTotal'));
+        Assert.areEqual(150.0, result.get('originalTotal'));
+        Assert.areEqual(50.0, result.get('discountAmount'));
+        Assert.areEqual(100.0, result.get('finalTotal'));
     }
 
-    @isTest
+    @IsTest
     static void testMinimumOrderEvaluator() {
-        Product2 prod = new Product2(Name = 'Shoes', IsActive = true);
-        insert prod;
+        Product2 product = TestDataFactory.createDefaultProduct();
+        insert product;
 
-        Discount__c d = new Discount__c(
-            Name = 'Min 100 Get 20',
-            Active__c = true,
-            Discount_Category__c = Util.DISCOUNT.CATEGORY.CONDITIONAL,
-            Condition_Type__c = Util.DISCOUNT.CONDITION.MIN_ORDER,
-            Minimum_Order_Value__c = 100.0,
-            Target_Type__c = Util.DISCOUNT.TARGET.ALL_PRODUCTS,
-            Discount_Type__c = Util.DISCOUNT.DISCOUNT_TYPE.FIXED,
-            Value__c = 20.0
-        );
-        insert d;
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        discount.Name = 'Min 100 Get 20';
+        discount.Discount_Category__c = Util.DISCOUNT.CATEGORY.CONDITIONAL;
+        discount.Condition_Type__c = Util.DISCOUNT.CONDITION.MIN_ORDER;
+        discount.Discount_Type__c = Util.DISCOUNT.DISCOUNT_TYPE.FIXED;
+        discount.Minimum_Order_Value__c = 100.0;
+        discount.Value__c = 20.0;
+        insert discount;
 
-        String payload = getCartPayload('01u000000000002AAA', prod.Id, 1, 150.0);
+        String payload = TestDataFactory.createCartPayload('01u000000000002AAA', product.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 150.0, 1);
         
         Map<String, Object> result = DiscountService.calculateOrderDiscounts(payload);
         
-        System.assertEquals(150.0, result.get('originalTotal'));
-        System.assertEquals(20.0, result.get('discountAmount'));
-        System.assertEquals(130.0, result.get('finalTotal'));
+        Assert.areEqual(150.0, result.get('originalTotal'));
+        Assert.areEqual(20.0, result.get('discountAmount'));
+        Assert.areEqual(130.0, result.get('finalTotal'));
     }
 
-    @isTest
+    @IsTest
     static void testVolumeTierEvaluator() {
-        Product2 prod = new Product2(Name = 'Bulk Pens', IsActive = true);
-        insert prod;
+        Product2 product = TestDataFactory.createDefaultProduct();
+        insert product;
 
-        Discount__c d = new Discount__c(
-            Name = 'Buy 10 Get 15% Off',
-            Active__c = true,
-            Discount_Category__c = Util.DISCOUNT.CATEGORY.CONDITIONAL,
-            Condition_Type__c = Util.DISCOUNT.CONDITION.VOLUME,
-            Minimum_Quantity__c = 10,
-            Target_Type__c = Util.DISCOUNT.TARGET.ALL_PRODUCTS,
-            Discount_Type__c = Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL,
-            Value__c = 15.0
-        );
-        insert d;
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        discount.Name = 'Buy 10 Get 15% Off';
+        discount.Discount_Category__c = Util.DISCOUNT.CATEGORY.CONDITIONAL;
+        discount.Condition_Type__c = Util.DISCOUNT.CONDITION.VOLUME;
+        discount.Minimum_Quantity__c = 10;
+        discount.Value__c = 15.0;
+        insert discount;
 
-        String payloadFail = getCartPayload('01u000000000004AAA', prod.Id, 5, 2.0);
+        String payloadFail = TestDataFactory.createCartPayload('01u000000000004AAA', product.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 2.0, 5);
         Map<String, Object> resultFail = DiscountService.calculateOrderDiscounts(payloadFail);
-        System.assertEquals(0.0, resultFail.get('discountAmount'), 'Should not discount when under minimum quantity');
+        Assert.areEqual(0.0, resultFail.get('discountAmount'));
 
-        String payloadPass = getCartPayload('01u000000000004AAA', prod.Id, 10, 2.0);
+        String payloadPass = TestDataFactory.createCartPayload('01u000000000004AAA', product.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 2.0, 10);
         Map<String, Object> resultPass = DiscountService.calculateOrderDiscounts(payloadPass);
-        System.assertEquals(3.0, resultPass.get('discountAmount'), 'Should calculate 15% of $20 ($3)');
+        Assert.areEqual(3.0, resultPass.get('discountAmount'));
     }
 
-    @isTest
+    @IsTest
     static void testRecurringEvaluator() {
-        Product2 prod = new Product2(Name = 'Socks', IsActive = true);
-        insert prod;
+        Product2 product = TestDataFactory.createDefaultProduct();
+        insert product;
 
-        Discount__c d = new Discount__c(
-            Name = 'Daily 10%',
-            Active__c = true,
-            Discount_Category__c = Util.DISCOUNT.CATEGORY.RECURRING,
-            Recurrence__c = 'Daily',
-            Target_Type__c = Util.DISCOUNT.TARGET.ALL_PRODUCTS,
-            Discount_Type__c = Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL,
-            Value__c = 10.0
-        );
-        insert d;
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        discount.Name = 'Daily 10%';
+        discount.Discount_Category__c = Util.DISCOUNT.CATEGORY.RECURRING;
+        discount.Recurrence__c = Util.DISCOUNT.RECURRENCE.DAILY;
+        insert discount;
 
-        String payload = getCartPayload('01u000000000003AAA', prod.Id, 2, 20.0);
+        String payload = TestDataFactory.createCartPayload('01u000000000003AAA', product.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 20.0, 2);
         
         Map<String, Object> result = DiscountService.calculateOrderDiscounts(payload);
         
-        System.assertEquals(40.0, result.get('originalTotal'));
-        System.assertEquals(4.0, result.get('discountAmount'));
-        System.assertEquals(36.0, result.get('finalTotal'));
+        Assert.areEqual(40.0, result.get('originalTotal'));
+        Assert.areEqual(4.0, result.get('discountAmount'));
+        Assert.areEqual(36.0, result.get('finalTotal'));
     }
 }

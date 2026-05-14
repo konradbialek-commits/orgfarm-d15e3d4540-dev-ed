@@ -1,69 +1,132 @@
-@isTest
+@IsTest
 private class DiscountManagerControllerTest {
     
-    @isTest
-    static void testControllerMethods() {
+    @IsTest
+    static void testGlobalSettingsRetrievedAndSaved() {
         Discount_Setting__c setting = DiscountManagerController.getGlobalSettings();
-        System.assertNotEquals(null, setting);
+        Assert.isNotNull(setting);
 
         setting.Minimum_Price_Floor_Percent__c = 5.0;
         DiscountManagerController.saveGlobalSettings(setting);
+        
         Discount_Setting__c updatedSetting = DiscountManagerController.getGlobalSettings();
-        System.assertEquals(5.0, updatedSetting.Minimum_Price_Floor_Percent__c);
+        Assert.areEqual(5.0, updatedSetting.Minimum_Price_Floor_Percent__c);
+    }
 
-        Product2 testProd = new Product2(Name = 'Test Product', IsActive = true);
+    @IsTest
+    static void testUpsertAndGetDiscounts() {
+        Product2 testProd = TestDataFactory.createDefaultProduct();
         insert testProd;
 
-        Discount__c d = new Discount__c(
-            Name = 'Test', 
-            Active__c = false, 
-            Target_Type__c = Util.DISCOUNT.TARGET.PRODUCTS,
-            Discount_Type__c = Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL, 
-            Value__c = 10
-        );
+        Discount__c d = TestDataFactory.createDefaultDiscount();
+        d.Active__c = false;
+        d.Target_Type__c = Util.DISCOUNT.TARGET.PRODUCTS;
         
+        Test.startTest();
         DiscountManagerController.upsertDiscount(d, new List<Id>{testProd.Id});
+        Test.stopTest();
         
         List<Discount__c> discounts = DiscountManagerController.getDiscounts();
-        System.assertEquals(1, discounts.size());
+        Assert.areEqual(1, discounts.size());
+    }
 
-        DiscountManagerController.toggleDiscounts(new List<Id>{d.Id}, true);
-        System.assertEquals(true, [SELECT Active__c FROM Discount__c WHERE Id = :d.Id].Active__c);
+    @IsTest
+    static void testToggleDiscounts() {
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        discount.Active__c = false;
+        insert discount;
 
-        String cartPayload = '[{"pricebookEntryId":"01u000000000000","productId":"' + testProd.Id + '","family":"Fiction","unitPrice":100.0,"quantity":1}]';
+        Test.startTest();
+        DiscountManagerController.toggleDiscounts(new List<Id>{discount.Id}, true);
+        Test.stopTest();
+
+        Assert.isTrue([SELECT Active__c FROM Discount__c WHERE Id = :discount.Id].Active__c);
+    }
+
+    @IsTest
+    static void testCalculateOrderDiscounts() {
+        insert TestDataFactory.createDefaultDiscountSetting();
+        Product2 testProd = TestDataFactory.createDefaultProduct();
+        insert testProd;
+
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        discount.Target_Type__c = Util.DISCOUNT.TARGET.PRODUCTS;
+        insert discount;
+
+        insert TestDataFactory.createDiscountProduct(discount.Id, testProd.Id);
+
+        String cartPayload = TestDataFactory.createCartPayload('01u000000000000', testProd.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 100.0, 1);
+        
+        Test.startTest();
         Map<String, Object> calcResult = DiscountManagerController.calculateOrderDiscounts(cartPayload);
-        System.assertNotEquals(null, calcResult);
+        Test.stopTest();
+        
+        Assert.isNotNull(calcResult);
+        Assert.areEqual(10.0, calcResult.get('discountAmount'));
+    }
 
-        List<Id> fetchedProductIds = DiscountManagerController.getDiscountProducts(d.Id);
-        System.assertEquals(1, fetchedProductIds.size());
-        System.assertEquals(testProd.Id, fetchedProductIds[0]);
+    @IsTest
+    static void testGetDiscountProducts() {
+        Product2 testProd = TestDataFactory.createDefaultProduct();
+        insert testProd;
 
-        DiscountManagerController.deleteDiscounts(new List<Id>{d.Id});
-        System.assertEquals(0, [SELECT Count() FROM Discount__c]);
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        insert discount;
+
+        insert TestDataFactory.createDiscountProduct(discount.Id, testProd.Id);
+
+        Test.startTest();
+        List<Id> fetchedProductIds = DiscountManagerController.getDiscountProducts(discount.Id);
+        Test.stopTest();
+
+        Assert.areEqual(1, fetchedProductIds.size());
+        Assert.areEqual(testProd.Id, fetchedProductIds[0]);
+    }
+
+    @IsTest
+    static void testDeleteDiscounts() {
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        insert discount;
+
+        Test.startTest();
+        DiscountManagerController.deleteDiscounts(new List<Id>{discount.Id});
+        Test.stopTest();
+
+        Assert.areEqual(0, [SELECT Count() FROM Discount__c]);
     }
     
-    @isTest
+    @IsTest
     static void testUpsertExceptions() {
-        Discount__c dTooHigh = new Discount__c(Discount_Type__c = Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL, Value__c = 110);
+        Discount__c discountTooHigh = TestDataFactory.createDefaultDiscount();
+        discountTooHigh.Value__c = 110.0;
+        
         try {
-            DiscountManagerController.upsertDiscount(dTooHigh, null);
-            System.assert(false);
+            DiscountManagerController.upsertDiscount(discountTooHigh, null);
+            Assert.isTrue(false);
         } catch (Exception e) {
-            System.assert(true);
+            Assert.isTrue(true);
         }
 
-        Discount__c dMissingDate = new Discount__c(Recurrence__c = Util.DISCOUNT.RECURRENCE.YEARLY_CUSTOM);
+        Discount__c discountMissingDate = TestDataFactory.createDefaultDiscount();
+        discountMissingDate.Discount_Category__c = Util.DISCOUNT.CATEGORY.RECURRING;
+        discountMissingDate.Recurrence__c = Util.DISCOUNT.RECURRENCE.YEARLY_CUSTOM;
+        
         try {
-            DiscountManagerController.upsertDiscount(dMissingDate, null);
-            System.assert(false);
+            DiscountManagerController.upsertDiscount(discountMissingDate, null);
+            Assert.isTrue(false);
         } catch (Exception e) {
-            System.assert(true);
+            Assert.isTrue(true);
         }
     }
 
-    @isTest
+    @IsTest
     static void testDataRetrieval() {
-        System.assertNotEquals(null, DiscountManagerController.getAvailableFamilies());
-        System.assertNotEquals(null, DiscountManagerController.getAvailableProducts());
+        Test.startTest();
+        List<Map<String, String>> families = DiscountManagerController.getAvailableFamilies();
+        List<Product2> products = DiscountManagerController.getAvailableProducts();
+        Test.stopTest();
+
+        Assert.isNotNull(families);
+        Assert.isNotNull(products);
     }
 }

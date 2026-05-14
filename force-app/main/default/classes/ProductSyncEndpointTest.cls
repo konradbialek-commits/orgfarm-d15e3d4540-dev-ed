@@ -2,23 +2,24 @@
 private class ProductSyncEndpointTest {
 
     private static void setupRestContext(String httpMethod, String uri, String body) {
-        RestRequest req = new RestRequest();
-        RestResponse res = new RestResponse();
+        RestRequest request = new RestRequest();
+        RestResponse response = new RestResponse();
         
-        req.httpMethod = httpMethod;
-        req.requestURI = uri;
+        request.httpMethod = httpMethod;
+        request.requestURI = uri;
         
         if (body != null) {
-            req.requestBody = Blob.valueOf(body);
+            request.requestBody = Blob.valueOf(body);
         }
         
-        RestContext.request = req;
-        RestContext.response = res;
+        RestContext.request = request;
+        RestContext.response = response;
     }
 
     @IsTest
     static void testUpsertProductInsertSuccess() {
-        Product2 payloadProduct = TestDataFactory.createProduct('Test Product', 'EXT-TEST-001', true);
+        Product2 payloadProduct = TestDataFactory.createDefaultProduct();
+        payloadProduct.Is_External__c = true;
         String payloadJson = TestDataFactory.createProductPayloadJson(payloadProduct);
         setupRestContext('POST', '/services/apexrest/v1/products', payloadJson);
 
@@ -27,16 +28,19 @@ private class ProductSyncEndpointTest {
         Test.stopTest();
 
         Assert.areEqual(200, RestContext.response.statusCode);
-        List<Product2> insertedProducts = [SELECT Id, Name, Is_External__c FROM Product2 WHERE External_Product_Id__c = 'EXT-TEST-001'];
+        List<Product2> insertedProducts = [SELECT Id, Name, Is_External__c FROM Product2 WHERE External_Product_Id__c = :Util.TEST.PRODUCT.DEFAULT_EXTERNAL_ID];
         Assert.areEqual(1, insertedProducts.size());
     }
 
     @IsTest
     static void testUpsertProductUpdateSuccess() {
-        Product2 existingProduct = TestDataFactory.createProduct('Old Name', 'EXT-TEST-002', true);
+        Product2 existingProduct = TestDataFactory.createDefaultProduct();
+        existingProduct.Is_External__c = true;
         insert existingProduct;
         
-        Product2 payloadProduct = TestDataFactory.createProduct('Updated Name', 'EXT-TEST-002', true);
+        Product2 payloadProduct = TestDataFactory.createDefaultProduct();
+        payloadProduct.Name = 'Updated Name';
+        payloadProduct.Is_External__c = true;
         String payloadJson = TestDataFactory.createProductPayloadJson(payloadProduct);
         setupRestContext('POST', '/services/apexrest/v1/products', payloadJson);
 
@@ -62,10 +66,11 @@ private class ProductSyncEndpointTest {
 
     @IsTest
     static void testSoftDeleteProductSuccess() {
-        Product2 testProduct = TestDataFactory.createProduct('To Be Deleted', 'EXT-003', true);
+        Product2 testProduct = TestDataFactory.createDefaultProduct();
+        testProduct.Is_External__c = true;
         insert testProduct;
         
-        setupRestContext('DELETE', '/services/apexrest/v1/products/EXT-003', null);
+        setupRestContext('DELETE', '/services/apexrest/v1/products/' + Util.TEST.PRODUCT.DEFAULT_EXTERNAL_ID, null);
 
         Test.startTest();
         ProductSyncEndpoint.softDeleteProduct();

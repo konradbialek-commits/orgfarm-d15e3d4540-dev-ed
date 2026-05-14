@@ -4,4 +4,5 @@ public class Util {
     public static OrderConst ORDER { get { return new OrderConst(); } }
     public static ProductConst PRODUCT { get { return new ProductConst(); } }
     public static ProductSyncQueueConst PRODUCT_SYNC_QUEUE { get { return new ProductSyncQueueConst(); } }
+    public static TestConst TEST { get { return new TestConst(); } }
 }
