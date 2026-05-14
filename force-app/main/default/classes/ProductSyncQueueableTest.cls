@@ -11,11 +11,11 @@ private class ProductSyncQueueableTest {
         }
         
         public HTTPResponse respond(HTTPRequest req) {
-            HttpResponse res = new HttpResponse();
-            res.setHeader('Content-Type', 'application/json');
-            res.setStatusCode(this.statusCode);
-            res.setBody(this.body);
-            return res;
+            HttpResponse response = new HttpResponse();
+            response.setHeader('Content-Type', 'application/json');
+            response.setStatusCode(this.statusCode);
+            response.setBody(this.body);
+            return response;
         }
     }
 

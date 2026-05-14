@@ -2,18 +2,18 @@
 private class ProductSyncEndpointTest {
 
     private static void setupRestContext(String httpMethod, String uri, String body) {
-        RestRequest req = new RestRequest();
-        RestResponse res = new RestResponse();
+        RestRequest request = new RestRequest();
+        RestResponse response = new RestResponse();
         
-        req.httpMethod = httpMethod;
-        req.requestURI = uri;
+        request.httpMethod = httpMethod;
+        request.requestURI = uri;
         
         if (body != null) {
-            req.requestBody = Blob.valueOf(body);
+            request.requestBody = Blob.valueOf(body);
         }
         
-        RestContext.request = req;
-        RestContext.response = res;
+        RestContext.request = request;
+        RestContext.response = response;
     }
 
     @IsTest

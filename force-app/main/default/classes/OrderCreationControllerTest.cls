@@ -27,22 +27,22 @@ private class OrderCreationControllerTest {
         
         insert new List<Product2>{prod1, prod2};
 
-        PricebookEntry pbe1 = TestDataFactory.createPricebookEntry(stdPricebookId, prod1.Id, 10.00);
-        PricebookEntry pbe2 = TestDataFactory.createPricebookEntry(stdPricebookId, prod2.Id, 15.00);
-        insert new List<PricebookEntry>{pbe1, pbe2};
+        PricebookEntry priceBookEntry1 = TestDataFactory.createPricebookEntry(stdPricebookId, prod1.Id, 10.00);
+        PricebookEntry priceBookEntry2 = TestDataFactory.createPricebookEntry(stdPricebookId, prod2.Id, 15.00);
+        insert new List<PricebookEntry>{priceBookEntry1, priceBookEntry2};
 
-        Discount__c d = TestDataFactory.createDefaultDiscount();
-        d.Name = 'One Time 10';
-        insert d;
+        Discount__c discount = TestDataFactory.createDefaultDiscount();
+        discount.Name = 'One Time 10';
+        insert discount;
     }
 
     @IsTest
     static void testGetAvailablePricebooks() {
         Test.startTest();
-        List<Pricebook2> pbs = OrderCreationController.getAvailablePricebooks();
+        List<Pricebook2> priceBooks = OrderCreationController.getAvailablePricebooks();
         Test.stopTest();
         
-        Assert.isTrue(pbs.size() >= 0);
+        Assert.isTrue(priceBooks.size() >= 0);
     }
 
     @IsTest
@@ -79,22 +79,22 @@ private class OrderCreationControllerTest {
     static void testCreateOrderWithItems() {
         Opportunity opp = [SELECT Id, AccountId FROM Opportunity LIMIT 1];
         Id stdPricebookId = Test.getStandardPricebookId();
-        PricebookEntry pbe1 = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2.Name = 'The Great Gatsby' LIMIT 1];
-        PricebookEntry pbe2 = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2.Name = 'A Brief History of Time' LIMIT 1];
+        PricebookEntry priceBookEntry1 = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2.Name = 'The Great Gatsby' LIMIT 1];
+        PricebookEntry priceBookEntry2 = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2.Name = 'A Brief History of Time' LIMIT 1];
         Discount__c testDiscount = [SELECT Id FROM Discount__c LIMIT 1];
 
         List<Map<String, Object>> payloadList = new List<Map<String, Object>>();
         
         payloadList.add(new Map<String, Object>{
-            'pricebookEntryId' => pbe1.Id,
+            'pricebookEntryId' => priceBookEntry1.Id,
             'quantity' => 2,
-            'unitPrice' => pbe1.UnitPrice
+            'unitPrice' => priceBookEntry1.UnitPrice
         });
         
         payloadList.add(new Map<String, Object>{
-            'pricebookEntryId' => pbe2.Id,
+            'pricebookEntryId' => priceBookEntry2.Id,
             'quantity' => 1,
-            'unitPrice' => pbe2.UnitPrice
+            'unitPrice' => priceBookEntry2.UnitPrice
         });
 
         String jsonPayload = JSON.serialize(payloadList);
