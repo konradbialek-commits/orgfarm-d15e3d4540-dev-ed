@@ -1,19 +1,22 @@
-@isTest
+@IsTest
 private class DiscountStrategyTest {
     
-    @isTest
+    @IsTest
     static void testFactory() {
-        System.assert(DiscountStrategyFactory.getStrategy(Util.SETTINGS.STRATEGY.CUMULATIVE) instanceof CumulativeStrategy, 'Should return Cumulative');
-        System.assert(DiscountStrategyFactory.getStrategy(Util.SETTINGS.STRATEGY.HIGHEST) instanceof HighestValueStrategy, 'Should return Highest');
-        System.assert(DiscountStrategyFactory.getStrategy(Util.SETTINGS.STRATEGY.LOWEST) instanceof LowestValueStrategy, 'Should return Lowest');
-        System.assert(DiscountStrategyFactory.getStrategy('Gibberish') instanceof CumulativeStrategy, 'Should default to Cumulative');
+        Assert.isTrue(DiscountStrategyFactory.getStrategy(Util.SETTINGS.STRATEGY.CUMULATIVE) instanceof CumulativeStrategy);
+        Assert.isTrue(DiscountStrategyFactory.getStrategy(Util.SETTINGS.STRATEGY.HIGHEST) instanceof HighestValueStrategy);
+        Assert.isTrue(DiscountStrategyFactory.getStrategy(Util.SETTINGS.STRATEGY.LOWEST) instanceof LowestValueStrategy);
+        Assert.isTrue(DiscountStrategyFactory.getStrategy('Gibberish') instanceof CumulativeStrategy);
     }
 
-    @isTest
+    @IsTest
     static void testStrategyLogic() {
-        Discount__c d1 = new Discount__c(Name = 'Discount 10');
-        Discount__c d2 = new Discount__c(Name = 'Discount 50');
-        Discount__c d3 = new Discount__c(Name = 'Discount 5');
+        Discount__c d1 = TestDataFactory.createDefaultDiscount();
+        d1.Name = 'Discount 10';
+        Discount__c d2 = TestDataFactory.createDefaultDiscount();
+        d2.Name = 'Discount 50';
+        Discount__c d3 = TestDataFactory.createDefaultDiscount();
+        d3.Name = 'Discount 5';
         insert new List<Discount__c>{d1, d2, d3};
         
         List<Discount__c> applicableDiscounts = new List<Discount__c>{d1, d2, d3};
@@ -26,19 +29,19 @@ private class DiscountStrategyTest {
 
         DiscountStrategy cumStrat = new CumulativeStrategy();
         List<Discount__c> cumResult = cumStrat.getWinningDiscounts(applicableDiscounts, discountToValueMap);
-        System.assertEquals(3, cumResult.size(), 'Cumulative should return all applicable discounts');
+        Assert.areEqual(3, cumResult.size());
 
         DiscountStrategy highStrat = new HighestValueStrategy();
         List<Discount__c> highResult = highStrat.getWinningDiscounts(applicableDiscounts, discountToValueMap);
-        System.assertEquals(1, highResult.size(), 'Highest should only return one winner');
-        System.assertEquals(d2.Id, highResult[0].Id, 'Highest should select the $50 discount');
+        Assert.areEqual(1, highResult.size());
+        Assert.areEqual(d2.Id, highResult[0].Id);
 
         DiscountStrategy lowStrat = new LowestValueStrategy();
         List<Discount__c> lowResult = lowStrat.getWinningDiscounts(applicableDiscounts, discountToValueMap);
-        System.assertEquals(1, lowResult.size(), 'Lowest should only return one winner');
-        System.assertEquals(d3.Id, lowResult[0].Id, 'Lowest should select the $5 discount');
+        Assert.areEqual(1, lowResult.size());
+        Assert.areEqual(d3.Id, lowResult[0].Id);
 
         List<Discount__c> emptyResult = highStrat.getWinningDiscounts(new List<Discount__c>(), discountToValueMap);
-        System.assertEquals(0, emptyResult.size(), 'Should handle empty lists gracefully');
+        Assert.areEqual(0, emptyResult.size());
     }
 }

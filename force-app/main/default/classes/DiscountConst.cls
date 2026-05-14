@@ -31,5 +31,6 @@ public class DiscountConst {
     public class RecurrencePattern {
         public String YEARLY_CUSTOM { get { return 'Yearly Custom Date'; } }
         public String FIRST_DAY_OF_MONTH { get { return 'First Day of Month'; } }
+        public String DAILY { get { return 'Daily'; } }
     }
 }

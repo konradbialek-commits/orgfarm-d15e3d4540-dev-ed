@@ -3,31 +3,82 @@ private class ErrorEventTriggerTest {
 
     @IsTest
     static void testErrorLogCreation() {
-        Error_Log__c mockLog = new Error_Log__c(
-            Log_Level__c = 'ERROR',
-            Class_Name__c = 'TestClass',
-            Method_Name__c = 'TestMethod',
-            Error_Message__c = 'Test exception message',
-            Stack_Trace__c = 'Line 1\nLine 2'
+        Error_Log__c mockLog = TestDataFactory.createErrorLog(
+            'ERROR',
+            Util.TEST.ERROR_LOG.DEFAULT_CLASS_NAME,
+            Util.TEST.ERROR_LOG.DEFAULT_METHOD_NAME,
+            Util.TEST.ERROR_LOG.DEFAULT_ERROR_MESSAGE,
+            Util.TEST.ERROR_LOG.DEFAULT_STACK_TRACE
         );
-        Error_Event__e testEvent = new Error_Event__e(
-            SObject_Type__c = 'Error_Log__c',
-            Payload__c = JSON.serialize(mockLog)
-        );
+        Error_Event__e testEvent = TestDataFactory.createDefaultErrorEvent(mockLog);
 
         Test.startTest();
         Database.SaveResult result = EventBus.publish(testEvent);
         Test.stopTest();
 
-        System.assert(result.isSuccess(), 'The platform event should publish successfully');
+        Assert.isTrue(result.isSuccess());
         List<Error_Log__c> logs = [
-            SELECT Class_Name__c, Method_Name__c, Error_Message__c, Stack_Trace__c 
+            SELECT Log_Level__c, Class_Name__c, Method_Name__c, Error_Message__c, Stack_Trace__c 
             FROM Error_Log__c
         ];
 
-        System.assertEquals(1, logs.size(), 'One error log should be inserted');
-        System.assertEquals('TestClass', logs[0].Class_Name__c, 'Class name should match');
-        System.assertEquals('TestMethod', logs[0].Method_Name__c, 'Method name should match');
-        System.assertEquals('Test exception message', logs[0].Error_Message__c, 'Error message should match');
+        Assert.areEqual(1, logs.size());
+        Assert.areEqual('ERROR', logs[0].Log_Level__c);
+        Assert.areEqual(Util.TEST.ERROR_LOG.DEFAULT_CLASS_NAME, logs[0].Class_Name__c);
+        Assert.areEqual(Util.TEST.ERROR_LOG.DEFAULT_METHOD_NAME, logs[0].Method_Name__c);
+        Assert.areEqual(Util.TEST.ERROR_LOG.DEFAULT_ERROR_MESSAGE, logs[0].Error_Message__c);
+        Assert.areEqual(Util.TEST.ERROR_LOG.DEFAULT_STACK_TRACE, logs[0].Stack_Trace__c);
+    }
+
+    @IsTest
+    static void testWarningLogCreation() {
+        Error_Log__c mockLog = TestDataFactory.createErrorLog(
+            'WARNING',
+            Util.TEST.ERROR_LOG.DEFAULT_CLASS_NAME,
+            Util.TEST.ERROR_LOG.DEFAULT_METHOD_NAME,
+            'Warning occurred',
+            null
+        );
+        Error_Event__e testEvent = TestDataFactory.createDefaultErrorEvent(mockLog);
+
+        Test.startTest();
+        Database.SaveResult result = EventBus.publish(testEvent);
+        Test.stopTest();
+
+        Assert.isTrue(result.isSuccess());
+        List<Error_Log__c> logs = [
+            SELECT Log_Level__c, Error_Message__c
+            FROM Error_Log__c
+        ];
+
+        Assert.areEqual(1, logs.size());
+        Assert.areEqual('WARNING', logs[0].Log_Level__c);
+        Assert.areEqual('Warning occurred', logs[0].Error_Message__c);
+    }
+
+    @IsTest
+    static void testInfoLogCreation() {
+        Error_Log__c mockLog = TestDataFactory.createErrorLog(
+            'INFO',
+            Util.TEST.ERROR_LOG.DEFAULT_CLASS_NAME,
+            Util.TEST.ERROR_LOG.DEFAULT_METHOD_NAME,
+            'Info message',
+            null
+        );
+        Error_Event__e testEvent = TestDataFactory.createDefaultErrorEvent(mockLog);
+
+        Test.startTest();
+        Database.SaveResult result = EventBus.publish(testEvent);
+        Test.stopTest();
+
+        Assert.isTrue(result.isSuccess());
+        List<Error_Log__c> logs = [
+            SELECT Log_Level__c, Error_Message__c
+            FROM Error_Log__c
+        ];
+
+        Assert.areEqual(1, logs.size());
+        Assert.areEqual('INFO', logs[0].Log_Level__c);
+        Assert.areEqual('Info message', logs[0].Error_Message__c);
     }
 }

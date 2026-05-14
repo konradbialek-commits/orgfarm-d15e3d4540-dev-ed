@@ -3,7 +3,7 @@ private class ProductSyncServiceTest {
 
     @IsTest
     static void testEnqueueInsertOperation() {
-        Product2 testProduct = TestDataFactory.createProduct('Test Insert', 'EXT-SRV-001', false);
+        Product2 testProduct = TestDataFactory.createDefaultProduct();
         insert testProduct;
         
         delete [SELECT Id FROM Product_Sync_Queue__c];
@@ -28,7 +28,7 @@ private class ProductSyncServiceTest {
 
     @IsTest
     static void testEnqueueUpdateOperation() {
-        Product2 testProduct = TestDataFactory.createProduct('Test Update', 'EXT-SRV-002', false);
+        Product2 testProduct = TestDataFactory.createDefaultProduct();
         insert testProduct;
         
         delete [SELECT Id FROM Product_Sync_Queue__c];
@@ -50,7 +50,7 @@ private class ProductSyncServiceTest {
 
     @IsTest
     static void testEnqueueDeleteOperation() {
-        Product2 testProduct = TestDataFactory.createProduct('Test Delete', 'EXT-SRV-003', false);
+        Product2 testProduct = TestDataFactory.createDefaultProduct();
         insert testProduct;
         
         delete [SELECT Id FROM Product_Sync_Queue__c];
@@ -72,7 +72,8 @@ private class ProductSyncServiceTest {
 
     @IsTest
     static void testExternalProductsAreIgnored() {
-        Product2 externalProduct = TestDataFactory.createProduct('External Product', 'EXT-SRV-004', true);
+        Product2 externalProduct = TestDataFactory.createDefaultProduct();
+        externalProduct.Is_External__c = true;
         insert externalProduct;
         
         delete [SELECT Id FROM Product_Sync_Queue__c];
