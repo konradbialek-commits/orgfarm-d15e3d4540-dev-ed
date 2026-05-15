@@ -35,7 +35,10 @@ private class ProductSyncQueueableTest {
         TriggerBase.clearBypass(Schema.Product2.SObjectType);
 
         Product_Sync_Queue__c queueItem = TestDataFactory.createDefaultQueueItem(testProduct.Id);
+
+        TriggerBase.bypass(Schema.Product_Sync_Queue__c.SObjectType);
         insert queueItem;
+        TriggerBase.clearBypass(Schema.Product_Sync_Queue__c.SObjectType);
     }
 
     @IsTest

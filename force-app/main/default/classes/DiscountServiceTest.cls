@@ -9,7 +9,7 @@ private class DiscountServiceTest {
 
         Discount__c discount1 = TestDataFactory.createDiscount(
             'Buy 2 Get 1',
-            true,
+            false,
             Util.DISCOUNT.CATEGORY.CONDITIONAL,
             Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL,
             100.0,
@@ -19,7 +19,7 @@ private class DiscountServiceTest {
 
         Discount__c discount2 = TestDataFactory.createDiscount(
             'Min 100 Get 20',
-            true,
+            false,
             Util.DISCOUNT.CATEGORY.CONDITIONAL,
             Util.DISCOUNT.DISCOUNT_TYPE.FIXED,
             20.0,
@@ -30,7 +30,7 @@ private class DiscountServiceTest {
 
         Discount__c discount3 = TestDataFactory.createDiscount(
             'Buy 10 Get 15% Off',
-            true,
+            false,
             Util.DISCOUNT.CATEGORY.CONDITIONAL,
             Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL,
             15.0,
@@ -41,7 +41,7 @@ private class DiscountServiceTest {
 
         Discount__c discount4 = TestDataFactory.createDiscount(
             'Daily 10%',
-            true,
+            false,
             Util.DISCOUNT.CATEGORY.RECURRING,
             Util.DISCOUNT.DISCOUNT_TYPE.PERCENT_VAL,
             10.0,
@@ -55,6 +55,10 @@ private class DiscountServiceTest {
 
     @IsTest
     static void testTwoForOneEvaluatorMath() {
+        Discount__c discount = [SELECT Id FROM Discount__c WHERE Name = 'Buy 2 Get 1' LIMIT 1];
+        discount.Active__c = true;
+        update discount;
+
         Product2 prod = [SELECT Id FROM Product2 LIMIT 1];
         String payload = TestDataFactory.createCartPayload('01u000000000001AAA', prod.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 50.0, 3);
 
@@ -69,6 +73,10 @@ private class DiscountServiceTest {
 
     @IsTest
     static void testMinimumOrderEvaluator() {
+        Discount__c discount = [SELECT Id FROM Discount__c WHERE Name = 'Min 100 Get 20' LIMIT 1];
+        discount.Active__c = true;
+        update discount;
+
         Product2 prod = [SELECT Id FROM Product2 LIMIT 1];
         String payload = TestDataFactory.createCartPayload('01u000000000002AAA', prod.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 150.0, 1);
 
@@ -83,6 +91,10 @@ private class DiscountServiceTest {
 
     @IsTest
     static void testVolumeTierEvaluator() {
+        Discount__c discount = [SELECT Id FROM Discount__c WHERE Name = 'Buy 10 Get 15% Off' LIMIT 1];
+        discount.Active__c = true;
+        update discount;
+
         Product2 prod = [SELECT Id FROM Product2 LIMIT 1];
         String payloadFail = TestDataFactory.createCartPayload('01u000000000004AAA', prod.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 2.0, 5);
         String payloadPass = TestDataFactory.createCartPayload('01u000000000004AAA', prod.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 2.0, 10);
@@ -98,6 +110,10 @@ private class DiscountServiceTest {
 
     @IsTest
     static void testRecurringEvaluator() {
+        Discount__c discount = [SELECT Id FROM Discount__c WHERE Name = 'Daily 10%' LIMIT 1];
+        discount.Active__c = true;
+        update discount;
+
         Product2 prod = [SELECT Id FROM Product2 LIMIT 1];
         String payload = TestDataFactory.createCartPayload('01u000000000003AAA', prod.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 20.0, 2);
 
