@@ -90,11 +90,21 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
     private void handleSuccess(Product_Sync_Queue__c item, HttpResponse res) {
         item.Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.SUCCESS;
         item.Error_Message__c = '';
+        ErrorLogger.logInfo(
+            'OUTBOUND ' + item.Operation__c + ' SUCCESS | Status: ' + res.getStatusCode() + ' | Response: ' + res.getBody(),
+            'ProductSyncQueueable',
+            'handleSuccess'
+        );
     }
 
     private void handleFailure(Product_Sync_Queue__c item, HttpResponse res) {
         item.Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.FAILED;
         item.Error_Message__c = 'HTTP ' + res.getStatusCode() + ': ' + res.getBody();
+        ErrorLogger.logWarning(
+            'OUTBOUND ' + item.Operation__c + ' REJECTED | Status: ' + res.getStatusCode() + ' | Response: ' + res.getBody(),
+            'ProductSyncQueueable',
+            'handleFailure'
+        );
     }
 
     private void handleException(Product_Sync_Queue__c item, Exception e) {
