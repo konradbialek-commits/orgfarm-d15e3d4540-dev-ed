@@ -46,7 +46,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
         return [
             SELECT Id, Operation__c, Attempt_Count__c, Product__c
             FROM Product_Sync_Queue__c
-            WHERE Status__c IN ('Pending', 'Failed')
+            WHERE Status__c = :Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING
             AND Attempt_Count__c < 3
             ORDER BY CreatedDate ASC
             LIMIT 50
@@ -114,7 +114,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
     }
 
     private void enqueueNextJobIfNeeded() {
-        Integer pendingCount = [SELECT Count() FROM Product_Sync_Queue__c WHERE Status__c = 'Pending' LIMIT 1];
+        Integer pendingCount = [SELECT Count() FROM Product_Sync_Queue__c WHERE Status__c = :Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING LIMIT 1];
         
         if (pendingCount > 0 && !Test.isRunningTest()) {
             System.enqueueJob(new ProductSyncQueueable());
