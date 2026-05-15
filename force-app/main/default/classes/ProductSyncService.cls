@@ -14,7 +14,7 @@ public class ProductSyncService {
 
         Map<Id, Product_Sync_Queue__c> existingItems = new Map<Id, Product_Sync_Queue__c>();
         for (Product_Sync_Queue__c item : [
-            SELECT Id, Product__c, Operation__c
+            SELECT Id, Product__c, Operation__c, Status__c, Attempt_Count__c
             FROM Product_Sync_Queue__c
             WHERE Product__c IN :productIds
             AND Status__c IN (:Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, :Util.PRODUCT_SYNC_QUEUE.STATUS.FAILED)
