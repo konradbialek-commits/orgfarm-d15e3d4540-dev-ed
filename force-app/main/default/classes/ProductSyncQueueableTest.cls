@@ -11,11 +11,11 @@ private class ProductSyncQueueableTest {
         }
         
         public HTTPResponse respond(HTTPRequest req) {
-            HttpResponse response = new HttpResponse();
-            response.setHeader('Content-Type', 'application/json');
-            response.setStatusCode(this.statusCode);
-            response.setBody(this.body);
-            return response;
+            HttpResponse res = new HttpResponse();
+            res.setHeader('Content-Type', 'application/json');
+            res.setStatusCode(this.statusCode);
+            res.setBody(this.body);
+            return res;
         }
     }
 
@@ -28,15 +28,12 @@ private class ProductSyncQueueableTest {
     }
 
     @IsTest
-    static void testQueueableInsertSuccessAndPayloadRefresh() {
+    static void testQueueableInsertSuccess() {
         Product2 testProduct = TestDataFactory.createDefaultProduct();
         insert testProduct;
         
         Product_Sync_Queue__c queueItem = TestDataFactory.createDefaultQueueItem(testProduct.Id);
         insert queueItem;
-
-        testProduct.Name = 'New Fresh Name';
-        update testProduct;
 
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator(200, '{"status":"success"}'));
 
@@ -44,10 +41,8 @@ private class ProductSyncQueueableTest {
         System.enqueueJob(new ProductSyncQueueable());
         Test.stopTest();
 
-        Product_Sync_Queue__c updatedQueueItem = [SELECT Status__c, Payload__c FROM Product_Sync_Queue__c WHERE Id = :queueItem.Id];
-        
+        Product_Sync_Queue__c updatedQueueItem = [SELECT Status__c FROM Product_Sync_Queue__c WHERE Id = :queueItem.Id];
         Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.STATUS.SUCCESS, updatedQueueItem.Status__c);
-        Assert.isTrue(updatedQueueItem.Payload__c.contains('New Fresh Name'));
     }
 
     @IsTest

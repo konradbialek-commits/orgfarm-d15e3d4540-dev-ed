@@ -95,4 +95,51 @@ private class ProductSyncServiceTest {
         
         Test.stopTest();
     }
+
+    @IsTest
+    static void testDeduplicateRapidUpdates() {
+        Product2 testProduct = TestDataFactory.createDefaultProduct();
+        
+        TriggerBase.bypass(Schema.Product2.SObjectType);
+        insert testProduct;
+        TriggerBase.clearBypass(Schema.Product2.SObjectType);
+        
+        Test.startTest();
+        ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION);
+        ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION);
+        ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION);
+        Test.stopTest();
+
+        List<Product_Sync_Queue__c> queueItems = [
+            SELECT Operation__c 
+            FROM Product_Sync_Queue__c 
+            WHERE Product__c = :testProduct.Id
+        ];
+
+        Assert.areEqual(1, queueItems.size());
+        Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION, queueItems[0].Operation__c);
+    }
+
+    @IsTest
+    static void testOverrideUpdateWithDelete() {
+        Product2 testProduct = TestDataFactory.createDefaultProduct();
+        
+        TriggerBase.bypass(Schema.Product2.SObjectType);
+        insert testProduct;
+        TriggerBase.clearBypass(Schema.Product2.SObjectType);
+        
+        Test.startTest();
+        ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION);
+        ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION);
+        Test.stopTest();
+
+        List<Product_Sync_Queue__c> queueItems = [
+            SELECT Operation__c 
+            FROM Product_Sync_Queue__c 
+            WHERE Product__c = :testProduct.Id
+        ];
+
+        Assert.areEqual(1, queueItems.size());
+        Assert.areEqual(Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION, queueItems[0].Operation__c);
+    }
 }
