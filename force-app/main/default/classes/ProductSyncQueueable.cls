@@ -16,6 +16,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
             SELECT Id, Name, Description, ProductCode, Family, External_Product_Id__c 
             FROM Product2 
             WHERE Id IN :productIds
+            FOR UPDATE
         ]);
 
         Http http = new Http();
