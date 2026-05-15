@@ -4,9 +4,10 @@ private class ProductSyncServiceTest {
     @IsTest
     static void testEnqueueInsertOperation() {
         Product2 testProduct = TestDataFactory.createDefaultProduct();
-        insert testProduct;
         
-        delete [SELECT Id FROM Product_Sync_Queue__c];
+        TriggerBase.bypass(Schema.Product2.SObjectType);
+        insert testProduct;
+        TriggerBase.clearBypass(Schema.Product2.SObjectType);
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION);
@@ -29,9 +30,10 @@ private class ProductSyncServiceTest {
     @IsTest
     static void testEnqueueUpdateOperation() {
         Product2 testProduct = TestDataFactory.createDefaultProduct();
-        insert testProduct;
         
-        delete [SELECT Id FROM Product_Sync_Queue__c];
+        TriggerBase.bypass(Schema.Product2.SObjectType);
+        insert testProduct;
+        TriggerBase.clearBypass(Schema.Product2.SObjectType);
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION);
@@ -51,9 +53,10 @@ private class ProductSyncServiceTest {
     @IsTest
     static void testEnqueueDeleteOperation() {
         Product2 testProduct = TestDataFactory.createDefaultProduct();
-        insert testProduct;
         
-        delete [SELECT Id FROM Product_Sync_Queue__c];
+        TriggerBase.bypass(Schema.Product2.SObjectType);
+        insert testProduct;
+        TriggerBase.clearBypass(Schema.Product2.SObjectType);
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{testProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION);
@@ -74,9 +77,10 @@ private class ProductSyncServiceTest {
     static void testExternalProductsAreIgnored() {
         Product2 externalProduct = TestDataFactory.createDefaultProduct();
         externalProduct.Is_External__c = true;
-        insert externalProduct;
         
-        delete [SELECT Id FROM Product_Sync_Queue__c];
+        TriggerBase.bypass(Schema.Product2.SObjectType);
+        insert externalProduct;
+        TriggerBase.clearBypass(Schema.Product2.SObjectType);
         
         Test.startTest();
         ProductSyncService.enqueueProducts(new List<Product2>{externalProduct}, Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION);

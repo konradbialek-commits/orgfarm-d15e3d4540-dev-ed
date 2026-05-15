@@ -27,40 +27,12 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
     }
 
     private List<Product_Sync_Queue__c> processQueueItems(List<Product_Sync_Queue__c> queueItems) {
-        Set<Id> productIdsToRefresh = new Set<Id>();
-        for (Product_Sync_Queue__c item : queueItems) {
-            if (item.Operation__c != Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION) {
-                productIdsToRefresh.add(item.Product__c);
-            }
-        }
-
-        Map<Id, Product2> freshProductsMap = new Map<Id, Product2>([
-            SELECT Id, Name, Description, ProductCode, Family, External_Product_Id__c 
-            FROM Product2 
-            WHERE Id IN :productIdsToRefresh
-        ]);
-
-        Http http = new Http();
         List<Product_Sync_Queue__c> itemsToUpdate = new List<Product_Sync_Queue__c>();
         List<Product_Sync_Queue__c> itemsToDelete = new List<Product_Sync_Queue__c>();
 
-        for (Product_Sync_Queue__c item : queueItems) {
-            if (item.Operation__c != Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION) {
-                if (freshProductsMap.containsKey(item.Product__c)) {
-                    Product2 freshProd = freshProductsMap.get(item.Product__c);
-                    String extId = String.isNotBlank(freshProd.External_Product_Id__c) ? freshProd.External_Product_Id__c : freshProd.Id;
-                    
-                    ProductPayload freshPayload = new ProductPayload(freshProd, extId);
-                    item.Payload__c = JSON.serialize(freshPayload);
-                    itemsToUpdate.add(item);
-                } else {
-                    itemsToDelete.add(item);
-                }
-            } else {
-                itemsToUpdate.add(item);
-            }
-        }
+        refreshPayloadsAndFilter(queueItems, itemsToUpdate, itemsToDelete);
 
+        Http http = new Http();
         for (Product_Sync_Queue__c item : itemsToUpdate) {
             processSingleItem(item, http);
         }
@@ -70,6 +42,31 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
         }
 
         return itemsToUpdate;
+    }
+
+    private void refreshPayloadsAndFilter(List<Product_Sync_Queue__c> queueItems, List<Product_Sync_Queue__c> itemsToUpdate, List<Product_Sync_Queue__c> itemsToDelete) {
+        Set<Id> productIdsToRefresh = new Set<Id>();
+        Map<Id, SyncOperationHandler> handlersByItemId = new Map<Id, SyncOperationHandler>();
+        
+        for (Product_Sync_Queue__c item : queueItems) {
+            SyncOperationHandler handler = SyncOperationHandlerFactory.getHandler(item.Operation__c);
+            handlersByItemId.put(item.Id, handler);
+            
+            Id requiredProdId = handler.getProductIdToRefresh(item);
+            if (requiredProdId != null) {
+                productIdsToRefresh.add(requiredProdId);
+            }
+        }
+
+        Map<Id, Product2> freshProductsMap = productIdsToRefresh.isEmpty() ? new Map<Id, Product2>() : new Map<Id, Product2>([
+            SELECT Id, Name, Description, ProductCode, Family, External_Product_Id__c 
+            FROM Product2 
+            WHERE Id IN :productIdsToRefresh
+        ]);
+
+        for (Product_Sync_Queue__c item : queueItems) {
+            handlersByItemId.get(item.Id).prepareItem(item, freshProductsMap, itemsToUpdate, itemsToDelete);
+        }
     }
 
     private void processSingleItem(Product_Sync_Queue__c item, Http http) {
