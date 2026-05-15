@@ -30,7 +30,10 @@ private class ProductSyncQueueableTest {
     @IsTest
     static void testQueueableInsertSuccess() {
         Product2 testProduct = TestDataFactory.createDefaultProduct();
+        
+        TriggerBase.bypass(Schema.Product2.SObjectType);
         insert testProduct;
+        TriggerBase.clearBypass(Schema.Product2.SObjectType);
         
         Product_Sync_Queue__c queueItem = TestDataFactory.createDefaultQueueItem(testProduct.Id);
         insert queueItem;
@@ -48,13 +51,18 @@ private class ProductSyncQueueableTest {
     @IsTest
     static void testPhantomProductDeletion() {
         Product2 testProduct = TestDataFactory.createDefaultProduct();
+        
+        TriggerBase.bypass(Schema.Product2.SObjectType);
         insert testProduct;
+        TriggerBase.clearBypass(Schema.Product2.SObjectType);
         
         Product_Sync_Queue__c queueItem = TestDataFactory.createDefaultQueueItem(testProduct.Id);
         queueItem.Operation__c = Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION;
         insert queueItem;
 
+        TriggerBase.bypass(Schema.Product2.SObjectType);
         delete testProduct;
+        TriggerBase.clearBypass(Schema.Product2.SObjectType);
 
         Test.startTest();
         System.enqueueJob(new ProductSyncQueueable());
@@ -67,7 +75,10 @@ private class ProductSyncQueueableTest {
     @IsTest
     static void testQueueableDeleteSuccess() {
         Product2 testProduct = TestDataFactory.createDefaultProduct();
+        
+        TriggerBase.bypass(Schema.Product2.SObjectType);
         insert testProduct;
+        TriggerBase.clearBypass(Schema.Product2.SObjectType);
         
         Product_Sync_Queue__c queueItem = TestDataFactory.createDefaultQueueItem(testProduct.Id);
         queueItem.Operation__c = Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION;
@@ -86,7 +97,10 @@ private class ProductSyncQueueableTest {
     @IsTest
     static void testQueueableFailure() {
         Product2 testProduct = TestDataFactory.createDefaultProduct();
+        
+        TriggerBase.bypass(Schema.Product2.SObjectType);
         insert testProduct;
+        TriggerBase.clearBypass(Schema.Product2.SObjectType);
         
         Product_Sync_Queue__c queueItem = TestDataFactory.createDefaultQueueItem(testProduct.Id);
         insert queueItem;
@@ -104,7 +118,10 @@ private class ProductSyncQueueableTest {
     @IsTest
     static void testQueueableException() {
         Product2 testProduct = TestDataFactory.createDefaultProduct();
+        
+        TriggerBase.bypass(Schema.Product2.SObjectType);
         insert testProduct;
+        TriggerBase.clearBypass(Schema.Product2.SObjectType);
         
         Product_Sync_Queue__c queueItem = TestDataFactory.createDefaultQueueItem(testProduct.Id);
         insert queueItem;
