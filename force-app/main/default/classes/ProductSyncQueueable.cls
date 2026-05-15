@@ -1,5 +1,4 @@
 public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts {
-
     public void execute(QueueableContext context) {
         List<Product_Sync_Queue__c> queueItems = getPendingQueueItems();
 
@@ -12,12 +11,14 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
             productIds.add(item.Product__c);
         }
 
-        Map<Id, Product2> productsMap = new Map<Id, Product2>([
-            SELECT Id, Name, Description, ProductCode, Family, External_Product_Id__c 
-            FROM Product2 
-            WHERE Id IN :productIds
-            FOR UPDATE
-        ]);
+        Map<Id, Product2> productsMap = new Map<Id, Product2>(
+            [
+                SELECT Id, Name, Description, ProductCode, Family, External_Product_Id__c
+                FROM Product2
+                WHERE Id IN :productIds
+                FOR UPDATE
+            ]
+        );
 
         Http http = new Http();
         List<Product_Sync_Queue__c> itemsToUpdate = new List<Product_Sync_Queue__c>();
@@ -38,7 +39,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
         if (!itemsToDelete.isEmpty()) {
             delete itemsToDelete;
         }
-        
+
         enqueueNextJobIfNeeded();
     }
 
@@ -46,8 +47,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
         return [
             SELECT Id, Operation__c, Attempt_Count__c, Product__c
             FROM Product_Sync_Queue__c
-            WHERE Status__c = :Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING
-            AND Attempt_Count__c < 3
+            WHERE Status__c = :Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING AND Attempt_Count__c < 3
             ORDER BY CreatedDate ASC
             LIMIT 50
         ];
@@ -59,9 +59,9 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
         try {
             SyncOperationHandler handler = SyncOperationHandlerFactory.getHandler(item.Operation__c);
             HttpRequest req = handler.createRequest(item, product);
-            
+
             logOutboundRequest(item, req);
-            
+
             HttpResponse res = http.send(req);
             evaluateResponse(item, res);
         } catch (Exception e) {
@@ -114,8 +114,13 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
     }
 
     private void enqueueNextJobIfNeeded() {
-        Integer pendingCount = [SELECT Count() FROM Product_Sync_Queue__c WHERE Status__c = :Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING LIMIT 1];
-        
+        Integer pendingCount = [
+            SELECT COUNT()
+            FROM Product_Sync_Queue__c
+            WHERE Status__c = :Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING
+            LIMIT 1
+        ];
+
         if (pendingCount > 0 && !Test.isRunningTest()) {
             System.enqueueJob(new ProductSyncQueueable());
         }

@@ -88,10 +88,7 @@ public class ProductSyncService {
         );
     }
 
-    private static void commitChanges(
-        List<Product_Sync_Queue__c> itemsToInsert,
-        List<Product_Sync_Queue__c> itemsToUpdate
-    ) {
+    private static void commitChanges(List<Product_Sync_Queue__c> itemsToInsert, List<Product_Sync_Queue__c> itemsToUpdate) {
         try {
             if (!itemsToInsert.isEmpty()) {
                 insert itemsToInsert;
