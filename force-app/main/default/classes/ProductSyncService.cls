@@ -17,7 +17,7 @@ public class ProductSyncService {
             SELECT Id, Product__c, Operation__c
             FROM Product_Sync_Queue__c
             WHERE Product__c IN :productIds
-            AND Status__c = :Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING
+            AND Status__c IN (:Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, :Util.PRODUCT_SYNC_QUEUE.STATUS.FAILED)
             AND Target_Org__c = :Util.PRODUCT_SYNC_QUEUE.TARGET_ORG.SZYMON_ORG
         ]) {
             existingItems.put(item.Product__c, item);
@@ -37,6 +37,12 @@ public class ProductSyncService {
                 } else if (operation == Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION && existingItem.Operation__c == Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION) {
                     existingItem.Operation__c = Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION;
                     needsUpdate = true;
+                }
+
+                if (existingItem.Status__c == Util.PRODUCT_SYNC_QUEUE.STATUS.FAILED) {
+                    existingItem.Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING;
+                    existingItem.Attempt_Count__c = 0;
+                    needsUpdate = true; 
                 }
 
                 if (needsUpdate) {

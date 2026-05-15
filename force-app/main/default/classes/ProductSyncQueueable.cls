@@ -48,6 +48,7 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
             FROM Product_Sync_Queue__c
             WHERE Status__c IN ('Pending', 'Failed')
             AND Attempt_Count__c < 3
+            ORDER BY CreatedDate ASC
             LIMIT 50
         ];
     }
