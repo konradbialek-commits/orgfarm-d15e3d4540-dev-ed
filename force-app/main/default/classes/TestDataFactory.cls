@@ -20,17 +20,15 @@ public class TestDataFactory {
         return createQueueItem(
             productId, 
             Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION, 
-            Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING, 
-            '{}'
+            Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING
         );
     }
 
-    public static Product_Sync_Queue__c createQueueItem(Id productId, String operation, String status, String payload) {
+    public static Product_Sync_Queue__c createQueueItem(Id productId, String operation, String status) {
         return new Product_Sync_Queue__c(
             Product__c = productId,
             Operation__c = operation,
             Status__c = status,
-            Payload__c = payload,
             Attempt_Count__c = 0
         );
     }

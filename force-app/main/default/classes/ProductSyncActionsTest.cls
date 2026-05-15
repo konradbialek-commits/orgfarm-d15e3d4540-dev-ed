@@ -3,11 +3,11 @@ private class ProductSyncActionsTest {
 
     private class MockHttpResponseGenerator implements HttpCalloutMock {
         public HTTPResponse respond(HTTPRequest req) {
-            HttpResponse response = new HttpResponse();
-            response.setHeader('Content-Type', 'application/json');
-            response.setStatusCode(200);
-            response.setBody('{"status":"success"}');
-            return response;
+            HttpResponse res = new HttpResponse();
+            res.setHeader('Content-Type', 'application/json');
+            res.setStatusCode(200);
+            res.setBody('{"status":"success"}');
+            return res;
         }
     }
 
@@ -27,14 +27,17 @@ private class ProductSyncActionsTest {
     }
 
     @IsTest
-    static void testAfterUpdateAction() {
+    static void testAfterUpdateActionStandardUpdate() {
         Product2 testProduct = TestDataFactory.createDefaultProduct();
         insert testProduct;
         
         delete [SELECT Id FROM Product_Sync_Queue__c];
 
+        Product2 oldProduct = testProduct.clone(true, true, true, true);
+        testProduct.Name = 'Changed Name';
+
         Test.startTest();
-        new ProductAfterUpdateSyncAction().afterUpdate(new List<Product2>{testProduct}, new List<Product2>{testProduct});
+        new ProductAfterUpdateSyncAction().afterUpdate(new List<Product2>{testProduct}, new List<Product2>{oldProduct});
         Test.stopTest();
 
         List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :testProduct.Id AND Operation__c = :Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION];
@@ -42,7 +45,25 @@ private class ProductSyncActionsTest {
     }
 
     @IsTest
-    static void testBeforeDeleteAction() {
+    static void testAfterUpdateActionSoftDelete() {
+        Product2 testProduct = TestDataFactory.createDefaultProduct();
+        insert testProduct;
+        
+        delete [SELECT Id FROM Product_Sync_Queue__c];
+
+        Product2 oldProduct = testProduct.clone(true, true, true, true);
+        testProduct.Is_Deleted__c = true;
+
+        Test.startTest();
+        new ProductAfterUpdateSyncAction().afterUpdate(new List<Product2>{testProduct}, new List<Product2>{oldProduct});
+        Test.stopTest();
+
+        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :testProduct.Id AND Operation__c = :Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION];
+        Assert.areEqual(1, queueItems.size());
+    }
+
+    @IsTest
+    static void testBeforeDeleteActionProductBlocked() {
         Product2 testProduct = TestDataFactory.createDefaultProduct();
         insert testProduct;
         
@@ -52,8 +73,10 @@ private class ProductSyncActionsTest {
         new ProductBeforeDeleteSyncAction().beforeDelete(new List<Product2>{testProduct});
         Test.stopTest();
 
-        List<Product_Sync_Queue__c> queueItems = [SELECT Operation__c FROM Product_Sync_Queue__c WHERE Product__c = :testProduct.Id AND Operation__c = :Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION];
-        Assert.areEqual(1, queueItems.size());
+        Assert.isTrue(testProduct.hasErrors());
+        
+        List<Product_Sync_Queue__c> queueItems = [SELECT Id FROM Product_Sync_Queue__c WHERE Product__c = :testProduct.Id];
+        Assert.isTrue(queueItems.isEmpty());
     }
 
     @IsTest
