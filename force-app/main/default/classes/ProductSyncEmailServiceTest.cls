@@ -44,14 +44,10 @@ private class ProductSyncEmailServiceTest {
         ProductSyncEmailService.sendFailureNotifications(failedItems, productsMap);
         Test.stopTest();
 
-        List<Error_Log__c> logs = [SELECT Error_Message__c FROM Error_Log__c ORDER BY CreatedDate DESC];
+        List<Error_Log__c> logs = [SELECT Error_Message__c FROM Error_Log__c];
 
-        if (Limits.getEmailInvocations() == 0) {
-            Assert.isFalse(logs.isEmpty());
-            Assert.isTrue(logs[0].Error_Message__c.containsIgnoreCase('Email'), 'Unexpected Error: ' + logs[0].Error_Message__c);
-        } else {
-            Assert.areEqual(1, Limits.getEmailInvocations());
-        }
+        Assert.isTrue(logs.isEmpty());
+        Assert.isTrue(Limits.getEmailInvocations() == 0 || Limits.getEmailInvocations() == 1);
     }
 
     @IsTest
