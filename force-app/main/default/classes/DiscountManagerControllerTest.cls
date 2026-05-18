@@ -58,8 +58,14 @@ private class DiscountManagerControllerTest {
 
     @IsTest
     static void testCalculateOrderDiscounts() {
-        PricebookEntry pbe = [SELECT Id, Product2Id FROM PricebookEntry LIMIT 1];
-        String cartPayload = TestDataFactory.createCartPayload(pbe.Id, pbe.Product2Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 100.0, 1);
+        PricebookEntry priceBookEntry = [SELECT Id, Product2Id FROM PricebookEntry LIMIT 1];
+        String cartPayload = TestDataFactory.createCartPayload(
+            priceBookEntry.Id,
+            priceBookEntry.Product2Id,
+            Util.TEST.PRODUCT.DEFAULT_FAMILY,
+            100.0,
+            1
+        );
 
         Test.startTest();
         Map<String, Object> calcResult = DiscountManagerController.calculateOrderDiscounts(cartPayload);

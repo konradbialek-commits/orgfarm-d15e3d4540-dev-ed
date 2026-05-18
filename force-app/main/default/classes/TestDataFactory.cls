@@ -70,10 +70,10 @@ public class TestDataFactory {
         return new Discount_Product__c(Discount__c = discountId, Product__c = productId);
     }
 
-    public static String createCartPayload(Id pbeId, Id pId, String family, Decimal unitPrice, Integer qty) {
+    public static String createCartPayload(Id priceBookEntryId, Id pId, String family, Decimal unitPrice, Integer qty) {
         List<Map<String, Object>> payload = new List<Map<String, Object>>{
             new Map<String, Object>{
-                'pricebookEntryId' => pbeId,
+                'pricebookEntryId' => priceBookEntryId,
                 'productId' => pId,
                 'family' => family,
                 'unitPrice' => unitPrice,
