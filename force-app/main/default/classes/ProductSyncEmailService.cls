@@ -1,12 +1,27 @@
 public class ProductSyncEmailService {
     public static void sendFailureNotifications(List<Product_Sync_Queue__c> failedItems, Map<Id, Product2> productsMap) {
         try {
-            EmailTemplate template = [
-                SELECT Id, Subject, Body, HtmlValue
+            String templateSubject = Util.EMAIL.PRODUCT_SYNC_FAILURE.SUBJECT;
+            String templateBody = Util.EMAIL.PRODUCT_SYNC_FAILURE.BODY;
+            String templateHtml = Util.EMAIL.PRODUCT_SYNC_FAILURE.HTML_VALUE;
+            String templateDevName = Util.EMAIL.PRODUCT_SYNC_FAILURE.DEVELOPER_NAME;
+
+            for (EmailTemplate emailTemplate : [
+                SELECT Subject, Body, HtmlValue
                 FROM EmailTemplate
-                WHERE DeveloperName = 'Product_Sync_Failure_Template'
+                WHERE DeveloperName = :templateDevName
                 LIMIT 1
-            ];
+            ]) {
+                if (String.isNotBlank(emailTemplate.Subject)) {
+                    templateSubject = emailTemplate.Subject;
+                }
+                if (String.isNotBlank(emailTemplate.Body)) {
+                    templateBody = emailTemplate.Body;
+                }
+                if (String.isNotBlank(emailTemplate.HtmlValue)) {
+                    templateHtml = emailTemplate.HtmlValue;
+                }
+            }
 
             String plainProductList = '';
             String htmlProductList = '<ul style="margin: 0; padding-left: 20px;">';
@@ -28,24 +43,14 @@ public class ProductSyncEmailService {
 
             String firstName = String.isNotBlank(UserInfo.getFirstName()) ? UserInfo.getFirstName() : 'Admin';
 
-            String plainBody = template.Body != null
-                ? template.Body.replace('[USER_NAME]', firstName).replace('[FAILED_PRODUCTS_LIST]', plainProductList)
-                : '';
-
-            String htmlBody = template.HtmlValue != null
-                ? template.HtmlValue.replace('[USER_NAME]', firstName).replace('[FAILED_PRODUCTS_LIST]', htmlProductList)
-                : '';
+            String plainBody = templateBody.replace('[USER_NAME]', firstName).replace('[FAILED_PRODUCTS_LIST]', plainProductList);
+            String htmlBody = templateHtml.replace('[USER_NAME]', firstName).replace('[FAILED_PRODUCTS_LIST]', htmlProductList);
 
             Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
             email.setToAddresses(new List<String>{ UserInfo.getUserEmail() });
-            email.setSubject(template.Subject);
-
-            if (String.isNotBlank(plainBody)) {
-                email.setPlainTextBody(plainBody);
-            }
-            if (String.isNotBlank(htmlBody)) {
-                email.setHtmlBody(htmlBody);
-            }
+            email.setSubject(templateSubject);
+            email.setPlainTextBody(plainBody);
+            email.setHtmlBody(htmlBody);
 
             Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ email });
         } catch (Exception e) {
