@@ -23,11 +23,16 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
         Http http = new Http();
         List<Product_Sync_Queue__c> itemsToUpdate = new List<Product_Sync_Queue__c>();
         List<Product_Sync_Queue__c> itemsToDelete = new List<Product_Sync_Queue__c>();
+        List<Product_Sync_Queue__c> itemsToEmail = new List<Product_Sync_Queue__c>();
 
         for (Product_Sync_Queue__c item : queueItems) {
             if (productsMap.containsKey(item.Product__c)) {
                 processSingleItem(item, productsMap.get(item.Product__c), http);
                 itemsToUpdate.add(item);
+
+                if (item.Status__c == Util.PRODUCT_SYNC_QUEUE.STATUS.FAILED && item.Attempt_Count__c >= 3) {
+                    itemsToEmail.add(item);
+                }
             } else {
                 itemsToDelete.add(item);
             }
@@ -38,6 +43,9 @@ public class ProductSyncQueueable implements Queueable, Database.AllowsCallouts 
         }
         if (!itemsToDelete.isEmpty()) {
             delete itemsToDelete;
+        }
+        if (!itemsToEmail.isEmpty()) {
+            ProductSyncEmailService.sendFailureNotifications(itemsToEmail, productsMap);
         }
 
         enqueueNextJobIfNeeded();
