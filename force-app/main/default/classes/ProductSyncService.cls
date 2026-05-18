@@ -1,6 +1,6 @@
 public class ProductSyncService {
     public static void enqueueProducts(List<Product2> recordList, String operation) {
-        Set<Id> productIds = getInternalProductIds(recordList);
+        Set<Id> productIds = getProductIds(recordList);
 
         if (productIds.isEmpty()) {
             return;
@@ -21,7 +21,7 @@ public class ProductSyncService {
         commitChanges(itemsToInsert, itemsToUpdate);
     }
 
-    private static Set<Id> getInternalProductIds(List<Product2> recordList) {
+    private static Set<Id> getProductIds(List<Product2> recordList) {
         Set<Id> productIds = new Set<Id>();
         for (Product2 prod : recordList) {
             if (prod.Is_External__c != true) {
@@ -51,31 +51,40 @@ public class ProductSyncService {
         String operation,
         List<Product_Sync_Queue__c> itemsToUpdate
     ) {
-        Boolean needsUpdate = false;
+        Boolean needsUpdate = updateQueueItemIfNeeded(existingItem, operation);
+        Boolean statusChanged = resetFailedStatus(existingItem);
 
-        if (
-            operation == Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION &&
-            existingItem.Operation__c != Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION
-        ) {
-            existingItem.Operation__c = operation;
-            needsUpdate = true;
-        } else if (
-            operation == Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION &&
-            existingItem.Operation__c == Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION
-        ) {
-            existingItem.Operation__c = Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION;
-            needsUpdate = true;
-        }
-
-        if (existingItem.Status__c == Util.PRODUCT_SYNC_QUEUE.STATUS.FAILED) {
-            existingItem.Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING;
-            existingItem.Attempt_Count__c = 0;
-            needsUpdate = true;
-        }
-
-        if (needsUpdate) {
+        if (needsUpdate || statusChanged) {
             itemsToUpdate.add(existingItem);
         }
+    }
+
+    private static Boolean updateQueueItemIfNeeded(Product_Sync_Queue__c item, String incomingOperation) {
+        String currentOperation = item.Operation__c;
+        String deleteOp = Util.PRODUCT_SYNC_QUEUE.OPERATION.DELETE_OPERATION;
+        String updateOp = Util.PRODUCT_SYNC_QUEUE.OPERATION.UPDATE_OPERATION;
+        String insertOp = Util.PRODUCT_SYNC_QUEUE.OPERATION.INSERT_OPERATION;
+
+        if (incomingOperation == deleteOp && currentOperation != deleteOp) {
+            item.Operation__c = incomingOperation;
+            return true;
+        }
+
+        if ((incomingOperation == insertOp || incomingOperation == updateOp) && currentOperation == deleteOp) {
+            item.Operation__c = updateOp;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static Boolean resetFailedStatus(Product_Sync_Queue__c item) {
+        if (item.Status__c == Util.PRODUCT_SYNC_QUEUE.STATUS.FAILED) {
+            item.Status__c = Util.PRODUCT_SYNC_QUEUE.STATUS.PENDING;
+            item.Attempt_Count__c = 0;
+            return true;
+        }
+        return false;
     }
 
     private static Product_Sync_Queue__c createNewQueueItem(Id prodId, String operation) {
