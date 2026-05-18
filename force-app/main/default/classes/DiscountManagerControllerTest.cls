@@ -7,6 +7,9 @@ private class DiscountManagerControllerTest {
         Product2 testProd = TestDataFactory.createDefaultProduct();
         insert testProd;
 
+        Id stdPricebookId = Test.getStandardPricebookId();
+        insert TestDataFactory.createPricebookEntry(stdPricebookId, testProd.Id, 100.0);
+
         Discount__c discount = TestDataFactory.createDefaultDiscount();
         discount.Target_Type__c = Util.DISCOUNT.TARGET.PRODUCTS;
         insert discount;
@@ -55,8 +58,14 @@ private class DiscountManagerControllerTest {
 
     @IsTest
     static void testCalculateOrderDiscounts() {
-        Product2 testProd = [SELECT Id FROM Product2 LIMIT 1];
-        String cartPayload = TestDataFactory.createCartPayload('01u000000000000', testProd.Id, Util.TEST.PRODUCT.DEFAULT_FAMILY, 100.0, 1);
+        PricebookEntry priceBookEntry = [SELECT Id, Product2Id FROM PricebookEntry LIMIT 1];
+        String cartPayload = TestDataFactory.createCartPayload(
+            priceBookEntry.Id,
+            priceBookEntry.Product2Id,
+            Util.TEST.PRODUCT.DEFAULT_FAMILY,
+            100.0,
+            1
+        );
 
         Test.startTest();
         Map<String, Object> calcResult = DiscountManagerController.calculateOrderDiscounts(cartPayload);
