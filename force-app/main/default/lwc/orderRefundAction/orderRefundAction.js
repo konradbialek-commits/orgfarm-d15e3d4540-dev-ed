@@ -1,4 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
+import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { CloseActionScreenEvent } from 'lightning/actions';
 import { subscribe, unsubscribe, onError } from 'lightning/empApi';
@@ -24,7 +25,7 @@ import LBL_MSG_ERROR from '@salesforce/label/c.Msg_Error';
 import LBL_SUCCESS_DESC from '@salesforce/label/c.RA_Success_Desc';
 import GENERIC_ERROR from '@salesforce/label/c.Generic_Error_Message';
 
-export default class OrderRefundAction extends LightningElement {
+export default class OrderRefundAction extends NavigationMixin(LightningElement) {
     @api recordId;
     @track orderItems = [];
     @track selectedItemIds = [];
@@ -141,6 +142,16 @@ export default class OrderRefundAction extends LightningElement {
         if (this.localCaseId && this.arrivedEventCaseIds.has(this.localCaseId)) {
             this.isWaiting = false;
             this.showToast(LBL_MSG_SUCCESS, LBL_SUCCESS_DESC, 'success');
+
+            this[NavigationMixin.Navigate]({
+                type: 'standard__recordPage',
+                attributes: {
+                    recordId: this.localCaseId,
+                    objectApiName: 'Case',
+                    actionName: 'view'
+                }
+            });
+
             this.handleCancel();
         }
     }
