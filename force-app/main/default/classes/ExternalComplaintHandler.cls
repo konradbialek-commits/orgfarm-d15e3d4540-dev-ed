@@ -1,16 +1,22 @@
 public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
     public void afterInsert(List<SObject> newList) {
         List<External_Complaint__e> events = (List<External_Complaint__e>) newList;
+
         Set<Id> caseIdsToVerify = new Set<Id>();
+        Set<Id> orderIdsToVerify = new Set<Id>();
 
         for (External_Complaint__e ev : events) {
             try {
-                caseIdsToVerify.add((Id) ev.Case_Id__c);
+                if (String.isNotBlank(ev.Case_Id__c))
+                    caseIdsToVerify.add((Id) ev.Case_Id__c);
+                if (String.isNotBlank(ev.Order_id__c))
+                    orderIdsToVerify.add((Id) ev.Order_id__c);
             } catch (Exception e) {
             }
         }
 
         Map<Id, Case> localCases = new Map<Id, Case>([SELECT Id FROM Case WHERE Id IN :caseIdsToVerify]);
+        Map<Id, Order> localOrders = new Map<Id, Order>([SELECT Id FROM Order WHERE Id IN :orderIdsToVerify]);
 
         List<External_Complaint__e> outboundEvents = new List<External_Complaint__e>();
         List<Case> inboundCasesToInsert = new List<Case>();
@@ -32,9 +38,13 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                     'afterInsert'
                 );
 
+                Id validLocalOrderId = null;
                 Id parsedOrderId;
                 try {
                     parsedOrderId = (Id) ev.Order_id__c;
+                    if (parsedOrderId != null && localOrders.containsKey(parsedOrderId)) {
+                        validLocalOrderId = parsedOrderId;
+                    }
                 } catch (Exception e) {
                 }
 
@@ -49,12 +59,13 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
 
                 Case newCase = new Case(
                     Subject = 'External Refund Request',
-                    Description = 'Reason: ' + ev.Reason__c + '\nProducts: ' + ev.Product_Ids__c,
-                    Order__c = parsedOrderId,
+                    Description = 'Reason: ' + ev.Reason__c + '\nProducts: ' + ev.Product_Ids__c + '\nExternal Order ID: ' + ev.Order_id__c,
+                    Order__c = validLocalOrderId,
                     Refund_Status__c = 'Pending',
                     Requested_Refund_Type__c = requestedType,
                     External_Case_Id__c = ev.Case_Id__c
                 );
+
                 inboundCasesToInsert.add(newCase);
                 inboundIndexToEvent.put(inboundCasesToInsert.size() - 1, ev);
             }
