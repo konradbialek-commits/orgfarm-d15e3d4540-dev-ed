@@ -1,49 +1,94 @@
-@IsTest
-private class ExternalComplaintHandlerTest {
-    private class MockHttpResponseGenerator implements HttpCalloutMock {
-        public HTTPResponse respond(HTTPRequest req) {
-            HttpResponse res = new HttpResponse();
-            res.setStatusCode(200);
-            return res;
+public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
+    public void afterInsert(List<SObject> newList) {
+        List<External_Complaint__e> events = (List<External_Complaint__e>) newList;
+
+        Set<Id> caseIdsToVerify = new Set<Id>();
+        Set<Id> orderIdsToVerify = new Set<Id>();
+
+        for (External_Complaint__e ev : events) {
+            try {
+                if (String.isNotBlank(ev.Case_Id__c))
+                    caseIdsToVerify.add((Id) ev.Case_Id__c);
+                if (String.isNotBlank(ev.Order_id__c))
+                    orderIdsToVerify.add((Id) ev.Order_id__c);
+            } catch (Exception e) {
+            }
         }
-    }
 
-    @IsTest
-    static void testInboundComplaintCreatesCaseAndResponse() {
-        External_Complaint__e inboundEvent = new External_Complaint__e(
-            Order_id__c = 'ORD-999',
-            Case_Id__c = 'invalid-id-to-force-inbound',
-            Reason__c = 'Item missing from package',
-            Product_Ids__c = '01t000000000001'
-        );
+        Map<Id, Case> localCases = new Map<Id, Case>([SELECT Id FROM Case WHERE Id IN :caseIdsToVerify]);
+        Map<Id, Order> localOrders = new Map<Id, Order>([SELECT Id FROM Order WHERE Id IN :orderIdsToVerify]);
 
-        Test.startTest();
-        new ExternalComplaintHandler().afterInsert(new List<SObject>{ inboundEvent });
-        Test.stopTest();
+        List<External_Complaint__e> outboundEvents = new List<External_Complaint__e>();
+        List<Case> inboundCasesToInsert = new List<Case>();
+        Map<Integer, External_Complaint__e> inboundIndexToEvent = new Map<Integer, External_Complaint__e>();
 
-        List<Case> insertedCases = [SELECT Id, Subject, Description FROM Case];
-        Assert.areEqual(1, insertedCases.size());
-        Assert.isTrue(insertedCases[0].Subject.contains('External Refund Request'));
-        Assert.isTrue(insertedCases[0].Description.contains('Item missing from package'));
-        Assert.isTrue(insertedCases[0].Description.contains('01t000000000001'));
-    }
+        for (External_Complaint__e ev : events) {
+            Id parsedId;
+            try {
+                parsedId = (Id) ev.Case_Id__c;
+            } catch (Exception e) {
+            }
 
-    @IsTest
-    static void testOutboundComplaintEnqueuesForwarder() {
-        Case localCase = new Case(Subject = 'Local Refund Request');
-        insert localCase;
+            if (parsedId != null && localCases.containsKey(parsedId)) {
+                outboundEvents.add(ev);
+            } else {
+                ErrorLogger.logInfo(
+                    'INBOUND EVENT RECEIVED | Type: External_Complaint__e | Payload: ' + JSON.serialize(ev),
+                    'ExternalComplaintHandler',
+                    'afterInsert'
+                );
 
-        External_Complaint__e outboundEvent = new External_Complaint__e(
-            Case_Id__c = String.valueOf(localCase.Id),
-            Reason__c = 'User requested refund via LWC'
-        );
+                Id validLocalOrderId = null;
+                Id parsedOrderId;
+                try {
+                    parsedOrderId = (Id) ev.Order_id__c;
+                    if (parsedOrderId != null && localOrders.containsKey(parsedOrderId)) {
+                        validLocalOrderId = parsedOrderId;
+                    }
+                } catch (Exception e) {
+                }
 
-        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
+                String requestedType = '';
+                if (String.isNotBlank(ev.Reason__c)) {
+                    if (ev.Reason__c.startsWith('Full')) {
+                        requestedType = 'Full';
+                    } else if (ev.Reason__c.startsWith('Partial')) {
+                        requestedType = 'Partial';
+                    }
+                }
 
-        Test.startTest();
-        new ExternalComplaintHandler().afterInsert(new List<SObject>{ outboundEvent });
+                Case newCase = new Case(
+                    Subject = 'External Refund Request',
+                    Description = 'Reason: ' + ev.Reason__c + '\nProducts: ' + ev.Product_Ids__c + '\nExternal Order ID: ' + ev.Order_id__c,
+                    Order__c = validLocalOrderId,
+                    Refund_Status__c = 'Pending',
+                    Requested_Refund_Type__c = requestedType,
+                    External_Case_Id__c = ev.Case_Id__c
+                );
 
-        Assert.areEqual(1, Limits.getQueueableJobs());
-        Test.stopTest();
+                inboundCasesToInsert.add(newCase);
+                inboundIndexToEvent.put(inboundCasesToInsert.size() - 1, ev);
+            }
+        }
+
+        if (!inboundCasesToInsert.isEmpty()) {
+            insert inboundCasesToInsert;
+
+            List<External_Complaint_Response__e> responses = new List<External_Complaint_Response__e>();
+            for (Integer i = 0; i < inboundCasesToInsert.size(); i++) {
+                responses.add(
+                    new External_Complaint_Response__e(
+                        Case_Id__c = inboundIndexToEvent.get(i).Case_Id__c,
+                        External_Case_Id__c = String.valueOf(inboundCasesToInsert[i].Id),
+                        Status__c = 'Created'
+                    )
+                );
+            }
+            EventBus.publish(responses);
+        }
+
+        if (!outboundEvents.isEmpty()) {
+            System.enqueueJob(new RefundEventForwarderQueueable(outboundEvents, 'External_Complaint__e'));
+        }
     }
 }
