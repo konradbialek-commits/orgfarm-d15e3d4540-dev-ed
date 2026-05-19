@@ -22,7 +22,6 @@ import LBL_FULL_REFUND from '@salesforce/label/c.RA_Full_Refund';
 import LBL_PARTIAL_REFUND from '@salesforce/label/c.RA_Partial_Refund';
 import LBL_MSG_SUCCESS from '@salesforce/label/c.Msg_Success';
 import LBL_MSG_ERROR from '@salesforce/label/c.Msg_Error';
-import LBL_SUCCESS_DESC from '@salesforce/label/c.RA_Success_Desc';
 import GENERIC_ERROR from '@salesforce/label/c.Generic_Error_Message';
 
 export default class OrderRefundAction extends NavigationMixin(LightningElement) {
@@ -33,9 +32,10 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     refundType = '';
     description = '';
     isWaiting = false;
-    localCaseId;
+
+    correlationId = null;
     subscription = {};
-    arrivedEventCaseIds = new Set();
+    arrivedEventIds = new Set();
 
     labels = {
         title: LBL_TITLE,
@@ -69,13 +69,11 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     @wire(getOrderItems, { orderId: '$recordId' })
     wiredItems({ error, data }) {
         if (data) {
-            this.orderItems = data.map((row) => {
-                return {
-                    ...row,
-                    ProductName: row.Product2.Name,
-                    ProductCode: row.Product2.ProductCode
-                };
-            });
+            this.orderItems = data.map((row) => ({
+                ...row,
+                ProductName: row.Product2.Name,
+                ProductCode: row.Product2.ProductCode
+            }));
         } else if (error) {
             this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : GENERIC_ERROR, 'error');
         }
@@ -91,17 +89,13 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     }
 
     handleRowSelection(event) {
-        const selectedRows = event.detail.selectedRows;
-        this.selectedItemIds = selectedRows.map((row) => row.Id);
+        this.selectedItemIds = event.detail.selectedRows.map((row) => row.Id);
     }
 
     handleChange(event) {
         const field = event.target.name;
-        if (field === 'refundType') {
-            this.refundType = event.target.value;
-        } else if (field === 'description') {
-            this.description = event.target.value;
-        }
+        if (field === 'refundType') this.refundType = event.target.value;
+        else if (field === 'description') this.description = event.target.value;
     }
 
     handleSubmit() {
@@ -114,8 +108,18 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
             description: this.description
         })
             .then((result) => {
-                this.localCaseId = result;
-                this.checkIfFinished();
+                if (result.startsWith('LOCAL:')) {
+                    const localCaseId = result.split(':')[1];
+                    this.showToast(LBL_MSG_SUCCESS, 'Local refund request submitted.', 'success');
+                    this[NavigationMixin.Navigate]({
+                        type: 'standard__recordPage',
+                        attributes: { recordId: localCaseId, actionName: 'view' }
+                    });
+                    this.handleCancel();
+                } else if (result.startsWith('EXTERNAL:')) {
+                    this.correlationId = result.split(':')[1];
+                    this.checkIfFinished();
+                }
             })
             .catch((error) => {
                 this.isWaiting = false;
@@ -131,7 +135,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
         const channelName = '/event/External_Complaint_Response__e';
         subscribe(channelName, -1, (message) => {
             const eventPayload = message.data.payload;
-            this.arrivedEventCaseIds.add(eventPayload.Case_Id__c);
+            this.arrivedEventIds.add(eventPayload.Case_Id__c);
             this.checkIfFinished();
         }).then((response) => {
             this.subscription = response;
@@ -139,34 +143,18 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     }
 
     checkIfFinished() {
-        if (this.localCaseId && this.arrivedEventCaseIds.has(this.localCaseId)) {
+        if (this.correlationId && this.arrivedEventIds.has(this.correlationId)) {
             this.isWaiting = false;
-            this.showToast(LBL_MSG_SUCCESS, LBL_SUCCESS_DESC, 'success');
-
-            this[NavigationMixin.Navigate]({
-                type: 'standard__recordPage',
-                attributes: {
-                    recordId: this.localCaseId,
-                    objectApiName: 'Case',
-                    actionName: 'view'
-                }
-            });
-
+            this.showToast(LBL_MSG_SUCCESS, 'Complaint sent to partner successfully.', 'success');
             this.handleCancel();
         }
     }
 
     handleUnsubscribe() {
-        unsubscribe(this.subscription, (response) => {});
+        unsubscribe(this.subscription, () => {});
     }
 
     showToast(title, message, variant) {
-        this.dispatchEvent(
-            new ShowToastEvent({
-                title: title,
-                message: message,
-                variant: variant
-            })
-        );
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 }
