@@ -10,7 +10,7 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
             }
         }
 
-        Map<Id, Case> localCases = new Map<Id, Case>([SELECT Id, Description FROM Case WHERE Id IN :caseIdsToVerify]);
+        Map<Id, Case> localCases = new Map<Id, Case>([SELECT Id FROM Case WHERE Id IN :caseIdsToVerify]);
 
         List<External_Complaint_Response__e> outboundEvents = new List<External_Complaint_Response__e>();
         List<Case> casesToUpdate = new List<Case>();
@@ -29,10 +29,7 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
                     'afterInsert'
                 );
 
-                Case c = new Case(
-                    Id = parsedId,
-                    Description = localCases.get(parsedId).Description + '\nExternal Reference: ' + ev.External_Case_Id__c
-                );
+                Case c = new Case(Id = parsedId, External_Case_Id__c = ev.External_Case_Id__c);
                 casesToUpdate.add(c);
             } else {
                 outboundEvents.add(ev);

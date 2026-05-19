@@ -22,7 +22,13 @@ public class RefundActionController {
             }
         }
 
-        Case localCase = new Case(Subject = 'Refund Request: ' + refundType, Description = description);
+        Case localCase = new Case(
+            Subject = 'Refund Request: ' + refundType,
+            Description = description,
+            Order__c = orderId,
+            Refund_Status__c = 'Pending',
+            Requested_Refund_Type__c = refundType
+        );
         insert localCase;
 
         if (isExternal) {
