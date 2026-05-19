@@ -7,9 +7,6 @@ private class ExternalComplaintHandlerTest {
 
         Order testOrder = new Order(AccountId = testAcc.Id, Status = 'Draft', EffectiveDate = Date.today());
         insert testOrder;
-
-        Case localCase = new Case(Subject = 'Local Refund Case', Description = 'Test');
-        insert localCase;
     }
 
     @IsTest
@@ -24,7 +21,7 @@ private class ExternalComplaintHandlerTest {
         );
 
         Test.startTest();
-        EventBus.publish(ev);
+        new ExternalComplaintHandler().afterInsert(new List<SObject>{ ev });
         Test.stopTest();
 
         Case insertedCase = [
@@ -50,7 +47,7 @@ private class ExternalComplaintHandlerTest {
         );
 
         Test.startTest();
-        EventBus.publish(ev);
+        new ExternalComplaintHandler().afterInsert(new List<SObject>{ ev });
         Test.stopTest();
 
         Case insertedCase = [
@@ -66,20 +63,34 @@ private class ExternalComplaintHandlerTest {
     }
 
     @IsTest
-    static void testOutboundEventEnqueuesQueueable() {
-        Case localCase = [SELECT Id FROM Case LIMIT 1];
-
+    static void testInboundEventWithMalformedOrderId() {
         External_Complaint__e ev = new External_Complaint__e(
-            Order_id__c = '801x00000000000YYY',
-            Case_Id__c = String.valueOf(localCase.Id),
+            Order_id__c = 'INVALID_ID_FORMAT',
+            Case_Id__c = '500x00000000000CCC',
             Reason__c = 'Full - Wrong item',
             Product_Ids__c = '01tx00000000000CCC'
         );
 
         Test.startTest();
-        EventBus.publish(ev);
+        new ExternalComplaintHandler().afterInsert(new List<SObject>{ ev });
         Test.stopTest();
 
-        Assert.isTrue(true);
+        Case insertedCase = [
+            SELECT Order__c, External_Case_Id__c
+            FROM Case
+            WHERE External_Case_Id__c = '500x00000000000CCC'
+            LIMIT 1
+        ];
+
+        Assert.isNull(insertedCase.Order__c);
+
+        List<Error_Log__c> logs = [
+            SELECT Error_Message__c
+            FROM Error_Log__c
+            WHERE Class_Name__c = 'ExternalComplaintHandler'
+        ];
+
+        Assert.isFalse(logs.isEmpty());
+        Assert.isTrue(logs[0].Error_Message__c.contains('Invalid Order ID format'));
     }
 }

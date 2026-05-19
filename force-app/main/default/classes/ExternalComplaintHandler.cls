@@ -2,73 +2,68 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
     public void afterInsert(List<SObject> newList) {
         List<External_Complaint__e> events = (List<External_Complaint__e>) newList;
 
-        Set<Id> caseIdsToVerify = new Set<Id>();
         Set<Id> orderIdsToVerify = new Set<Id>();
 
         for (External_Complaint__e ev : events) {
-            try {
-                if (String.isNotBlank(ev.Case_Id__c))
-                    caseIdsToVerify.add((Id) ev.Case_Id__c);
-                if (String.isNotBlank(ev.Order_id__c))
+            if (String.isNotBlank(ev.Order_id__c)) {
+                try {
                     orderIdsToVerify.add((Id) ev.Order_id__c);
-            } catch (Exception e) {
+                } catch (Exception e) {
+                    ErrorLogger.logWarning(
+                        'Invalid Order ID format received: ' + ev.Order_id__c,
+                        'ExternalComplaintHandler',
+                        'afterInsert'
+                    );
+                }
             }
         }
 
-        Map<Id, Case> localCases = new Map<Id, Case>([SELECT Id FROM Case WHERE Id IN :caseIdsToVerify]);
-        Map<Id, Order> localOrders = new Map<Id, Order>([SELECT Id FROM Order WHERE Id IN :orderIdsToVerify]);
+        Map<Id, Order> localOrders = new Map<Id, Order>();
+        if (!orderIdsToVerify.isEmpty()) {
+            localOrders = new Map<Id, Order>([SELECT Id FROM Order WHERE Id IN :orderIdsToVerify]);
+        }
 
-        List<External_Complaint__e> outboundEvents = new List<External_Complaint__e>();
         List<Case> inboundCasesToInsert = new List<Case>();
         Map<Integer, External_Complaint__e> inboundIndexToEvent = new Map<Integer, External_Complaint__e>();
 
         for (External_Complaint__e ev : events) {
-            Id parsedId;
-            try {
-                parsedId = (Id) ev.Case_Id__c;
-            } catch (Exception e) {
-            }
+            ErrorLogger.logInfo(
+                'INBOUND EVENT RECEIVED | Type: External_Complaint__e | Payload: ' + JSON.serialize(ev),
+                'ExternalComplaintHandler',
+                'afterInsert'
+            );
 
-            if (parsedId != null && localCases.containsKey(parsedId)) {
-                outboundEvents.add(ev);
-            } else {
-                ErrorLogger.logInfo(
-                    'INBOUND EVENT RECEIVED | Type: External_Complaint__e | Payload: ' + JSON.serialize(ev),
-                    'ExternalComplaintHandler',
-                    'afterInsert'
-                );
-
-                Id validLocalOrderId = null;
-                Id parsedOrderId;
+            Id validLocalOrderId = null;
+            if (String.isNotBlank(ev.Order_id__c)) {
                 try {
-                    parsedOrderId = (Id) ev.Order_id__c;
-                    if (parsedOrderId != null && localOrders.containsKey(parsedOrderId)) {
+                    Id parsedOrderId = (Id) ev.Order_id__c;
+                    if (localOrders.containsKey(parsedOrderId)) {
                         validLocalOrderId = parsedOrderId;
                     }
                 } catch (Exception e) {
                 }
-
-                String requestedType = '';
-                if (String.isNotBlank(ev.Reason__c)) {
-                    if (ev.Reason__c.startsWith('Full')) {
-                        requestedType = 'Full';
-                    } else if (ev.Reason__c.startsWith('Partial')) {
-                        requestedType = 'Partial';
-                    }
-                }
-
-                Case newCase = new Case(
-                    Subject = 'External Refund Request',
-                    Description = 'Reason: ' + ev.Reason__c + '\nProducts: ' + ev.Product_Ids__c + '\nExternal Order ID: ' + ev.Order_id__c,
-                    Order__c = validLocalOrderId,
-                    Refund_Status__c = 'Pending',
-                    Requested_Refund_Type__c = requestedType,
-                    External_Case_Id__c = ev.Case_Id__c
-                );
-
-                inboundCasesToInsert.add(newCase);
-                inboundIndexToEvent.put(inboundCasesToInsert.size() - 1, ev);
             }
+
+            String requestedType = '';
+            if (String.isNotBlank(ev.Reason__c)) {
+                if (ev.Reason__c.startsWith('Full')) {
+                    requestedType = 'Full';
+                } else if (ev.Reason__c.startsWith('Partial')) {
+                    requestedType = 'Partial';
+                }
+            }
+
+            Case newCase = new Case(
+                Subject = 'External Refund Request',
+                Description = 'Reason: ' + ev.Reason__c + '\nProducts: ' + ev.Product_Ids__c + '\nExternal Order ID: ' + ev.Order_id__c,
+                Order__c = validLocalOrderId,
+                Refund_Status__c = 'Pending',
+                Requested_Refund_Type__c = requestedType,
+                External_Case_Id__c = ev.Case_Id__c
+            );
+
+            inboundCasesToInsert.add(newCase);
+            inboundIndexToEvent.put(inboundCasesToInsert.size() - 1, ev);
         }
 
         if (!inboundCasesToInsert.isEmpty()) {
@@ -85,10 +80,6 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                 );
             }
             EventBus.publish(responses);
-        }
-
-        if (!outboundEvents.isEmpty()) {
-            System.enqueueJob(new RefundEventForwarderQueueable(outboundEvents, 'External_Complaint__e'));
         }
     }
 }
