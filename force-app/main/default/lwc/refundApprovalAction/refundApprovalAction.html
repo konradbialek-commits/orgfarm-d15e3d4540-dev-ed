@@ -1,0 +1,34 @@
+<template>
+    <lightning-quick-action-panel title={labels.title}>
+        <template if:true={errorMessage}>
+            <div class="slds-text-color_error slds-m-bottom_small">{errorMessage}</div>
+        </template>
+
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text={labels.processing} size="medium" variant="brand"></lightning-spinner>
+        </template>
+
+        <template if:false={isLoading}>
+            <div class="slds-m-bottom_medium">
+                <lightning-combobox
+                    name="decision"
+                    label={labels.decision}
+                    value={decision}
+                    options={decisionOptions}
+                    onchange={handleChange}
+                    required
+                >
+                </lightning-combobox>
+            </div>
+
+            <div class="slds-m-bottom_medium">
+                <lightning-textarea name="comments" label={labels.comments} value={comments} onchange={handleChange}> </lightning-textarea>
+            </div>
+        </template>
+
+        <div slot="footer">
+            <lightning-button label={labels.cancel} onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+            <lightning-button variant="brand" label={labels.submit} onclick={handleSubmit} disabled={isSubmitDisabled}></lightning-button>
+        </div>
+    </lightning-quick-action-panel>
+</template>

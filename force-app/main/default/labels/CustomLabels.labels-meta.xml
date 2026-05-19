@@ -814,4 +814,53 @@
         <shortDescription>Button Cancel</shortDescription>
         <value>Cancel</value>
     </labels>
+    <labels>
+        <fullName>AA_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>AA Title</shortDescription>
+        <value>Review Refund Request</value>
+    </labels>
+    <labels>
+        <fullName>AA_Decision</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>AA Decision</shortDescription>
+        <value>Approval Decision</value>
+    </labels>
+    <labels>
+        <fullName>AA_Comments</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>AA Comments</shortDescription>
+        <value>Approver Comments</value>
+    </labels>
+    <labels>
+        <fullName>AA_Approve_Full</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>AA Approve Full</shortDescription>
+        <value>Approve - Full Refund</value>
+    </labels>
+    <labels>
+        <fullName>AA_Approve_Partial</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>AA Approve Partial</shortDescription>
+        <value>Approve - Partial Refund</value>
+    </labels>
+    <labels>
+        <fullName>AA_Reject</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>AA Reject</shortDescription>
+        <value>Reject Request</value>
+    </labels>
+    <labels>
+        <fullName>AA_Success_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>AA Success Msg</shortDescription>
+        <value>Refund request processed successfully.</value>
+    </labels>
 </CustomLabels>
