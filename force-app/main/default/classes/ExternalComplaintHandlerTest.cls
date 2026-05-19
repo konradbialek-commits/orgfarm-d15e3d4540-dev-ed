@@ -1,5 +1,13 @@
 @IsTest
 private class ExternalComplaintHandlerTest {
+    private class MockHttpResponseGenerator implements HttpCalloutMock {
+        public HTTPResponse respond(HTTPRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            return res;
+        }
+    }
+
     @IsTest
     static void testInboundComplaintCreatesCaseAndResponse() {
         External_Complaint__e inboundEvent = new External_Complaint__e(
@@ -30,10 +38,12 @@ private class ExternalComplaintHandlerTest {
             Reason__c = 'User requested refund via LWC'
         );
 
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
+
         Test.startTest();
         new ExternalComplaintHandler().afterInsert(new List<SObject>{ outboundEvent });
-        Test.stopTest();
 
         Assert.areEqual(1, Limits.getQueueableJobs());
+        Test.stopTest();
     }
 }

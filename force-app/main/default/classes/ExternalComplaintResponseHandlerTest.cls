@@ -1,5 +1,13 @@
 @IsTest
 private class ExternalComplaintResponseHandlerTest {
+    private class MockHttpResponseGenerator implements HttpCalloutMock {
+        public HTTPResponse respond(HTTPRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            return res;
+        }
+    }
+
     @IsTest
     static void testInboundResponseUpdatesLocalCase() {
         Case localCase = new Case(Subject = 'Awaiting External Sync', Description = 'Initial Desc');
@@ -28,10 +36,12 @@ private class ExternalComplaintResponseHandlerTest {
             Status__c = 'Created'
         );
 
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
+
         Test.startTest();
         new ExternalComplaintResponseHandler().afterInsert(new List<SObject>{ outboundEvent });
-        Test.stopTest();
 
         Assert.areEqual(1, Limits.getQueueableJobs());
+        Test.stopTest();
     }
 }
