@@ -9,38 +9,39 @@ public class RefundActionController {
     }
 
     @AuraEnabled
-    public static void processRefund(Id orderId, List<Id> orderItemIds, String refundType, String description, String correlationId) {
+    public static String processRefund(Id orderId, List<Id> orderItemIds, String refundType, String description) {
         List<OrderItem> items = [SELECT Id, Product2.Is_External__c FROM OrderItem WHERE Id IN :orderItemIds];
 
         Boolean isExternal = false;
+        List<String> productIds = new List<String>();
+
         for (OrderItem oi : items) {
+            productIds.add(oi.Id);
             if (oi.Product2.Is_External__c) {
                 isExternal = true;
-                break;
             }
         }
 
+        Case localCase = new Case(Subject = 'Refund Request: ' + refundType, Description = description);
+        insert localCase;
+
         if (isExternal) {
-            Refund_Sync_Event__e ev = new Refund_Sync_Event__e(
-                Action__c = 'REQUEST',
-                Correlation_Id__c = correlationId,
-                Order_Id__c = orderId,
-                Refund_Type__c = refundType,
-                Description__c = description,
-                Target_Org__c = Util.PRODUCT_SYNC_QUEUE.TARGET_ORG.SZYMON_ORG
+            External_Complaint__e ev = new External_Complaint__e(
+                Order_id__c = String.valueOf(orderId),
+                Case_Id__c = String.valueOf(localCase.Id),
+                Reason__c = refundType + ' - ' + description,
+                Product_Ids__c = String.join(productIds, ',')
             );
             EventBus.publish(ev);
         } else {
-            Case c = new Case(Subject = 'Refund Request: ' + refundType, Description = description);
-            insert c;
-
-            Refund_Sync_Event__e ev = new Refund_Sync_Event__e(
-                Action__c = 'CONFIRMATION',
-                Correlation_Id__c = correlationId,
-                Case_Id__c = c.Id,
-                Target_Org__c = 'LOCAL'
+            External_Complaint_Response__e ev = new External_Complaint_Response__e(
+                Case_Id__c = String.valueOf(localCase.Id),
+                External_Case_Id__c = String.valueOf(localCase.Id),
+                Status__c = 'Created Locally'
             );
             EventBus.publish(ev);
         }
+
+        return localCase.Id;
     }
 }

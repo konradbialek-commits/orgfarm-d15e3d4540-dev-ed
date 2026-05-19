@@ -13,7 +13,7 @@ export default class OrderRefundAction extends LightningElement {
     refundType = '';
     description = '';
     isWaiting = false;
-    correlationId;
+    localCaseId;
     subscription = {};
 
     columns = [
@@ -50,7 +50,6 @@ export default class OrderRefundAction extends LightningElement {
     }
 
     connectedCallback() {
-        this.correlationId = this.generateUUID();
         this.handleSubscribe();
 
         onError((error) => {
@@ -83,12 +82,15 @@ export default class OrderRefundAction extends LightningElement {
             orderId: this.recordId,
             orderItemIds: this.selectedItemIds,
             refundType: this.refundType,
-            description: this.description,
-            correlationId: this.correlationId
-        }).catch((error) => {
-            this.isWaiting = false;
-            this.showToast('Error', error.body.message, 'error');
-        });
+            description: this.description
+        })
+            .then((result) => {
+                this.localCaseId = result;
+            })
+            .catch((error) => {
+                this.isWaiting = false;
+                this.showToast('Error', error.body.message, 'error');
+            });
     }
 
     handleCancel() {
@@ -96,13 +98,13 @@ export default class OrderRefundAction extends LightningElement {
     }
 
     handleSubscribe() {
-        const channelName = '/event/Refund_Sync_Event__e';
+        const channelName = '/event/External_Complaint_Response__e';
         subscribe(channelName, -1, (message) => {
             const eventPayload = message.data.payload;
 
-            if (eventPayload.Action__c === 'CONFIRMATION' && eventPayload.Correlation_Id__c === this.correlationId) {
+            if (eventPayload.Case_Id__c === this.localCaseId) {
                 this.isWaiting = false;
-                this.showToast('Success', 'Refund Case created successfully.', 'success');
+                this.showToast('Success', 'Refund Case created and synchronized successfully.', 'success');
                 this.handleCancel();
             }
         }).then((response) => {
@@ -112,14 +114,6 @@ export default class OrderRefundAction extends LightningElement {
 
     handleUnsubscribe() {
         unsubscribe(this.subscription, (response) => {});
-    }
-
-    generateUUID() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            let r = (Math.random() * 16) | 0,
-                v = c === 'x' ? r : (r & 0x3) | 0x8;
-            return v.toString(16);
-        });
     }
 
     showToast(title, message, variant) {
