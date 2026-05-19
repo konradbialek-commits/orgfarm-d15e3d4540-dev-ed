@@ -23,6 +23,12 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
             }
 
             if (parsedId != null && localCases.containsKey(parsedId)) {
+                ErrorLogger.logInfo(
+                    'INBOUND EVENT RECEIVED | Type: External_Complaint_Response__e | Payload: ' + JSON.serialize(ev),
+                    'ExternalComplaintResponseHandler',
+                    'afterInsert'
+                );
+
                 Case c = new Case(
                     Id = parsedId,
                     Description = localCases.get(parsedId).Description + '\nExternal Reference: ' + ev.External_Case_Id__c

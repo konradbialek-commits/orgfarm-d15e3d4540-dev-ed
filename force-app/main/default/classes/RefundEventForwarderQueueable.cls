@@ -34,10 +34,31 @@ public class RefundEventForwarderQueueable implements Queueable, Database.Allows
                 payload.put('Status__c', ecr.Status__c);
             }
 
-            req.setBody(JSON.serialize(payload));
+            String requestBody = JSON.serialize(payload);
+            req.setBody(requestBody);
 
             try {
-                http.send(req);
+                ErrorLogger.logInfo(
+                    'OUTBOUND REQUEST | Endpoint: ' + targetEndpoint + ' | Payload: ' + requestBody,
+                    'RefundEventForwarderQueueable',
+                    'execute'
+                );
+
+                HttpResponse res = http.send(req);
+
+                if (res.getStatusCode() == 200 || res.getStatusCode() == 201) {
+                    ErrorLogger.logInfo(
+                        'OUTBOUND SUCCESS | Status: ' + res.getStatusCode() + ' | Response: ' + res.getBody(),
+                        'RefundEventForwarderQueueable',
+                        'execute'
+                    );
+                } else {
+                    ErrorLogger.logWarning(
+                        'OUTBOUND REJECTED | Status: ' + res.getStatusCode() + ' | Response: ' + res.getBody(),
+                        'RefundEventForwarderQueueable',
+                        'execute'
+                    );
+                }
             } catch (Exception e) {
                 ErrorLogger.logException(e, 'RefundEventForwarderQueueable', 'execute');
             }

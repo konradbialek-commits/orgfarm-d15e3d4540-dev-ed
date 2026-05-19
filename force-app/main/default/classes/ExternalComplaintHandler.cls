@@ -26,6 +26,12 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
             if (parsedId != null && localCases.containsKey(parsedId)) {
                 outboundEvents.add(ev);
             } else {
+                ErrorLogger.logInfo(
+                    'INBOUND EVENT RECEIVED | Type: External_Complaint__e | Payload: ' + JSON.serialize(ev),
+                    'ExternalComplaintHandler',
+                    'afterInsert'
+                );
+
                 Case newCase = new Case(
                     Subject = 'External Refund Request',
                     Description = 'Reason: ' + ev.Reason__c + '\nProducts: ' + ev.Product_Ids__c
