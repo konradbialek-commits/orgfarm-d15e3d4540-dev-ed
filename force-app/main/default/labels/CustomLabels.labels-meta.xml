@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
         <fullName>Btn_Save</fullName>
@@ -287,7 +287,8 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Floor Help Text</shortDescription>
-        <value>Example: If set to 10%, the final order price can never drop below 10% of the original subtotal, regardless of how many discounts are applied.</value>
+        <value
+        >Example: If set to 10%, the final order price can never drop below 10% of the original subtotal, regardless of how many discounts are applied.</value>
     </labels>
     <labels>
         <fullName>DM_Lbl_ModalTitle</fullName>
@@ -350,7 +351,8 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Annual Help</shortDescription>
-        <value>Note: The year selected does not matter. The system will trigger this discount every year on the specified month and day.</value>
+        <value
+        >Note: The year selected does not matter. The system will trigger this discount every year on the specified month and day.</value>
     </labels>
     <labels>
         <fullName>DM_Lbl_RecurringHelp</fullName>
@@ -706,5 +708,110 @@
         <protected>false</protected>
         <shortDescription>Order Modal Create Order Error</shortDescription>
         <value>An error occurred while attempting to create your order. Please contact your system administrator.</value>
+    </labels>
+    <labels>
+        <fullName>RA_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Title</shortDescription>
+        <value>Request Refund</value>
+    </labels>
+    <labels>
+        <fullName>RA_Processing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Processing</shortDescription>
+        <value>Processing...</value>
+    </labels>
+    <labels>
+        <fullName>RA_Submitting</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Submitting</shortDescription>
+        <value>Securely submitting your request...</value>
+    </labels>
+    <labels>
+        <fullName>RA_Refund_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Refund Type</shortDescription>
+        <value>Refund Type</value>
+    </labels>
+    <labels>
+        <fullName>RA_Select_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Select Type</shortDescription>
+        <value>Select Type</value>
+    </labels>
+    <labels>
+        <fullName>RA_Reason</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Reason</shortDescription>
+        <value>Reason for Refund</value>
+    </labels>
+    <labels>
+        <fullName>RA_Col_Product</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Col Product</shortDescription>
+        <value>Product</value>
+    </labels>
+    <labels>
+        <fullName>RA_Col_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Col Code</shortDescription>
+        <value>Code</value>
+    </labels>
+    <labels>
+        <fullName>RA_Col_Qty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Col Qty</shortDescription>
+        <value>Qty</value>
+    </labels>
+    <labels>
+        <fullName>RA_Col_Price</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Col Price</shortDescription>
+        <value>Price</value>
+    </labels>
+    <labels>
+        <fullName>RA_Full_Refund</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Full Refund</shortDescription>
+        <value>Full Refund</value>
+    </labels>
+    <labels>
+        <fullName>RA_Partial_Refund</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Partial Refund</shortDescription>
+        <value>Partial Refund</value>
+    </labels>
+    <labels>
+        <fullName>RA_Success_Desc</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Success Desc</shortDescription>
+        <value>Refund Case created and synchronized successfully.</value>
+    </labels>
+    <labels>
+        <fullName>Btn_Submit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button Submit</shortDescription>
+        <value>Submit</value>
+    </labels>
+    <labels>
+        <fullName>Btn_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button Cancel</shortDescription>
+        <value>Cancel</value>
     </labels>
 </CustomLabels>

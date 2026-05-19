@@ -1,12 +1,16 @@
 <template>
-    <lightning-quick-action-panel title="Request Refund">
+    <lightning-quick-action-panel title={labels.title}>
         <template if:true={isWaiting}>
-            <lightning-spinner alternative-text="Processing..." size="medium"></lightning-spinner>
-            <div class="slds-text-align_center slds-m-top_large slds-text-heading_small">Securely submitting your request...</div>
+            <div class="slds-is-relative slds-p-vertical_xx-large">
+                <lightning-spinner alternative-text={labels.processing} size="medium" variant="brand"></lightning-spinner>
+                <div class="slds-text-align_center slds-m-top_xx-large slds-text-heading_small slds-text-color_weak slds-p-top_large">
+                    {labels.submitting}
+                </div>
+            </div>
         </template>
 
         <template if:false={isWaiting}>
-            <div class="slds-m-bottom_medium">
+            <div class="slds-m-bottom_medium slds-scrollable_y" style="max-height: 250px">
                 <lightning-datatable key-field="Id" data={orderItems} columns={columns} onrowselection={handleRowSelection}>
                 </lightning-datatable>
             </div>
@@ -14,9 +18,9 @@
             <div class="slds-m-bottom_medium">
                 <lightning-combobox
                     name="refundType"
-                    label="Refund Type"
+                    label={labels.refundType}
                     value={refundType}
-                    placeholder="Select Type"
+                    placeholder={labels.selectType}
                     options={refundOptions}
                     onchange={handleChange}
                     required
@@ -25,14 +29,14 @@
             </div>
 
             <div class="slds-m-bottom_medium">
-                <lightning-textarea name="description" label="Reason for Refund" value={description} onchange={handleChange} required>
+                <lightning-textarea name="description" label={labels.reason} value={description} onchange={handleChange} required>
                 </lightning-textarea>
             </div>
         </template>
 
         <div slot="footer">
-            <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_small"></lightning-button>
-            <lightning-button variant="brand" label="Submit Request" onclick={handleSubmit} disabled={isSubmitDisabled}></lightning-button>
+            <lightning-button label={labels.cancel} onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+            <lightning-button variant="brand" label={labels.submit} onclick={handleSubmit} disabled={isSubmitDisabled}></lightning-button>
         </div>
     </lightning-quick-action-panel>
 </template>

@@ -5,6 +5,25 @@ import { subscribe, unsubscribe, onError } from 'lightning/empApi';
 import getOrderItems from '@salesforce/apex/RefundActionController.getOrderItems';
 import processRefund from '@salesforce/apex/RefundActionController.processRefund';
 
+import LBL_TITLE from '@salesforce/label/c.RA_Title';
+import LBL_PROCESSING from '@salesforce/label/c.RA_Processing';
+import LBL_SUBMITTING from '@salesforce/label/c.RA_Submitting';
+import LBL_REFUND_TYPE from '@salesforce/label/c.RA_Refund_Type';
+import LBL_SELECT_TYPE from '@salesforce/label/c.RA_Select_Type';
+import LBL_REASON from '@salesforce/label/c.RA_Reason';
+import LBL_BTN_CANCEL from '@salesforce/label/c.Btn_Cancel';
+import LBL_BTN_SUBMIT from '@salesforce/label/c.Btn_Submit';
+import LBL_COL_PRODUCT from '@salesforce/label/c.RA_Col_Product';
+import LBL_COL_CODE from '@salesforce/label/c.RA_Col_Code';
+import LBL_COL_QTY from '@salesforce/label/c.RA_Col_Qty';
+import LBL_COL_PRICE from '@salesforce/label/c.RA_Col_Price';
+import LBL_FULL_REFUND from '@salesforce/label/c.RA_Full_Refund';
+import LBL_PARTIAL_REFUND from '@salesforce/label/c.RA_Partial_Refund';
+import LBL_MSG_SUCCESS from '@salesforce/label/c.Msg_Success';
+import LBL_MSG_ERROR from '@salesforce/label/c.Msg_Error';
+import LBL_SUCCESS_DESC from '@salesforce/label/c.RA_Success_Desc';
+import GENERIC_ERROR from '@salesforce/label/c.Generic_Error_Message';
+
 export default class OrderRefundAction extends LightningElement {
     @api recordId;
     @track orderItems = [];
@@ -15,18 +34,30 @@ export default class OrderRefundAction extends LightningElement {
     isWaiting = false;
     localCaseId;
     subscription = {};
+    arrivedEventCaseIds = new Set();
+
+    labels = {
+        title: LBL_TITLE,
+        processing: LBL_PROCESSING,
+        submitting: LBL_SUBMITTING,
+        refundType: LBL_REFUND_TYPE,
+        selectType: LBL_SELECT_TYPE,
+        reason: LBL_REASON,
+        cancel: LBL_BTN_CANCEL,
+        submit: LBL_BTN_SUBMIT
+    };
 
     columns = [
-        { label: 'Product', fieldName: 'ProductName' },
-        { label: 'Code', fieldName: 'ProductCode' },
-        { label: 'Qty', fieldName: 'Quantity', type: 'number' },
-        { label: 'Price', fieldName: 'UnitPrice', type: 'currency' }
+        { label: LBL_COL_PRODUCT, fieldName: 'ProductName' },
+        { label: LBL_COL_CODE, fieldName: 'ProductCode' },
+        { label: LBL_COL_QTY, fieldName: 'Quantity', type: 'number' },
+        { label: LBL_COL_PRICE, fieldName: 'UnitPrice', type: 'currency' }
     ];
 
     get refundOptions() {
         return [
-            { label: 'Full Refund', value: 'Full' },
-            { label: 'Partial Refund', value: 'Partial' }
+            { label: LBL_FULL_REFUND, value: 'Full' },
+            { label: LBL_PARTIAL_REFUND, value: 'Partial' }
         ];
     }
 
@@ -45,16 +76,13 @@ export default class OrderRefundAction extends LightningElement {
                 };
             });
         } else if (error) {
-            this.showToast('Error', error.body.message, 'error');
+            this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : GENERIC_ERROR, 'error');
         }
     }
 
     connectedCallback() {
         this.handleSubscribe();
-
-        onError((error) => {
-            console.error('EMP API Error: ', JSON.stringify(error));
-        });
+        onError((error) => {});
     }
 
     disconnectedCallback() {
@@ -86,10 +114,11 @@ export default class OrderRefundAction extends LightningElement {
         })
             .then((result) => {
                 this.localCaseId = result;
+                this.checkIfFinished();
             })
             .catch((error) => {
                 this.isWaiting = false;
-                this.showToast('Error', error.body.message, 'error');
+                this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : GENERIC_ERROR, 'error');
             });
     }
 
@@ -101,15 +130,19 @@ export default class OrderRefundAction extends LightningElement {
         const channelName = '/event/External_Complaint_Response__e';
         subscribe(channelName, -1, (message) => {
             const eventPayload = message.data.payload;
-
-            if (eventPayload.Case_Id__c === this.localCaseId) {
-                this.isWaiting = false;
-                this.showToast('Success', 'Refund Case created and synchronized successfully.', 'success');
-                this.handleCancel();
-            }
+            this.arrivedEventCaseIds.add(eventPayload.Case_Id__c);
+            this.checkIfFinished();
         }).then((response) => {
             this.subscription = response;
         });
+    }
+
+    checkIfFinished() {
+        if (this.localCaseId && this.arrivedEventCaseIds.has(this.localCaseId)) {
+            this.isWaiting = false;
+            this.showToast(LBL_MSG_SUCCESS, LBL_SUCCESS_DESC, 'success');
+            this.handleCancel();
+        }
     }
 
     handleUnsubscribe() {
