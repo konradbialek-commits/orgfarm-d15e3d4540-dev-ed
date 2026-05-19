@@ -21,7 +21,7 @@ private class ExternalComplaintHandlerTest {
         );
 
         Test.startTest();
-        EventBus.publish(ev);
+        new ExternalComplaintHandler().afterInsert(new List<SObject>{ ev });
         Test.stopTest();
 
         Case insertedCase = [
@@ -47,7 +47,7 @@ private class ExternalComplaintHandlerTest {
         );
 
         Test.startTest();
-        EventBus.publish(ev);
+        new ExternalComplaintHandler().afterInsert(new List<SObject>{ ev });
         Test.stopTest();
 
         Case insertedCase = [
@@ -72,7 +72,7 @@ private class ExternalComplaintHandlerTest {
         );
 
         Test.startTest();
-        EventBus.publish(ev);
+        new ExternalComplaintHandler().afterInsert(new List<SObject>{ ev });
         Test.stopTest();
 
         Case insertedCase = [
