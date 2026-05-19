@@ -26,53 +26,66 @@ public class RefundActionController {
             }
         }
 
-        Case localCase = new Case(
-            Subject = 'Refund Request: ' + refundType,
-            Description = description,
-            Order__c = orderId,
-            Refund_Status__c = 'Pending',
-            Requested_Refund_Type__c = refundType,
-            Has_External_Product__c = isExternal
-        );
-        insert localCase;
-
-        List<Case_Order_Product__c> caseOrderProducts = new List<Case_Order_Product__c>();
-        for (OrderItem oi : items) {
-            caseOrderProducts.add(
-                new Case_Order_Product__c(
-                    Case__c = localCase.Id,
-                    Order_Product__c = oi.Id,
-                    Product_Name__c = oi.Product2.Name,
-                    Is_External__c = oi.Product2.Is_External__c
-                )
-            );
-        }
-        insert caseOrderProducts;
-
-        update new Order(Id = orderId, ComplaintCaseId__c = localCase.Id);
-
-        Approval.ProcessSubmitRequest request = new Approval.ProcessSubmitRequest();
-        request.setObjectId(localCase.Id);
-        request.setSubmitterId(UserInfo.getUserId());
-        Approval.process(request);
-
         if (isExternal) {
-            External_Complaint__e ev = new External_Complaint__e(
-                Order_id__c = String.valueOf(orderId),
-                Case_Id__c = String.valueOf(localCase.Id),
-                Reason__c = refundType + ' - ' + description,
-                Product_Ids__c = String.join(productIds, ',')
-            );
-            EventBus.publish(ev);
-        } else {
-            External_Complaint_Response__e ev = new External_Complaint_Response__e(
-                Case_Id__c = String.valueOf(localCase.Id),
-                External_Case_Id__c = String.valueOf(localCase.Id),
-                Status__c = 'Created Locally'
-            );
-            EventBus.publish(ev);
-        }
+            String correlationId = UUID.randomUUID().toString();
 
-        return localCase.Id;
+            String payload = JSON.serialize(
+                new Map<String, String>{
+                    'Product_Ids__c' => String.join(productIds, ','),
+                    'Reason__c' => refundType +
+                    ' - ' +
+                    description,
+                    'Case_Id__c' => correlationId,
+                    'Order_id__c' => String.valueOf(orderId)
+                }
+            );
+
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint('callout:Szymon_Org_API/services/data/v60.0/sobjects/External_Complaint__e');
+            req.setMethod('POST');
+            req.setHeader('Content-Type', 'application/json');
+            req.setBody(payload);
+
+            Http http = new Http();
+            HttpResponse res = http.send(req);
+
+            if (res.getStatusCode() >= 200 && res.getStatusCode() < 300) {
+                return 'EXTERNAL:' + correlationId;
+            } else {
+                throw new AuraHandledException('Callout failed: ' + res.getBody());
+            }
+        } else {
+            Case localCase = new Case(
+                Subject = 'Refund Request: ' + refundType,
+                Description = description,
+                Order__c = orderId,
+                Refund_Status__c = 'Pending',
+                Requested_Refund_Type__c = refundType,
+                Has_External_Product__c = false
+            );
+            insert localCase;
+
+            List<Case_Order_Product__c> caseOrderProducts = new List<Case_Order_Product__c>();
+            for (OrderItem oi : items) {
+                caseOrderProducts.add(
+                    new Case_Order_Product__c(
+                        Case__c = localCase.Id,
+                        Order_Product__c = oi.Id,
+                        Product_Name__c = oi.Product2.Name,
+                        Is_External__c = false
+                    )
+                );
+            }
+            insert caseOrderProducts;
+
+            update new Order(Id = orderId, ComplaintCaseId__c = localCase.Id);
+
+            Approval.ProcessSubmitRequest request = new Approval.ProcessSubmitRequest();
+            request.setObjectId(localCase.Id);
+            request.setSubmitterId(UserInfo.getUserId());
+            Approval.process(request);
+
+            return 'LOCAL:' + localCase.Id;
+        }
     }
 }
