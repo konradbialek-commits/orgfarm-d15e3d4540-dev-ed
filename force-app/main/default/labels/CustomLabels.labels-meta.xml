@@ -800,4 +800,18 @@
         <shortDescription>RA Success Desc</shortDescription>
         <value>Refund Case created and synchronized successfully.</value>
     </labels>
+    <labels>
+        <fullName>Btn_Submit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button Submit</shortDescription>
+        <value>Submit</value>
+    </labels>
+    <labels>
+        <fullName>Btn_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
 </CustomLabels>
