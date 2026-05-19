@@ -1,0 +1,38 @@
+<template>
+    <lightning-quick-action-panel title="Request Refund">
+        <template if:true={isWaiting}>
+            <lightning-spinner alternative-text="Processing..." size="medium"></lightning-spinner>
+            <div class="slds-text-align_center slds-m-top_large slds-text-heading_small">Securely submitting your request...</div>
+        </template>
+
+        <template if:false={isWaiting}>
+            <div class="slds-m-bottom_medium">
+                <lightning-datatable key-field="Id" data={orderItems} columns={columns} onrowselection={handleRowSelection}>
+                </lightning-datatable>
+            </div>
+
+            <div class="slds-m-bottom_medium">
+                <lightning-combobox
+                    name="refundType"
+                    label="Refund Type"
+                    value={refundType}
+                    placeholder="Select Type"
+                    options={refundOptions}
+                    onchange={handleChange}
+                    required
+                >
+                </lightning-combobox>
+            </div>
+
+            <div class="slds-m-bottom_medium">
+                <lightning-textarea name="description" label="Reason for Refund" value={description} onchange={handleChange} required>
+                </lightning-textarea>
+            </div>
+        </template>
+
+        <div slot="footer">
+            <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+            <lightning-button variant="brand" label="Submit Request" onclick={handleSubmit} disabled={isSubmitDisabled}></lightning-button>
+        </div>
+    </lightning-quick-action-panel>
+</template>
