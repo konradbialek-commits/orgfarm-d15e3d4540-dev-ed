@@ -69,17 +69,42 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
         if (!inboundCasesToInsert.isEmpty()) {
             insert inboundCasesToInsert;
 
-            List<External_Complaint_Response__e> responses = new List<External_Complaint_Response__e>();
+            List<String> responsePayloads = new List<String>();
             for (Integer i = 0; i < inboundCasesToInsert.size(); i++) {
-                responses.add(
-                    new External_Complaint_Response__e(
-                        Case_Id__c = inboundIndexToEvent.get(i).Case_Id__c,
-                        External_Case_Id__c = String.valueOf(inboundCasesToInsert[i].Id),
-                        Status__c = 'Created'
-                    )
-                );
+                Map<String, String> responseBody = new Map<String, String>{
+                    'Case_Id__c' => inboundIndexToEvent.get(i).Case_Id__c,
+                    'External_Case_Id__c' => String.valueOf(inboundCasesToInsert[i].Id),
+                    'Status__c' => 'Created'
+                };
+                responsePayloads.add(JSON.serialize(responseBody));
             }
-            EventBus.publish(responses);
+
+            if (!System.isFuture() && !System.isBatch()) {
+                sendResponses(responsePayloads);
+            }
+        }
+    }
+
+    @future(callout=true)
+    public static void sendResponses(List<String> payloads) {
+        Http http = new Http();
+        for (String payload : payloads) {
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint('callout:Szymon_Org_API/services/data/v60.0/sobjects/External_Complaint_Response__e');
+            req.setMethod('POST');
+            req.setHeader('Content-Type', 'application/json');
+            req.setBody(payload);
+
+            try {
+                HttpResponse res = http.send(req);
+                if (res.getStatusCode() >= 200 && res.getStatusCode() < 300) {
+                    ErrorLogger.logInfo('OUTBOUND RESPONSE SUCCESS | ' + res.getBody(), 'ExternalComplaintHandler', 'sendResponses');
+                } else {
+                    ErrorLogger.logWarning('OUTBOUND RESPONSE FAILED | ' + res.getBody(), 'ExternalComplaintHandler', 'sendResponses');
+                }
+            } catch (Exception e) {
+                ErrorLogger.logException(e, 'ExternalComplaintHandler', 'sendResponses');
+            }
         }
     }
 }
