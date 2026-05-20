@@ -17,7 +17,7 @@ public class RefundActionController {
     }
 
     @AuraEnabled
-    public static String processRefund(Id orderId, List<Id> orderItemIds, String refundType, String description) {
+    public static String processRefund(Id orderId, List<Id> orderItemIds, String refundType, String description, Decimal refundAmount) {
         List<OrderItem> selectedOrderItems = [
             SELECT Id, Product2Id, Product2.Name, Product2.ProductCode, Product2.Is_External__c, Product2.External_Product_Id__c
             FROM OrderItem
@@ -41,29 +41,36 @@ public class RefundActionController {
         Map<String, String> refundResponseData = new Map<String, String>();
 
         if (!externalProductIds.isEmpty()) {
-            String externalCorrelationId = processExternalRefund(orderId, externalProductIds, refundType, description);
+            String externalCorrelationId = processExternalRefund(orderId, externalProductIds, refundType, description, refundAmount);
             refundResponseData.put('correlationId', externalCorrelationId);
         }
 
         if (!localOrderItems.isEmpty()) {
-            Id localCaseId = processLocalRefund(orderId, localOrderItems, refundType, description);
+            Id localCaseId = processLocalRefund(orderId, localOrderItems, refundType, description, refundAmount);
             refundResponseData.put('localCaseId', localCaseId);
         }
 
         return JSON.serialize(refundResponseData);
     }
 
-    private static String processExternalRefund(Id orderId, List<String> externalProductIds, String refundType, String description) {
+    private static String processExternalRefund(
+        Id orderId,
+        List<String> externalProductIds,
+        String refundType,
+        String description,
+        Decimal refundAmount
+    ) {
         String correlationId = UUID.randomUUID().toString();
 
         String payloadData = JSON.serialize(
-            new Map<String, String>{
+            new Map<String, Object>{
                 'Product_Ids__c' => String.join(externalProductIds, ','),
                 'Reason__c' => refundType +
                 ' - ' +
                 description,
                 'Case_Id__c' => correlationId,
-                'Order_id__c' => String.valueOf(orderId)
+                'Order_id__c' => String.valueOf(orderId),
+                'Refund_Amount__c' => refundAmount
             }
         );
 
@@ -110,13 +117,20 @@ public class RefundActionController {
         }
     }
 
-    private static Id processLocalRefund(Id orderId, List<OrderItem> localOrderItems, String refundType, String description) {
+    private static Id processLocalRefund(
+        Id orderId,
+        List<OrderItem> localOrderItems,
+        String refundType,
+        String description,
+        Decimal refundAmount
+    ) {
         Case localRefundCase = new Case(
             Subject = Util.COMPLAINT.SUBJECT.LOCAL_REFUND + refundType,
             Description = description,
             Order__c = orderId,
             Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
-            Requested_Refund_Type__c = refundType
+            Requested_Refund_Type__c = refundType,
+            Refund_Amount__c = refundAmount
         );
         insert localRefundCase;
 

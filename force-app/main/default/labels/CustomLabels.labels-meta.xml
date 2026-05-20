@@ -863,4 +863,11 @@
         <shortDescription>AA Success Msg</shortDescription>
         <value>Refund request processed successfully.</value>
     </labels>
+    <labels>
+        <fullName>RA_Refund_Amount</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Refund Amount</shortDescription>
+        <value>Refund Amount</value>
+    </labels>
 </CustomLabels>

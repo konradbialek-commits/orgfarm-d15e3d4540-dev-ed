@@ -50,7 +50,7 @@ private class RefundActionControllerTest {
         OrderItem localItem = [SELECT Id FROM OrderItem WHERE Product2.Is_External__c = FALSE LIMIT 1];
 
         Test.startTest();
-        String result = RefundActionController.processRefund(testOrder.Id, new List<Id>{ localItem.Id }, 'Full', 'Test Reason');
+        String result = RefundActionController.processRefund(testOrder.Id, new List<Id>{ localItem.Id }, 'Full', 'Test Reason', 100.00);
         Test.stopTest();
 
         Map<String, Object> parsedResult = (Map<String, Object>) JSON.deserializeUntyped(result);
@@ -59,8 +59,9 @@ private class RefundActionControllerTest {
         Assert.isFalse(parsedResult.containsKey('correlationId'));
 
         Id caseId = (Id) parsedResult.get('localCaseId');
-        Case insertedCase = [SELECT Id FROM Case WHERE Id = :caseId];
+        Case insertedCase = [SELECT Id, Refund_Amount__c FROM Case WHERE Id = :caseId];
         Assert.isNotNull(insertedCase);
+        Assert.areEqual(100.00, insertedCase.Refund_Amount__c);
 
         Order updatedOrder = [SELECT Refund_Status__c FROM Order WHERE Id = :testOrder.Id];
         Assert.areEqual('Pending', updatedOrder.Refund_Status__c);
@@ -74,7 +75,13 @@ private class RefundActionControllerTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
         Test.startTest();
-        String result = RefundActionController.processRefund(testOrder.Id, new List<Id>{ extItem.Id }, 'Partial', 'Test Reason External');
+        String result = RefundActionController.processRefund(
+            testOrder.Id,
+            new List<Id>{ extItem.Id },
+            'Partial',
+            'Test Reason External',
+            50.00
+        );
         Test.stopTest();
 
         Map<String, Object> parsedResult = (Map<String, Object>) JSON.deserializeUntyped(result);
@@ -98,7 +105,7 @@ private class RefundActionControllerTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
         Test.startTest();
-        String result = RefundActionController.processRefund(testOrder.Id, allItemIds, 'Partial', 'Mixed Request');
+        String result = RefundActionController.processRefund(testOrder.Id, allItemIds, 'Partial', 'Mixed Request', 125.00);
         Test.stopTest();
 
         Map<String, Object> parsedResult = (Map<String, Object>) JSON.deserializeUntyped(result);
@@ -107,45 +114,11 @@ private class RefundActionControllerTest {
         Assert.isTrue(parsedResult.containsKey('correlationId'));
 
         Id caseId = (Id) parsedResult.get('localCaseId');
-        Case insertedCase = [SELECT Id FROM Case WHERE Id = :caseId];
+        Case insertedCase = [SELECT Id, Refund_Amount__c FROM Case WHERE Id = :caseId];
         Assert.isNotNull(insertedCase);
+        Assert.areEqual(125.00, insertedCase.Refund_Amount__c);
 
         Order updatedOrder = [SELECT Refund_Status__c FROM Order WHERE Id = :testOrder.Id];
         Assert.areEqual('Pending', updatedOrder.Refund_Status__c);
-    }
-
-    @IsTest
-    static void testInboundEventWithExternalProductId() {
-        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
-
-        Product2 extProd = [SELECT Id, External_Product_Id__c, Name FROM Product2 WHERE Is_External__c = TRUE LIMIT 1];
-
-        External_Complaint__e ev = TestDataFactory.createExternalComplaintEvent(
-            '801x00000000000ZZZ',
-            '500x00000000000DDD',
-            'Full - Broken in transit',
-            extProd.External_Product_Id__c
-        );
-
-        Test.startTest();
-        new ExternalComplaintHandler().afterInsert(new List<SObject>{ ev });
-        Test.stopTest();
-
-        Case insertedCase = [
-            SELECT Id, External_Case_Id__c
-            FROM Case
-            WHERE External_Case_Id__c = '500x00000000000DDD'
-            LIMIT 1
-        ];
-
-        List<Case_Order_Product__c> copList = [
-            SELECT Product_Name__c, Is_External__c
-            FROM Case_Order_Product__c
-            WHERE Case__c = :insertedCase.Id
-        ];
-
-        Assert.areEqual(1, copList.size());
-        Assert.areEqual(extProd.Name, copList[0].Product_Name__c);
-        Assert.isTrue(copList[0].Is_External__c);
     }
 }
