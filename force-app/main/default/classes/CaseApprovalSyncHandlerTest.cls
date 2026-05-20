@@ -28,12 +28,12 @@ private class CaseApprovalSyncHandlerTest {
         insert testCase;
 
         Test.startTest();
-        testCase.Refund_Status__c = 'Approved';
+        testCase.Refund_Status__c = 'Approved Partial Refund';
         update testCase;
         Test.stopTest();
 
         Order updatedOrder = [SELECT Refund_Status__c, Refunded_Amount__c FROM Order WHERE Id = :testOrder.Id];
-        Assert.areEqual('Approved', updatedOrder.Refund_Status__c);
+        Assert.areEqual('Approved Partial Refund', updatedOrder.Refund_Status__c);
         Assert.areEqual(50.00, updatedOrder.Refunded_Amount__c);
     }
 
@@ -51,10 +51,10 @@ private class CaseApprovalSyncHandlerTest {
         insert testCase;
 
         Test.startTest();
-        testCase.Refund_Status__c = 'Approved';
+        testCase.Refund_Status__c = 'Approved Full Refund';
         update testCase;
         Test.stopTest();
 
-        Assert.areEqual('Approved', [SELECT Refund_Status__c FROM Case WHERE Id = :testCase.Id].Refund_Status__c);
+        Assert.areEqual('Approved Full Refund', [SELECT Refund_Status__c FROM Case WHERE Id = :testCase.Id].Refund_Status__c);
     }
 }

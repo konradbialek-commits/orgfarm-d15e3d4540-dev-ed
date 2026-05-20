@@ -16,7 +16,11 @@ public class CaseApprovalSyncHandler implements TriggerAction.AfterUpdate {
                 }
 
                 if (newCase.Order__c == null && String.isNotBlank(newCase.External_Case_Id__c)) {
-                    if (newCase.Refund_Status__c == 'Approved' || newCase.Refund_Status__c == 'Rejected') {
+                    if (
+                        newCase.Refund_Status__c == 'Approved Full Refund' ||
+                        newCase.Refund_Status__c == 'Approved Partial Refund' ||
+                        newCase.Refund_Status__c == 'Rejected'
+                    ) {
                         Map<String, Object> responseBodyMap = new Map<String, Object>{
                             'Case_Id__c' => newCase.External_Case_Id__c,
                             'Status__c' => newCase.Refund_Status__c,
@@ -57,7 +61,7 @@ public class CaseApprovalSyncHandler implements TriggerAction.AfterUpdate {
 
                 relOrder.Refund_Status__c = newCase.Refund_Status__c;
 
-                if (newCase.Refund_Status__c == 'Approved') {
+                if (newCase.Refund_Status__c == 'Approved Full Refund' || newCase.Refund_Status__c == 'Approved Partial Refund') {
                     Decimal currentRefund = relOrder.Refunded_Amount__c != null ? relOrder.Refunded_Amount__c : 0;
                     Decimal newRefund = newCase.Refund_Amount__c != null ? newCase.Refund_Amount__c : 0;
                     relOrder.Refunded_Amount__c = currentRefund + newRefund;
