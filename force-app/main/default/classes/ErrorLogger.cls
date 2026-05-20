@@ -1,6 +1,9 @@
 public without sharing class ErrorLogger {
-
-    public enum LogLevel { ERROR, WARNING, INFO }
+    public enum LogLevel {
+        ERROR,
+        WARNING,
+        INFO
+    }
 
     public static void log(SObject recordToLog) {
         Error_Event__e newEvent = new Error_Event__e(
@@ -24,10 +27,23 @@ public without sharing class ErrorLogger {
             Method_Name__c = methodName,
             Error_Message__c = message,
             Stack_Trace__c = stackTrace,
-            User__c = userId 
+            User__c = userId
         );
-        
+
         log(logRecord);
+    }
+
+    @AuraEnabled
+    public static void logClientError(String errorMessage, String stackTrace, String componentName, String methodName) {
+        try {
+            logWarning(
+                'CLIENT ERROR: ' + errorMessage + (String.isNotBlank(stackTrace) ? '\nStack: ' + stackTrace : ''),
+                componentName,
+                methodName
+            );
+        } catch (Exception e) {
+            System.debug('Failed to log client error: ' + e.getMessage());
+        }
     }
 
     public static void logException(Exception except, String className, String methodName, Id userId) {
