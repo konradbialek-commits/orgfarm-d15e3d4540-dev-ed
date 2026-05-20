@@ -12,29 +12,24 @@ private class RefundActionControllerTest {
 
     @TestSetup
     static void setupData() {
-        Account testAcc = new Account(Name = 'Test Account');
+        Account testAcc = TestDataFactory.createAccount('Test Account');
         insert testAcc;
 
-        Product2 localProd = new Product2(Name = 'Local Product', ProductCode = 'LP01', Is_External__c = false);
-        Product2 extProd = new Product2(Name = 'External Product', ProductCode = 'EP01', Is_External__c = true);
+        Product2 localProd = TestDataFactory.createProduct('Local Product', null, false);
+        Product2 extProd = TestDataFactory.createProduct('External Product', 'EP01', true);
         insert new List<Product2>{ localProd, extProd };
 
         Id pricebookId = Test.getStandardPricebookId();
 
-        PricebookEntry pbeLocal = new PricebookEntry(
-            Pricebook2Id = pricebookId,
-            Product2Id = localProd.Id,
-            UnitPrice = 100,
-            IsActive = true
-        );
-        PricebookEntry pbeExt = new PricebookEntry(Pricebook2Id = pricebookId, Product2Id = extProd.Id, UnitPrice = 150, IsActive = true);
+        PricebookEntry pbeLocal = TestDataFactory.createPricebookEntry(pricebookId, localProd.Id, 100);
+        PricebookEntry pbeExt = TestDataFactory.createPricebookEntry(pricebookId, extProd.Id, 150);
         insert new List<PricebookEntry>{ pbeLocal, pbeExt };
 
-        Order testOrder = new Order(AccountId = testAcc.Id, Status = 'Draft', EffectiveDate = Date.today(), Pricebook2Id = pricebookId);
+        Order testOrder = TestDataFactory.createOrder(testAcc.Id, 'Draft', Date.today(), pricebookId);
         insert testOrder;
 
-        OrderItem oiLocal = new OrderItem(OrderId = testOrder.Id, PricebookEntryId = pbeLocal.Id, Quantity = 1, UnitPrice = 100);
-        OrderItem oiExt = new OrderItem(OrderId = testOrder.Id, PricebookEntryId = pbeExt.Id, Quantity = 1, UnitPrice = 150);
+        OrderItem oiLocal = TestDataFactory.createOrderItem(testOrder.Id, pbeLocal.Id, 1, 100);
+        OrderItem oiExt = TestDataFactory.createOrderItem(testOrder.Id, pbeExt.Id, 1, 150);
         insert new List<OrderItem>{ oiLocal, oiExt };
     }
 
