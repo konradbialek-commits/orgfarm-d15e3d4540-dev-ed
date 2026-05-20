@@ -132,4 +132,16 @@ public class TestDataFactory {
     public static OrderContext createOrderContext(Decimal totalAmount, Decimal eligibleSubtotal, Integer eligibleQuantity, Date orderDate) {
         return new OrderContext(totalAmount, eligibleSubtotal, eligibleQuantity, orderDate);
     }
+
+    public static Order createOrder(Id accountId, String status, Date effectiveDate, Id pricebookId) {
+        return new Order(AccountId = accountId, Status = status, EffectiveDate = effectiveDate, Pricebook2Id = pricebookId);
+    }
+
+    public static OrderItem createOrderItem(Id orderId, Id pricebookEntryId, Integer quantity, Decimal unitPrice) {
+        return new OrderItem(OrderId = orderId, PricebookEntryId = pricebookEntryId, Quantity = quantity, UnitPrice = unitPrice);
+    }
+
+    public static External_Complaint__e createExternalComplaintEvent(String orderId, String caseId, String reason, String productIds) {
+        return new External_Complaint__e(Order_id__c = orderId, Case_Id__c = caseId, Reason__c = reason, Product_Ids__c = productIds);
+    }
 }

@@ -1,114 +1,183 @@
 public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
     public void afterInsert(List<SObject> newList) {
-        List<External_Complaint__e> events = (List<External_Complaint__e>) newList;
+        List<External_Complaint__e> incomingComplaints = (List<External_Complaint__e>) newList;
 
-        Set<Id> orderIdsToVerify = new Set<Id>();
+        Set<String> extractedProductIds = extractProductIds(incomingComplaints);
+        Map<String, Product2> productByExternalOrLocalId = getProductMap(extractedProductIds);
 
-        for (External_Complaint__e complaintEvent : events) {
-            if (String.isNotBlank(complaintEvent.Order_id__c)) {
-                try {
-                    orderIdsToVerify.add((Id) complaintEvent.Order_id__c);
-                } catch (Exception e) {
-                    ErrorLogger.logWarning(
-                        'Invalid Order ID format received: ' + complaintEvent.Order_id__c,
-                        'ExternalComplaintHandler',
-                        'afterInsert'
-                    );
+        Map<Integer, External_Complaint__e> caseIndexToComplaintMap = new Map<Integer, External_Complaint__e>();
+        List<Case> casesToCreate = buildComplaintCases(incomingComplaints, caseIndexToComplaintMap);
+
+        if (!casesToCreate.isEmpty()) {
+            insert casesToCreate;
+
+            insertCaseProducts(casesToCreate, caseIndexToComplaintMap, productByExternalOrLocalId);
+            generateAndSendResponses(casesToCreate, caseIndexToComplaintMap);
+        }
+    }
+
+    private Set<String> extractProductIds(List<External_Complaint__e> incomingComplaints) {
+        Set<String> extractedProductIds = new Set<String>();
+        for (External_Complaint__e complaint : incomingComplaints) {
+            if (String.isNotBlank(complaint.Product_Ids__c)) {
+                for (String productId : complaint.Product_Ids__c.split(',')) {
+                    extractedProductIds.add(productId.trim());
                 }
             }
         }
+        return extractedProductIds;
+    }
 
-        Map<Id, Order> localOrders = new Map<Id, Order>();
-        if (!orderIdsToVerify.isEmpty()) {
-            localOrders = new Map<Id, Order>([SELECT Id FROM Order WHERE Id IN :orderIdsToVerify]);
+    private Map<String, Product2> getProductMap(Set<String> extractedProductIds) {
+        Map<String, Product2> productByExternalOrLocalId = new Map<String, Product2>();
+
+        if (extractedProductIds.isEmpty()) {
+            return productByExternalOrLocalId;
         }
 
-        List<Case> inboundCasesToInsert = new List<Case>();
-        Map<Integer, External_Complaint__e> inboundIndexToEvent = new Map<Integer, External_Complaint__e>();
+        Set<Id> validSalesforceIds = new Set<Id>();
+        Set<String> externalIds = new Set<String>();
 
-        for (External_Complaint__e complaintEvent : events) {
+        for (String productId : extractedProductIds) {
+            try {
+                validSalesforceIds.add((Id) productId);
+            } catch (Exception parseException) {
+                ErrorLogger.logException(parseException, 'ExternalComplaintHandler', 'getProductMap');
+            }
+            externalIds.add(productId);
+        }
+
+        List<Product2> matchedProducts = [
+            SELECT Id, Name, External_Product_Id__c, Is_External__c
+            FROM Product2
+            WHERE Id IN :validSalesforceIds OR External_Product_Id__c IN :externalIds
+        ];
+
+        for (Product2 productRecord : matchedProducts) {
+            productByExternalOrLocalId.put(productRecord.Id, productRecord);
+            if (String.isNotBlank(productRecord.External_Product_Id__c)) {
+                productByExternalOrLocalId.put(productRecord.External_Product_Id__c, productRecord);
+            }
+        }
+
+        return productByExternalOrLocalId;
+    }
+
+    private List<Case> buildComplaintCases(
+        List<External_Complaint__e> incomingComplaints,
+        Map<Integer, External_Complaint__e> caseIndexToComplaintMap
+    ) {
+        List<Case> casesToCreate = new List<Case>();
+
+        for (External_Complaint__e complaint : incomingComplaints) {
             ErrorLogger.logInfo(
-                'INBOUND EVENT RECEIVED | Type: External_Complaint__e | Payload: ' + JSON.serialize(complaintEvent),
+                'INBOUND EVENT RECEIVED | Type: External_Complaint__e | Payload: ' + JSON.serialize(complaint),
                 'ExternalComplaintHandler',
-                'afterInsert'
+                'buildComplaintCases'
             );
 
-            Id validLocalOrderId = null;
-            if (String.isNotBlank(complaintEvent.Order_id__c)) {
-                try {
-                    Id parsedOrderId = (Id) complaintEvent.Order_id__c;
-                    if (localOrders.containsKey(parsedOrderId)) {
-                        validLocalOrderId = parsedOrderId;
-                    }
-                } catch (Exception e) {
+            String requestedRefundType = '';
+            if (String.isNotBlank(complaint.Reason__c)) {
+                if (complaint.Reason__c.startsWith(Util.COMPLAINT.TYPE.FULL)) {
+                    requestedRefundType = Util.COMPLAINT.TYPE.FULL;
+                } else if (complaint.Reason__c.startsWith(Util.COMPLAINT.TYPE.PARTIAL)) {
+                    requestedRefundType = Util.COMPLAINT.TYPE.PARTIAL;
                 }
             }
 
-            String requestedType = '';
-            if (String.isNotBlank(complaintEvent.Reason__c)) {
-                if (complaintEvent.Reason__c.startsWith(Util.COMPLAINT.TYPE.FULL)) {
-                    requestedType = Util.COMPLAINT.TYPE.FULL;
-                } else if (complaintEvent.Reason__c.startsWith(Util.COMPLAINT.TYPE.PARTIAL)) {
-                    requestedType = Util.COMPLAINT.TYPE.PARTIAL;
-                }
-            }
-
-            Case newCase = new Case(
+            Case newComplaintCase = new Case(
                 Subject = Util.COMPLAINT.SUBJECT.EXTERNAL_REFUND,
                 Description = 'Reason: ' +
-                    complaintEvent.Reason__c +
+                    complaint.Reason__c +
                     '\nProducts: ' +
-                    complaintEvent.Product_Ids__c +
+                    complaint.Product_Ids__c +
                     '\nExternal Order ID: ' +
-                    complaintEvent.Order_id__c,
-                Order__c = validLocalOrderId,
+                    complaint.Order_id__c,
+                Order__c = null,
                 Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
-                Requested_Refund_Type__c = requestedType,
-                External_Case_Id__c = complaintEvent.Case_Id__c
+                Requested_Refund_Type__c = requestedRefundType,
+                External_Case_Id__c = complaint.Case_Id__c
             );
 
-            inboundCasesToInsert.add(newCase);
-            inboundIndexToEvent.put(inboundCasesToInsert.size() - 1, complaintEvent);
+            casesToCreate.add(newComplaintCase);
+            caseIndexToComplaintMap.put(casesToCreate.size() - 1, complaint);
         }
 
-        if (!inboundCasesToInsert.isEmpty()) {
-            insert inboundCasesToInsert;
+        return casesToCreate;
+    }
 
-            List<String> responsePayloads = new List<String>();
-            for (Integer i = 0; i < inboundCasesToInsert.size(); i++) {
-                Map<String, String> responseBody = new Map<String, String>{
-                    'Case_Id__c' => inboundIndexToEvent.get(i).Case_Id__c,
-                    'External_Case_Id__c' => String.valueOf(inboundCasesToInsert[i].Id),
-                    'Status__c' => Util.COMPLAINT.RESPONSE_STATUS.CREATED
-                };
-                responsePayloads.add(JSON.serialize(responseBody));
-            }
+    private void insertCaseProducts(
+        List<Case> insertedCases,
+        Map<Integer, External_Complaint__e> caseIndexToComplaintMap,
+        Map<String, Product2> productByExternalOrLocalId
+    ) {
+        List<Case_Order_Product__c> caseProductsToInsert = new List<Case_Order_Product__c>();
 
-            if (!System.isFuture() && !System.isBatch()) {
-                sendResponses(responsePayloads);
+        for (Integer i = 0; i < insertedCases.size(); i++) {
+            Case insertedCase = insertedCases[i];
+            External_Complaint__e originalComplaint = caseIndexToComplaintMap.get(i);
+
+            if (String.isNotBlank(originalComplaint.Product_Ids__c)) {
+                for (String rawProductId : originalComplaint.Product_Ids__c.split(',')) {
+                    String trimmedProductId = rawProductId.trim();
+                    if (productByExternalOrLocalId.containsKey(trimmedProductId)) {
+                        Product2 matchedProduct = productByExternalOrLocalId.get(trimmedProductId);
+                        caseProductsToInsert.add(
+                            new Case_Order_Product__c(
+                                Case__c = insertedCase.Id,
+                                Product_Name__c = matchedProduct.Name,
+                                Is_External__c = matchedProduct.Is_External__c
+                            )
+                        );
+                    }
+                }
             }
+        }
+
+        if (!caseProductsToInsert.isEmpty()) {
+            insert caseProductsToInsert;
+        }
+    }
+
+    private void generateAndSendResponses(List<Case> insertedCases, Map<Integer, External_Complaint__e> caseIndexToComplaintMap) {
+        List<String> responsePayloads = new List<String>();
+
+        for (Integer i = 0; i < insertedCases.size(); i++) {
+            Case insertedCase = insertedCases[i];
+            External_Complaint__e originalComplaint = caseIndexToComplaintMap.get(i);
+
+            Map<String, String> responseBodyMap = new Map<String, String>{
+                'Case_Id__c' => originalComplaint.Case_Id__c,
+                'External_Case_Id__c' => String.valueOf(insertedCase.Id),
+                'Status__c' => Util.COMPLAINT.RESPONSE_STATUS.CREATED
+            };
+            responsePayloads.add(JSON.serialize(responseBodyMap));
+        }
+
+        if (!System.isFuture() && !System.isBatch()) {
+            sendResponses(responsePayloads);
         }
     }
 
     @future(callout=true)
     public static void sendResponses(List<String> payloads) {
-        Http http = new Http();
-        for (String payload : payloads) {
+        Http httpAgent = new Http();
+        for (String payloadData : payloads) {
             HttpRequest request = new HttpRequest();
             request.setEndpoint(Util.COMPLAINT.ENDPOINT_COMPLAINT_RESPONSE);
             request.setMethod('POST');
             request.setHeader('Content-Type', 'application/json');
-            request.setBody(payload);
+            request.setBody(payloadData);
 
             try {
-                HttpResponse response = http.send(request);
+                HttpResponse response = httpAgent.send(request);
                 if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
                     ErrorLogger.logInfo('OUTBOUND RESPONSE SUCCESS | ' + response.getBody(), 'ExternalComplaintHandler', 'sendResponses');
                 } else {
                     ErrorLogger.logWarning('OUTBOUND RESPONSE FAILED | ' + response.getBody(), 'ExternalComplaintHandler', 'sendResponses');
                 }
-            } catch (Exception e) {
-                ErrorLogger.logException(e, 'ExternalComplaintHandler', 'sendResponses');
+            } catch (Exception calloutException) {
+                ErrorLogger.logException(calloutException, 'ExternalComplaintHandler', 'sendResponses');
             }
         }
     }
