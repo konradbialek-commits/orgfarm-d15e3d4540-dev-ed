@@ -68,7 +68,7 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
             );
 
             inboundCasesToInsert.add(newCase);
-            inboundIndexToEvent.put(inboundCasesToInsert.size() - 1, ev);
+            inboundIndexToEvent.put(inboundCasesToInsert.size() - 1, complaintEvent);
         }
 
         if (!inboundCasesToInsert.isEmpty()) {

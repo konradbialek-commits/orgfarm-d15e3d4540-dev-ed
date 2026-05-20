@@ -74,7 +74,7 @@ public class RefundActionController {
                         'RefundActionController',
                         'processRefund'
                     );
-                    throw new AuraHandledException('Callout failed: ' + res.getBody());
+                    throw new AuraHandledException('Callout failed: ' + response.getBody());
                 }
             } catch (Exception e) {
                 ErrorLogger.logException(e, 'RefundActionController', 'processRefund');
