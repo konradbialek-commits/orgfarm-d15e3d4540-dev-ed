@@ -49,13 +49,30 @@ public class RefundActionController {
             req.setHeader('Content-Type', 'application/json');
             req.setBody(payload);
 
-            Http http = new Http();
-            HttpResponse res = http.send(req);
+            ErrorLogger.logInfo('OUTBOUND External_Complaint__e REQUEST | Payload: ' + payload, 'RefundActionController', 'processRefund');
 
-            if (res.getStatusCode() >= 200 && res.getStatusCode() < 300) {
-                responseMap.put('correlationId', correlationId);
-            } else {
-                throw new AuraHandledException('Callout failed: ' + res.getBody());
+            try {
+                Http http = new Http();
+                HttpResponse res = http.send(req);
+
+                if (res.getStatusCode() >= 200 && res.getStatusCode() < 300) {
+                    ErrorLogger.logInfo(
+                        'OUTBOUND External_Complaint__e SUCCESS | Status: ' + res.getStatusCode() + ' | Response: ' + res.getBody(),
+                        'RefundActionController',
+                        'processRefund'
+                    );
+                    responseMap.put('correlationId', correlationId);
+                } else {
+                    ErrorLogger.logWarning(
+                        'OUTBOUND External_Complaint__e FAILED | Status: ' + res.getStatusCode() + ' | Response: ' + res.getBody(),
+                        'RefundActionController',
+                        'processRefund'
+                    );
+                    throw new AuraHandledException('Callout failed: ' + res.getBody());
+                }
+            } catch (Exception e) {
+                ErrorLogger.logException(e, 'RefundActionController', 'processRefund');
+                throw new AuraHandledException('Callout failed: ' + e.getMessage());
             }
         }
 
