@@ -5,7 +5,12 @@
         </template>
 
         <template if:true={isLoading}>
-            <lightning-spinner alternative-text={labels.processing} size="medium" variant="brand"></lightning-spinner>
+            <div class="slds-is-relative slds-p-vertical_xx-large">
+                <lightning-spinner alternative-text={labels.processing} size="medium" variant="brand"></lightning-spinner>
+                <div class="slds-text-align_center slds-m-top_xx-large slds-text-heading_small slds-text-color_weak slds-p-top_large">
+                    {labels.submitting}
+                </div>
+            </div>
         </template>
 
         <template if:false={isLoading}>
