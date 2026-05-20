@@ -19,11 +19,11 @@ public class RefundActionController {
         List<OrderItem> localItems = new List<OrderItem>();
         List<String> externalProductIds = new List<String>();
 
-        for (OrderItem oi : items) {
-            if (oi.Product2.Is_External__c) {
-                externalProductIds.add(oi.Product2Id);
+        for (OrderItem orderI : items) {
+            if (orderI.Product2.Is_External__c) {
+                externalProductIds.add(orderI.Product2Id);
             } else {
-                localItems.add(oi);
+                localItems.add(orderI);
             }
         }
 
@@ -43,28 +43,51 @@ public class RefundActionController {
                 }
             );
 
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint('callout:Szymon_Org_API/services/data/v60.0/sobjects/External_Complaint__e');
-            req.setMethod('POST');
-            req.setHeader('Content-Type', 'application/json');
-            req.setBody(payload);
+            HttpRequest request = new HttpRequest();
+            request.setEndpoint(Util.COMPLAINT.ENDPOINT_EXTERNAL_COMPLAINT);
+            request.setMethod('POST');
+            request.setHeader('Content-Type', 'application/json');
+            request.setBody(payload);
 
-            Http http = new Http();
-            HttpResponse res = http.send(req);
+            ErrorLogger.logInfo('OUTBOUND External_Complaint__e REQUEST | Payload: ' + payload, 'RefundActionController', 'processRefund');
 
-            if (res.getStatusCode() >= 200 && res.getStatusCode() < 300) {
-                responseMap.put('correlationId', correlationId);
-            } else {
-                throw new AuraHandledException('Callout failed: ' + res.getBody());
+            try {
+                Http http = new Http();
+                HttpResponse response = http.send(request);
+
+                if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
+                    ErrorLogger.logInfo(
+                        'OUTBOUND External_Complaint__e SUCCESS | Status: ' +
+                            response.getStatusCode() +
+                            ' | Response: ' +
+                            response.getBody(),
+                        'RefundActionController',
+                        'processRefund'
+                    );
+                    responseMap.put('correlationId', correlationId);
+                } else {
+                    ErrorLogger.logWarning(
+                        'OUTBOUND External_Complaint__e FAILED | Status: ' +
+                            response.getStatusCode() +
+                            ' | Response: ' +
+                            response.getBody(),
+                        'RefundActionController',
+                        'processRefund'
+                    );
+                    throw new AuraHandledException('Callout failed: ' + response.getBody());
+                }
+            } catch (Exception e) {
+                ErrorLogger.logException(e, 'RefundActionController', 'processRefund');
+                throw new AuraHandledException('Callout failed: ' + e.getMessage());
             }
         }
 
         if (!localItems.isEmpty()) {
             Case localCase = new Case(
-                Subject = 'Refund Request: ' + refundType,
+                Subject = Util.COMPLAINT.SUBJECT.LOCAL_REFUND + refundType,
                 Description = description,
                 Order__c = orderId,
-                Refund_Status__c = 'Pending',
+                Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
                 Requested_Refund_Type__c = refundType,
                 Has_External_Product__c = false
             );

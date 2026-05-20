@@ -1,9 +1,11 @@
 import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { CloseActionScreenEvent } from 'lightning/actions';
+import { notifyRecordUpdateAvailable } from 'lightning/uiRecordApi';
 import processApproval from '@salesforce/apex/RefundApprovalController.processApproval';
 
 import LBL_PROCESSING from '@salesforce/label/c.RA_Processing';
+import LBL_SUBMITTING from '@salesforce/label/c.RA_Submitting';
 import LBL_BTN_CANCEL from '@salesforce/label/c.Btn_Cancel';
 import LBL_BTN_SUBMIT from '@salesforce/label/c.Btn_Submit';
 import LBL_MSG_SUCCESS from '@salesforce/label/c.Msg_Success';
@@ -28,6 +30,7 @@ export default class RefundApprovalAction extends LightningElement {
     labels = {
         title: LBL_AA_TITLE,
         processing: LBL_PROCESSING,
+        submitting: LBL_SUBMITTING,
         decision: LBL_AA_DECISION,
         comments: LBL_AA_COMMENTS,
         cancel: LBL_BTN_CANCEL,
@@ -77,7 +80,8 @@ export default class RefundApprovalAction extends LightningElement {
             );
 
             this.dispatchEvent(new CloseActionScreenEvent());
-            window.location.reload();
+
+            notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
         } catch (exception) {
             this.errorMessage = exception.body?.message || GENERIC_ERROR;
         } finally {

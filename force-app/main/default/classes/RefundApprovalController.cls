@@ -17,14 +17,8 @@ public with sharing class RefundApprovalController {
             req.setComments(comments);
             Approval.process(req);
 
-            Case c = [SELECT Id, Order__c FROM Case WHERE Id = :caseId LIMIT 1];
-            c.Refund_Status__c = decision;
-            update c;
-
-            if (c.Order__c != null) {
-                Order o = new Order(Id = c.Order__c, Refund_Status__c = decision);
-                update o;
-            }
+            Case caseRecord = new Case(Id = caseId, Refund_Status__c = decision);
+            update caseRecord;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
