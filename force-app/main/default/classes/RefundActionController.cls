@@ -29,6 +29,36 @@ public class RefundActionController {
 
         Map<String, String> responseMap = new Map<String, String>();
 
+        if (!externalProductIds.isEmpty()) {
+            String correlationId = UUID.randomUUID().toString();
+
+            String payload = JSON.serialize(
+                new Map<String, String>{
+                    'Product_Ids__c' => String.join(externalProductIds, ','),
+                    'Reason__c' => refundType +
+                    ' - ' +
+                    description,
+                    'Case_Id__c' => correlationId,
+                    'Order_id__c' => String.valueOf(orderId)
+                }
+            );
+
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint('callout:Szymon_Org_API/services/data/v60.0/sobjects/External_Complaint__e');
+            req.setMethod('POST');
+            req.setHeader('Content-Type', 'application/json');
+            req.setBody(payload);
+
+            Http http = new Http();
+            HttpResponse res = http.send(req);
+
+            if (res.getStatusCode() >= 200 && res.getStatusCode() < 300) {
+                responseMap.put('correlationId', correlationId);
+            } else {
+                throw new AuraHandledException('Callout failed: ' + res.getBody());
+            }
+        }
+
         if (!localItems.isEmpty()) {
             Case localCase = new Case(
                 Subject = 'Refund Request: ' + refundType,
@@ -61,36 +91,6 @@ public class RefundActionController {
             Approval.process(request);
 
             responseMap.put('localCaseId', localCase.Id);
-        }
-
-        if (!externalProductIds.isEmpty()) {
-            String correlationId = UUID.randomUUID().toString();
-
-            String payload = JSON.serialize(
-                new Map<String, String>{
-                    'Product_Ids__c' => String.join(externalProductIds, ','),
-                    'Reason__c' => refundType +
-                    ' - ' +
-                    description,
-                    'Case_Id__c' => correlationId,
-                    'Order_id__c' => String.valueOf(orderId)
-                }
-            );
-
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint('callout:Szymon_Org_API/services/data/v60.0/sobjects/External_Complaint__e');
-            req.setMethod('POST');
-            req.setHeader('Content-Type', 'application/json');
-            req.setBody(payload);
-
-            Http http = new Http();
-            HttpResponse res = http.send(req);
-
-            if (res.getStatusCode() >= 200 && res.getStatusCode() < 300) {
-                responseMap.put('correlationId', correlationId);
-            } else {
-                throw new AuraHandledException('Callout failed: ' + res.getBody());
-            }
         }
 
         return JSON.serialize(responseMap);
