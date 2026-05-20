@@ -17,9 +17,11 @@ public class CaseApprovalSyncHandler implements TriggerAction.AfterUpdate {
 
                 if (newCase.Order__c == null && String.isNotBlank(newCase.External_Case_Id__c)) {
                     if (newCase.Refund_Status__c == 'Approved' || newCase.Refund_Status__c == 'Rejected') {
-                        Map<String, String> responseBodyMap = new Map<String, String>{
+                        Map<String, Object> responseBodyMap = new Map<String, Object>{
                             'Case_Id__c' => newCase.External_Case_Id__c,
-                            'Status__c' => newCase.Refund_Status__c
+                            'Status__c' => newCase.Refund_Status__c,
+                            'Final_Refund_Amount__c' => newCase.Refund_Amount__c,
+                            'Final_Refund_Type__c' => newCase.Requested_Refund_Type__c
                         };
                         outboundResponses.add(JSON.serialize(responseBodyMap));
                     }

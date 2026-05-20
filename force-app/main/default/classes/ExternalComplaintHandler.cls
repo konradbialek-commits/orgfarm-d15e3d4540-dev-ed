@@ -89,7 +89,7 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
             Case newComplaintCase = new Case(
                 Subject = Util.COMPLAINT.SUBJECT.EXTERNAL_REFUND,
                 Reason = complaint.Reason__c,
-                Order__c = null, // Left null intentionally to track that Szymon originated this
+                Order__c = null,
                 Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
                 Requested_Refund_Type__c = requestedRefundType,
                 External_Case_Id__c = complaint.Case_Id__c,

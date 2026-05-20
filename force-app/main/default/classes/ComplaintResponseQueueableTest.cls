@@ -19,7 +19,6 @@ private class ComplaintResponseQueueableTest {
         System.enqueueJob(new ComplaintResponseQueueable(payloads));
         Test.stopTest();
 
-        // Assert that the job successfully queued and executed without throwing exceptions
         Assert.isTrue(true);
     }
 }
