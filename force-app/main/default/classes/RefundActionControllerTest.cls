@@ -61,6 +61,9 @@ private class RefundActionControllerTest {
         Id caseId = (Id) parsedResult.get('localCaseId');
         Case insertedCase = [SELECT Id FROM Case WHERE Id = :caseId];
         Assert.isNotNull(insertedCase);
+
+        Order updatedOrder = [SELECT Refund_Status__c FROM Order WHERE Id = :testOrder.Id];
+        Assert.areEqual('Pending', updatedOrder.Refund_Status__c);
     }
 
     @IsTest
@@ -106,6 +109,9 @@ private class RefundActionControllerTest {
         Id caseId = (Id) parsedResult.get('localCaseId');
         Case insertedCase = [SELECT Id FROM Case WHERE Id = :caseId];
         Assert.isNotNull(insertedCase);
+
+        Order updatedOrder = [SELECT Refund_Status__c FROM Order WHERE Id = :testOrder.Id];
+        Assert.areEqual('Pending', updatedOrder.Refund_Status__c);
     }
 
     @IsTest

@@ -134,7 +134,11 @@ public class RefundActionController {
         }
         insert caseProductsToInsert;
 
-        Order relatedOrder = new Order(Id = orderId, ComplaintCaseId__c = localRefundCase.Id);
+        Order relatedOrder = new Order(
+            Id = orderId,
+            ComplaintCaseId__c = localRefundCase.Id,
+            Refund_Status__c = Util.COMPLAINT.STATUS.PENDING
+        );
         update relatedOrder;
 
         Approval.ProcessSubmitRequest approvalRequest = new Approval.ProcessSubmitRequest();
