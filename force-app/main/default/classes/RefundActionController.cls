@@ -19,11 +19,11 @@ public class RefundActionController {
         List<OrderItem> localItems = new List<OrderItem>();
         List<String> externalProductIds = new List<String>();
 
-        for (OrderItem oi : items) {
-            if (oi.Product2.Is_External__c) {
-                externalProductIds.add(oi.Product2Id);
+        for (OrderItem orderI : items) {
+            if (orderI.Product2.Is_External__c) {
+                externalProductIds.add(orderI.Product2Id);
             } else {
-                localItems.add(oi);
+                localItems.add(orderI);
             }
         }
 
@@ -43,28 +43,34 @@ public class RefundActionController {
                 }
             );
 
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(Util.COMPLAINT.ENDPOINT_EXTERNAL_COMPLAINT);
-            req.setMethod('POST');
-            req.setHeader('Content-Type', 'application/json');
-            req.setBody(payload);
+            HttpRequest request = new HttpRequest();
+            request.setEndpoint(Util.COMPLAINT.ENDPOINT_EXTERNAL_COMPLAINT);
+            request.setMethod('POST');
+            request.setHeader('Content-Type', 'application/json');
+            request.setBody(payload);
 
             ErrorLogger.logInfo('OUTBOUND External_Complaint__e REQUEST | Payload: ' + payload, 'RefundActionController', 'processRefund');
 
             try {
                 Http http = new Http();
-                HttpResponse res = http.send(req);
+                HttpResponse response = http.send(request);
 
-                if (res.getStatusCode() >= 200 && res.getStatusCode() < 300) {
+                if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
                     ErrorLogger.logInfo(
-                        'OUTBOUND External_Complaint__e SUCCESS | Status: ' + res.getStatusCode() + ' | Response: ' + res.getBody(),
+                        'OUTBOUND External_Complaint__e SUCCESS | Status: ' +
+                            response.getStatusCode() +
+                            ' | Response: ' +
+                            response.getBody(),
                         'RefundActionController',
                         'processRefund'
                     );
                     responseMap.put('correlationId', correlationId);
                 } else {
                     ErrorLogger.logWarning(
-                        'OUTBOUND External_Complaint__e FAILED | Status: ' + res.getStatusCode() + ' | Response: ' + res.getBody(),
+                        'OUTBOUND External_Complaint__e FAILED | Status: ' +
+                            response.getStatusCode() +
+                            ' | Response: ' +
+                            response.getBody(),
                         'RefundActionController',
                         'processRefund'
                     );
