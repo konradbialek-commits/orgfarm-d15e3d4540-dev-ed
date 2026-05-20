@@ -126,7 +126,7 @@ public class RefundActionController {
     ) {
         Case localRefundCase = new Case(
             Subject = Util.COMPLAINT.SUBJECT.LOCAL_REFUND + refundType,
-            Description = description,
+            Reason = refundType + ' - ' + description,
             Order__c = orderId,
             Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
             Requested_Refund_Type__c = refundType,

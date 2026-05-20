@@ -59,9 +59,10 @@ private class RefundActionControllerTest {
         Assert.isFalse(parsedResult.containsKey('correlationId'));
 
         Id caseId = (Id) parsedResult.get('localCaseId');
-        Case insertedCase = [SELECT Id, Refund_Amount__c FROM Case WHERE Id = :caseId];
+        Case insertedCase = [SELECT Id, Refund_Amount__c, Reason FROM Case WHERE Id = :caseId];
         Assert.isNotNull(insertedCase);
         Assert.areEqual(100.00, insertedCase.Refund_Amount__c);
+        Assert.areEqual('Full - Test Reason', insertedCase.Reason);
 
         Order updatedOrder = [SELECT Refund_Status__c FROM Order WHERE Id = :testOrder.Id];
         Assert.areEqual('Pending', updatedOrder.Refund_Status__c);
@@ -114,9 +115,10 @@ private class RefundActionControllerTest {
         Assert.isTrue(parsedResult.containsKey('correlationId'));
 
         Id caseId = (Id) parsedResult.get('localCaseId');
-        Case insertedCase = [SELECT Id, Refund_Amount__c FROM Case WHERE Id = :caseId];
+        Case insertedCase = [SELECT Id, Refund_Amount__c, Reason FROM Case WHERE Id = :caseId];
         Assert.isNotNull(insertedCase);
         Assert.areEqual(125.00, insertedCase.Refund_Amount__c);
+        Assert.areEqual('Partial - Mixed Request', insertedCase.Reason);
 
         Order updatedOrder = [SELECT Refund_Status__c FROM Order WHERE Id = :testOrder.Id];
         Assert.areEqual('Pending', updatedOrder.Refund_Status__c);
