@@ -46,18 +46,18 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
 
             String requestedType = '';
             if (String.isNotBlank(ev.Reason__c)) {
-                if (ev.Reason__c.startsWith('Full')) {
-                    requestedType = 'Full';
-                } else if (ev.Reason__c.startsWith('Partial')) {
-                    requestedType = 'Partial';
+                if (ev.Reason__c.startsWith(Util.COMPLAINT.TYPE.FULL)) {
+                    requestedType = Util.COMPLAINT.TYPE.FULL;
+                } else if (ev.Reason__c.startsWith(Util.COMPLAINT.TYPE.PARTIAL)) {
+                    requestedType = Util.COMPLAINT.TYPE.PARTIAL;
                 }
             }
 
             Case newCase = new Case(
-                Subject = 'External Refund Request',
+                Subject = Util.COMPLAINT.SUBJECT.EXTERNAL_REFUND,
                 Description = 'Reason: ' + ev.Reason__c + '\nProducts: ' + ev.Product_Ids__c + '\nExternal Order ID: ' + ev.Order_id__c,
                 Order__c = validLocalOrderId,
-                Refund_Status__c = 'Pending',
+                Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
                 Requested_Refund_Type__c = requestedType,
                 External_Case_Id__c = ev.Case_Id__c
             );
@@ -74,7 +74,7 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                 Map<String, String> responseBody = new Map<String, String>{
                     'Case_Id__c' => inboundIndexToEvent.get(i).Case_Id__c,
                     'External_Case_Id__c' => String.valueOf(inboundCasesToInsert[i].Id),
-                    'Status__c' => 'Created'
+                    'Status__c' => Util.COMPLAINT.RESPONSE_STATUS.CREATED
                 };
                 responsePayloads.add(JSON.serialize(responseBody));
             }
@@ -90,7 +90,7 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
         Http http = new Http();
         for (String payload : payloads) {
             HttpRequest req = new HttpRequest();
-            req.setEndpoint('callout:Szymon_Org_API/services/data/v60.0/sobjects/External_Complaint_Response__e');
+            req.setEndpoint(Util.COMPLAINT.ENDPOINT_COMPLAINT_RESPONSE);
             req.setMethod('POST');
             req.setHeader('Content-Type', 'application/json');
             req.setBody(payload);

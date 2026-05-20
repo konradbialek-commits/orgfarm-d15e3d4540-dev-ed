@@ -34,4 +34,9 @@ public class Util {
             return new EmailConst();
         }
     }
+    public static ComplaintConst COMPLAINT {
+        get {
+            return new ComplaintConst();
+        }
+    }
 }

@@ -44,7 +44,7 @@ public class RefundActionController {
             );
 
             HttpRequest req = new HttpRequest();
-            req.setEndpoint('callout:Szymon_Org_API/services/data/v60.0/sobjects/External_Complaint__e');
+            req.setEndpoint(Util.COMPLAINT.ENDPOINT_EXTERNAL_COMPLAINT);
             req.setMethod('POST');
             req.setHeader('Content-Type', 'application/json');
             req.setBody(payload);
@@ -78,10 +78,10 @@ public class RefundActionController {
 
         if (!localItems.isEmpty()) {
             Case localCase = new Case(
-                Subject = 'Refund Request: ' + refundType,
+                Subject = Util.COMPLAINT.SUBJECT.LOCAL_REFUND + refundType,
                 Description = description,
                 Order__c = orderId,
-                Refund_Status__c = 'Pending',
+                Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
                 Requested_Refund_Type__c = refundType,
                 Has_External_Product__c = false
             );
