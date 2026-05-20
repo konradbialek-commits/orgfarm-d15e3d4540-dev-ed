@@ -90,8 +90,9 @@ private class RefundActionControllerTest {
         Assert.isTrue(parsedResult.containsKey('correlationId'));
         Assert.isFalse(parsedResult.containsKey('localCaseId'));
 
-        List<Case> localCases = [SELECT Id FROM Case];
-        Assert.isTrue(localCases.isEmpty());
+        List<Case> externalCases = [SELECT Id, External_Case_Id__c, Reason FROM Case WHERE External_Case_Id__c != NULL];
+        Assert.areEqual(1, externalCases.size());
+        Assert.areEqual('Partial - Test Reason External', externalCases[0].Reason);
     }
 
     @IsTest

@@ -173,31 +173,8 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
             responsePayloads.add(JSON.serialize(responseBodyMap));
         }
 
-        if (!System.isFuture() && !System.isBatch()) {
-            sendResponses(responsePayloads);
-        }
-    }
-
-    @future(callout=true)
-    public static void sendResponses(List<String> payloads) {
-        Http httpAgent = new Http();
-        for (String payloadData : payloads) {
-            HttpRequest request = new HttpRequest();
-            request.setEndpoint(Util.COMPLAINT.ENDPOINT_COMPLAINT_RESPONSE);
-            request.setMethod('POST');
-            request.setHeader('Content-Type', 'application/json');
-            request.setBody(payloadData);
-
-            try {
-                HttpResponse response = httpAgent.send(request);
-                if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
-                    ErrorLogger.logInfo('OUTBOUND RESPONSE SUCCESS | ' + response.getBody(), 'ExternalComplaintHandler', 'sendResponses');
-                } else {
-                    ErrorLogger.logWarning('OUTBOUND RESPONSE FAILED | ' + response.getBody(), 'ExternalComplaintHandler', 'sendResponses');
-                }
-            } catch (Exception calloutException) {
-                ErrorLogger.logException(calloutException, 'ExternalComplaintHandler', 'sendResponses');
-            }
+        if (!responsePayloads.isEmpty() && !System.isQueueable() && !System.isBatch()) {
+            System.enqueueJob(new ComplaintResponseQueueable(responsePayloads));
         }
     }
 }
