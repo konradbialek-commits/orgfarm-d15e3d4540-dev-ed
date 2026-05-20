@@ -870,4 +870,32 @@
         <shortDescription>RA Refund Amount</shortDescription>
         <value>Refund Amount</value>
     </labels>
+    <labels>
+        <fullName>RA_Connection_Error_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Connection Error Title</shortDescription>
+        <value>Connection Error</value>
+    </labels>
+    <labels>
+        <fullName>RA_Connection_Error_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Connection Error Msg</shortDescription>
+        <value>Lost connection to the event stream. The process may have still completed. Please refresh the page.</value>
+    </labels>
+    <labels>
+        <fullName>RA_Subscription_Error_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Subscription Error Title</shortDescription>
+        <value>Subscription Error</value>
+    </labels>
+    <labels>
+        <fullName>RA_Subscription_Error_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Subscription Error Msg</shortDescription>
+        <value>Could not connect to event stream.</value>
+    </labels>
 </CustomLabels>

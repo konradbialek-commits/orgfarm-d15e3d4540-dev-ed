@@ -5,6 +5,7 @@ import { CloseActionScreenEvent } from 'lightning/actions';
 import { subscribe, unsubscribe, onError } from 'lightning/empApi';
 import getOrderItems from '@salesforce/apex/RefundActionController.getOrderItems';
 import processRefund from '@salesforce/apex/RefundActionController.processRefund';
+import logClientError from '@salesforce/apex/ErrorLogger.logClientError';
 
 import LBL_TITLE from '@salesforce/label/c.RA_Title';
 import LBL_PROCESSING from '@salesforce/label/c.RA_Processing';
@@ -24,6 +25,10 @@ import LBL_PARTIAL_REFUND from '@salesforce/label/c.RA_Partial_Refund';
 import LBL_MSG_SUCCESS from '@salesforce/label/c.Msg_Success';
 import LBL_MSG_ERROR from '@salesforce/label/c.Msg_Error';
 import GENERIC_ERROR from '@salesforce/label/c.Generic_Error_Message';
+import LBL_CONN_ERR_TITLE from '@salesforce/label/c.RA_Connection_Error_Title';
+import LBL_CONN_ERR_MSG from '@salesforce/label/c.RA_Connection_Error_Msg';
+import LBL_SUB_ERR_TITLE from '@salesforce/label/c.RA_Subscription_Error_Title';
+import LBL_SUB_ERR_MSG from '@salesforce/label/c.RA_Subscription_Error_Msg';
 
 export default class OrderRefundAction extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -79,13 +84,22 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
                 ProductCode: row.Product2.ProductCode
             }));
         } else if (error) {
-            this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : GENERIC_ERROR, 'error');
+            this.logToBackend(error, 'wiredItems');
+            this.showToast(LBL_MSG_ERROR, this.extractErrorMessage(error), 'error');
         }
     }
 
     connectedCallback() {
         this.handleSubscribe();
-        onError((error) => {});
+
+        onError((error) => {
+            this.logToBackend(error, 'empApi_onError');
+
+            if (this.isWaiting) {
+                this.isWaiting = false;
+                this.showToast(LBL_CONN_ERR_TITLE, LBL_CONN_ERR_MSG, 'error');
+            }
+        });
     }
 
     disconnectedCallback() {
@@ -130,16 +144,14 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
                     this.checkIfFinished();
                 } else if (this.localCaseId) {
                     this.showToast(LBL_MSG_SUCCESS, 'Local refund request submitted.', 'success');
-                    this[NavigationMixin.Navigate]({
-                        type: 'standard__recordPage',
-                        attributes: { recordId: this.localCaseId, actionName: 'view' }
-                    });
+                    this.navigateToRecord(this.localCaseId);
                     this.handleCancel();
                 }
             })
             .catch((error) => {
                 this.isWaiting = false;
-                this.showToast(LBL_MSG_ERROR, error.body ? error.body.message : GENERIC_ERROR, 'error');
+                this.logToBackend(error, 'handleSubmit');
+                this.showToast(LBL_MSG_ERROR, this.extractErrorMessage(error), 'error');
             });
     }
 
@@ -150,12 +162,21 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     handleSubscribe() {
         const channelName = '/event/External_Complaint_Response__e';
         subscribe(channelName, -1, (message) => {
-            const eventPayload = message.data.payload;
-            this.arrivedEventIds.add(eventPayload.Case_Id__c);
-            this.checkIfFinished();
-        }).then((response) => {
-            this.subscription = response;
-        });
+            try {
+                const eventPayload = message.data.payload;
+                this.arrivedEventIds.add(eventPayload.Case_Id__c);
+                this.checkIfFinished();
+            } catch (error) {
+                this.logToBackend(error, 'handleSubscribe_messageCallback');
+            }
+        })
+            .then((response) => {
+                this.subscription = response;
+            })
+            .catch((error) => {
+                this.logToBackend(error, 'handleSubscribe');
+                this.showToast(LBL_SUB_ERR_TITLE, LBL_SUB_ERR_MSG, 'warning');
+            });
     }
 
     checkIfFinished() {
@@ -164,20 +185,62 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
             this.showToast(LBL_MSG_SUCCESS, 'Requests processed successfully.', 'success');
 
             if (this.localCaseId) {
-                this[NavigationMixin.Navigate]({
-                    type: 'standard__recordPage',
-                    attributes: { recordId: this.localCaseId, actionName: 'view' }
-                });
+                this.navigateToRecord(this.localCaseId);
             }
             this.handleCancel();
         }
     }
 
     handleUnsubscribe() {
-        unsubscribe(this.subscription, () => {});
+        if (this.subscription && this.subscription.id) {
+            unsubscribe(this.subscription, () => {}).catch((error) => {
+                this.logToBackend(error, 'handleUnsubscribe');
+            });
+        }
+    }
+
+    navigateToRecord(recId) {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: { recordId: recId, actionName: 'view' }
+        });
     }
 
     showToast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    }
+
+    extractErrorMessage(error) {
+        if (!error) {
+            return GENERIC_ERROR;
+        }
+
+        if (Array.isArray(error.body)) {
+            return error.body.map((e) => e.message).join(', ');
+        }
+
+        if (error.body && typeof error.body.message === 'string') {
+            return error.body.message;
+        }
+
+        if (typeof error.message === 'string') {
+            return error.message;
+        }
+
+        return error.statusText || GENERIC_ERROR;
+    }
+
+    logToBackend(error, methodName) {
+        let msg = this.extractErrorMessage(error);
+        let stack = error.stack ? error.stack : JSON.stringify(error);
+
+        logClientError({
+            errorMessage: msg,
+            stackTrace: stack,
+            componentName: 'orderRefundAction',
+            methodName: methodName
+        }).catch((err) => {
+            console.error('Failed to log error to backend: ', err);
+        });
     }
 }
