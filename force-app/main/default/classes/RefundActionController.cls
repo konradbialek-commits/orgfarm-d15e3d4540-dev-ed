@@ -10,112 +10,126 @@ public class RefundActionController {
 
     @AuraEnabled
     public static String processRefund(Id orderId, List<Id> orderItemIds, String refundType, String description) {
-        List<OrderItem> items = [
+        List<OrderItem> selectedOrderItems = [
             SELECT Id, Product2Id, Product2.Name, Product2.ProductCode, Product2.Is_External__c
             FROM OrderItem
             WHERE Id IN :orderItemIds
         ];
 
-        List<OrderItem> localItems = new List<OrderItem>();
+        List<OrderItem> localOrderItems = new List<OrderItem>();
         List<String> externalProductIds = new List<String>();
 
-        for (OrderItem orderI : items) {
-            if (orderI.Product2.Is_External__c) {
-                externalProductIds.add(orderI.Product2Id);
+        for (OrderItem item : selectedOrderItems) {
+            if (item.Product2.Is_External__c) {
+                externalProductIds.add(item.Product2Id);
             } else {
-                localItems.add(orderI);
+                localOrderItems.add(item);
             }
         }
 
-        Map<String, String> responseMap = new Map<String, String>();
+        Map<String, String> refundResponseData = new Map<String, String>();
 
         if (!externalProductIds.isEmpty()) {
-            String correlationId = UUID.randomUUID().toString();
-
-            String payload = JSON.serialize(
-                new Map<String, String>{
-                    'Product_Ids__c' => String.join(externalProductIds, ','),
-                    'Reason__c' => refundType +
-                    ' - ' +
-                    description,
-                    'Case_Id__c' => correlationId,
-                    'Order_id__c' => String.valueOf(orderId)
-                }
-            );
-
-            HttpRequest request = new HttpRequest();
-            request.setEndpoint(Util.COMPLAINT.ENDPOINT_EXTERNAL_COMPLAINT);
-            request.setMethod('POST');
-            request.setHeader('Content-Type', 'application/json');
-            request.setBody(payload);
-
-            ErrorLogger.logInfo('OUTBOUND External_Complaint__e REQUEST | Payload: ' + payload, 'RefundActionController', 'processRefund');
-
-            try {
-                Http http = new Http();
-                HttpResponse response = http.send(request);
-
-                if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
-                    ErrorLogger.logInfo(
-                        'OUTBOUND External_Complaint__e SUCCESS | Status: ' +
-                            response.getStatusCode() +
-                            ' | Response: ' +
-                            response.getBody(),
-                        'RefundActionController',
-                        'processRefund'
-                    );
-                    responseMap.put('correlationId', correlationId);
-                } else {
-                    ErrorLogger.logWarning(
-                        'OUTBOUND External_Complaint__e FAILED | Status: ' +
-                            response.getStatusCode() +
-                            ' | Response: ' +
-                            response.getBody(),
-                        'RefundActionController',
-                        'processRefund'
-                    );
-                    throw new AuraHandledException('Callout failed: ' + response.getBody());
-                }
-            } catch (Exception e) {
-                ErrorLogger.logException(e, 'RefundActionController', 'processRefund');
-                throw new AuraHandledException('Callout failed: ' + e.getMessage());
-            }
+            String externalCorrelationId = processExternalRefund(orderId, externalProductIds, refundType, description);
+            refundResponseData.put('correlationId', externalCorrelationId);
         }
 
-        if (!localItems.isEmpty()) {
-            Case localCase = new Case(
-                Subject = Util.COMPLAINT.SUBJECT.LOCAL_REFUND + refundType,
-                Description = description,
-                Order__c = orderId,
-                Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
-                Requested_Refund_Type__c = refundType,
-                Has_External_Product__c = false
-            );
-            insert localCase;
+        if (!localOrderItems.isEmpty()) {
+            Id localCaseId = processLocalRefund(orderId, localOrderItems, refundType, description);
+            refundResponseData.put('localCaseId', localCaseId);
+        }
 
-            List<Case_Order_Product__c> caseOrderProducts = new List<Case_Order_Product__c>();
-            for (OrderItem oi : localItems) {
-                caseOrderProducts.add(
-                    new Case_Order_Product__c(
-                        Case__c = localCase.Id,
-                        Order_Product__c = oi.Id,
-                        Product_Name__c = oi.Product2.Name,
-                        Is_External__c = false
-                    )
+        return JSON.serialize(refundResponseData);
+    }
+
+    private static String processExternalRefund(Id orderId, List<String> externalProductIds, String refundType, String description) {
+        String correlationId = UUID.randomUUID().toString();
+
+        String payloadData = JSON.serialize(
+            new Map<String, String>{
+                'Product_Ids__c' => String.join(externalProductIds, ','),
+                'Reason__c' => refundType +
+                ' - ' +
+                description,
+                'Case_Id__c' => correlationId,
+                'Order_id__c' => String.valueOf(orderId)
+            }
+        );
+
+        HttpRequest outboundRequest = new HttpRequest();
+        outboundRequest.setEndpoint(Util.COMPLAINT.ENDPOINT_EXTERNAL_COMPLAINT);
+        outboundRequest.setMethod('POST');
+        outboundRequest.setHeader('Content-Type', 'application/json');
+        outboundRequest.setBody(payloadData);
+
+        ErrorLogger.logInfo(
+            'OUTBOUND External_Complaint__e REQUEST | Payload: ' + payloadData,
+            'RefundActionController',
+            'processExternalRefund'
+        );
+
+        try {
+            Http httpAgent = new Http();
+            HttpResponse calloutResponse = httpAgent.send(outboundRequest);
+
+            if (calloutResponse.getStatusCode() >= 200 && calloutResponse.getStatusCode() < 300) {
+                ErrorLogger.logInfo(
+                    'OUTBOUND External_Complaint__e SUCCESS | Status: ' +
+                        calloutResponse.getStatusCode() +
+                        ' | Response: ' +
+                        calloutResponse.getBody(),
+                    'RefundActionController',
+                    'processExternalRefund'
                 );
+                return correlationId;
+            } else {
+                ErrorLogger.logWarning(
+                    'OUTBOUND External_Complaint__e FAILED | Status: ' +
+                        calloutResponse.getStatusCode() +
+                        ' | Response: ' +
+                        calloutResponse.getBody(),
+                    'RefundActionController',
+                    'processExternalRefund'
+                );
+                throw new AuraHandledException('Callout failed: ' + calloutResponse.getBody());
             }
-            insert caseOrderProducts;
-
-            update new Order(Id = orderId, ComplaintCaseId__c = localCase.Id);
-
-            Approval.ProcessSubmitRequest request = new Approval.ProcessSubmitRequest();
-            request.setObjectId(localCase.Id);
-            request.setSubmitterId(UserInfo.getUserId());
-            Approval.process(request);
-
-            responseMap.put('localCaseId', localCase.Id);
+        } catch (Exception calloutException) {
+            ErrorLogger.logException(calloutException, 'RefundActionController', 'processExternalRefund');
+            throw new AuraHandledException('Callout failed: ' + calloutException.getMessage());
         }
+    }
 
-        return JSON.serialize(responseMap);
+    private static Id processLocalRefund(Id orderId, List<OrderItem> localOrderItems, String refundType, String description) {
+        Case localRefundCase = new Case(
+            Subject = Util.COMPLAINT.SUBJECT.LOCAL_REFUND + refundType,
+            Description = description,
+            Order__c = orderId,
+            Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
+            Requested_Refund_Type__c = refundType
+        );
+        insert localRefundCase;
+
+        List<Case_Order_Product__c> caseProductsToInsert = new List<Case_Order_Product__c>();
+        for (OrderItem localItem : localOrderItems) {
+            caseProductsToInsert.add(
+                new Case_Order_Product__c(
+                    Case__c = localRefundCase.Id,
+                    Order_Product__c = localItem.Id,
+                    Product_Name__c = localItem.Product2.Name,
+                    Is_External__c = false
+                )
+            );
+        }
+        insert caseProductsToInsert;
+
+        Order relatedOrder = new Order(Id = orderId, ComplaintCaseId__c = localRefundCase.Id);
+        update relatedOrder;
+
+        Approval.ProcessSubmitRequest approvalRequest = new Approval.ProcessSubmitRequest();
+        approvalRequest.setObjectId(localRefundCase.Id);
+        approvalRequest.setSubmitterId(UserInfo.getUserId());
+        Approval.process(approvalRequest);
+
+        return localRefundCase.Id;
     }
 }
