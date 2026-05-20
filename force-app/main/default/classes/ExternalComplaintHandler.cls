@@ -125,6 +125,7 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                         caseProductsToInsert.add(
                             new Case_Order_Product__c(
                                 Case__c = insertedCase.Id,
+                                Name = matchedProduct.Name,
                                 Product_Name__c = matchedProduct.Name,
                                 Is_External__c = matchedProduct.Is_External__c
                             )

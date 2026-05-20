@@ -112,7 +112,7 @@ private class RefundActionControllerTest {
     static void testInboundEventWithExternalProductId() {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
-        Product2 extProd = [SELECT Id, External_Product_Id__c, Name FROM Product2 WHERE External_Product_Id__c = 'EXT-001' LIMIT 1];
+        Product2 extProd = [SELECT Id, External_Product_Id__c, Name FROM Product2 WHERE Is_External__c = TRUE LIMIT 1];
 
         External_Complaint__e ev = TestDataFactory.createExternalComplaintEvent(
             '801x00000000000ZZZ',

@@ -126,6 +126,7 @@ public class RefundActionController {
                 new Case_Order_Product__c(
                     Case__c = localRefundCase.Id,
                     Order_Product__c = localItem.Id,
+                    Name = localItem.Product2.Name,
                     Product_Name__c = localItem.Product2.Name,
                     Is_External__c = false
                 )
