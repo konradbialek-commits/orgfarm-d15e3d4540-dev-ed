@@ -2,27 +2,6 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
     public void afterInsert(List<SObject> newList) {
         List<External_Complaint__e> events = (List<External_Complaint__e>) newList;
 
-        Set<Id> orderIdsToVerify = new Set<Id>();
-
-        for (External_Complaint__e complaintEvent : events) {
-            if (String.isNotBlank(complaintEvent.Order_id__c)) {
-                try {
-                    orderIdsToVerify.add((Id) complaintEvent.Order_id__c);
-                } catch (Exception e) {
-                    ErrorLogger.logWarning(
-                        'Invalid Order ID format received: ' + complaintEvent.Order_id__c,
-                        'ExternalComplaintHandler',
-                        'afterInsert'
-                    );
-                }
-            }
-        }
-
-        Map<Id, Order> localOrders = new Map<Id, Order>();
-        if (!orderIdsToVerify.isEmpty()) {
-            localOrders = new Map<Id, Order>([SELECT Id FROM Order WHERE Id IN :orderIdsToVerify]);
-        }
-
         List<Case> inboundCasesToInsert = new List<Case>();
         Map<Integer, External_Complaint__e> inboundIndexToEvent = new Map<Integer, External_Complaint__e>();
 
@@ -32,17 +11,6 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                 'ExternalComplaintHandler',
                 'afterInsert'
             );
-
-            Id validLocalOrderId = null;
-            if (String.isNotBlank(complaintEvent.Order_id__c)) {
-                try {
-                    Id parsedOrderId = (Id) complaintEvent.Order_id__c;
-                    if (localOrders.containsKey(parsedOrderId)) {
-                        validLocalOrderId = parsedOrderId;
-                    }
-                } catch (Exception e) {
-                }
-            }
 
             String requestedType = '';
             if (String.isNotBlank(complaintEvent.Reason__c)) {
@@ -61,7 +29,7 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                     complaintEvent.Product_Ids__c +
                     '\nExternal Order ID: ' +
                     complaintEvent.Order_id__c,
-                Order__c = validLocalOrderId,
+                Order__c = null,
                 Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
                 Requested_Refund_Type__c = requestedType,
                 External_Case_Id__c = complaintEvent.Case_Id__c

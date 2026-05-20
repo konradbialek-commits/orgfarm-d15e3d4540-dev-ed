@@ -20,34 +20,6 @@ private class ExternalComplaintHandlerTest {
     }
 
     @IsTest
-    static void testInboundEventWithValidLocalOrder() {
-        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
-        Order localOrder = [SELECT Id FROM Order LIMIT 1];
-
-        External_Complaint__e ev = new External_Complaint__e(
-            Order_id__c = String.valueOf(localOrder.Id),
-            Case_Id__c = '500x00000000000AAA',
-            Reason__c = 'Full - Product was damaged',
-            Product_Ids__c = '01tx00000000000AAA'
-        );
-
-        Test.startTest();
-        new ExternalComplaintHandler().afterInsert(new List<SObject>{ ev });
-        Test.stopTest();
-
-        Case insertedCase = [
-            SELECT Order__c, Requested_Refund_Type__c, External_Case_Id__c, Description
-            FROM Case
-            WHERE External_Case_Id__c = '500x00000000000AAA'
-            LIMIT 1
-        ];
-
-        Assert.areEqual(localOrder.Id, insertedCase.Order__c);
-        Assert.areEqual('Full', insertedCase.Requested_Refund_Type__c);
-        Assert.areEqual('500x00000000000AAA', insertedCase.External_Case_Id__c);
-    }
-
-    @IsTest
     static void testInboundEventWithExternalOrder() {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
         External_Complaint__e ev = new External_Complaint__e(
@@ -70,6 +42,7 @@ private class ExternalComplaintHandlerTest {
 
         Assert.isNull(insertedCase.Order__c);
         Assert.areEqual('Partial', insertedCase.Requested_Refund_Type__c);
+        Assert.isTrue(insertedCase.Description.contains('801x00000000000ZZZ'));
     }
 
     @IsTest
@@ -86,13 +59,15 @@ private class ExternalComplaintHandlerTest {
         new ExternalComplaintHandler().afterInsert(new List<SObject>{ ev });
         Test.stopTest();
 
-        List<Error_Log__c> logs = [
-            SELECT Error_Message__c
-            FROM Error_Log__c
-            WHERE Class_Name__c = 'ExternalComplaintHandler'
+        Case insertedCase = [
+            SELECT Order__c, Requested_Refund_Type__c, External_Case_Id__c, Description
+            FROM Case
+            WHERE External_Case_Id__c = '500x00000000000CCC'
+            LIMIT 1
         ];
 
-        Assert.isFalse(logs.isEmpty());
-        Assert.isTrue(logs[0].Error_Message__c.contains('Invalid Order ID format'));
+        Assert.isNull(insertedCase.Order__c);
+        Assert.areEqual('Full', insertedCase.Requested_Refund_Type__c);
+        Assert.isTrue(insertedCase.Description.contains('INVALID_ID_FORMAT'));
     }
 }
