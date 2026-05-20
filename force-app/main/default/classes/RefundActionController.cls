@@ -25,6 +25,7 @@ public class RefundActionController {
         ];
 
         List<OrderItem> localOrderItems = new List<OrderItem>();
+        List<OrderItem> externalOrderItems = new List<OrderItem>();
         List<String> externalProductIds = new List<String>();
 
         for (OrderItem item : selectedOrderItems) {
@@ -33,6 +34,7 @@ public class RefundActionController {
                     ? item.Product2.External_Product_Id__c
                     : item.Product2Id;
                 externalProductIds.add(productIdToUse);
+                externalOrderItems.add(item);
             } else {
                 localOrderItems.add(item);
             }
@@ -41,7 +43,14 @@ public class RefundActionController {
         Map<String, String> refundResponseData = new Map<String, String>();
 
         if (!externalProductIds.isEmpty()) {
-            String externalCorrelationId = processExternalRefund(orderId, externalProductIds, refundType, description, refundAmount);
+            String externalCorrelationId = processExternalRefund(
+                orderId,
+                externalProductIds,
+                externalOrderItems,
+                refundType,
+                description,
+                refundAmount
+            );
             refundResponseData.put('correlationId', externalCorrelationId);
         }
 
@@ -56,6 +65,7 @@ public class RefundActionController {
     private static String processExternalRefund(
         Id orderId,
         List<String> externalProductIds,
+        List<OrderItem> externalOrderItems,
         String refundType,
         String description,
         Decimal refundAmount
@@ -80,35 +90,45 @@ public class RefundActionController {
         outboundRequest.setHeader('Content-Type', 'application/json');
         outboundRequest.setBody(payloadData);
 
-        ErrorLogger.logInfo(
-            'OUTBOUND External_Complaint__e REQUEST | Payload: ' + payloadData,
-            'RefundActionController',
-            'processExternalRefund'
-        );
-
         try {
             Http httpAgent = new Http();
             HttpResponse calloutResponse = httpAgent.send(outboundRequest);
 
             if (calloutResponse.getStatusCode() >= 200 && calloutResponse.getStatusCode() < 300) {
-                ErrorLogger.logInfo(
-                    'OUTBOUND External_Complaint__e SUCCESS | Status: ' +
-                        calloutResponse.getStatusCode() +
-                        ' | Response: ' +
-                        calloutResponse.getBody(),
-                    'RefundActionController',
-                    'processExternalRefund'
+                Case externalRefundCase = new Case(
+                    Subject = Util.COMPLAINT.SUBJECT.EXTERNAL_REFUND,
+                    Reason = refundType + ' - ' + description,
+                    Order__c = orderId,
+                    Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
+                    Requested_Refund_Type__c = refundType,
+                    Refund_Amount__c = refundAmount,
+                    External_Case_Id__c = correlationId
                 );
+                insert externalRefundCase;
+
+                List<Case_Order_Product__c> caseProductsToInsert = new List<Case_Order_Product__c>();
+                for (OrderItem extItem : externalOrderItems) {
+                    caseProductsToInsert.add(
+                        new Case_Order_Product__c(
+                            Case__c = externalRefundCase.Id,
+                            Order_Product__c = extItem.Id,
+                            Name = extItem.Product2.Name,
+                            Product_Name__c = extItem.Product2.Name,
+                            Is_External__c = true
+                        )
+                    );
+                }
+                insert caseProductsToInsert;
+
+                Order relatedOrder = new Order(
+                    Id = orderId,
+                    ComplaintCaseId__c = externalRefundCase.Id,
+                    Refund_Status__c = Util.COMPLAINT.STATUS.PENDING
+                );
+                update relatedOrder;
+
                 return correlationId;
             } else {
-                ErrorLogger.logWarning(
-                    'OUTBOUND External_Complaint__e FAILED | Status: ' +
-                        calloutResponse.getStatusCode() +
-                        ' | Response: ' +
-                        calloutResponse.getBody(),
-                    'RefundActionController',
-                    'processExternalRefund'
-                );
                 throw new AuraHandledException('Callout failed: ' + calloutResponse.getBody());
             }
         } catch (Exception calloutException) {
