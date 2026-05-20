@@ -33,6 +33,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     description = '';
     isWaiting = false;
 
+    localCaseId = null;
     correlationId = null;
     subscription = {};
     arrivedEventIds = new Set();
@@ -108,17 +109,19 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
             description: this.description
         })
             .then((result) => {
-                if (result.startsWith('LOCAL:')) {
-                    const localCaseId = result.split(':')[1];
+                const parsedResult = JSON.parse(result);
+                this.localCaseId = parsedResult.localCaseId;
+                this.correlationId = parsedResult.correlationId;
+
+                if (this.correlationId) {
+                    this.checkIfFinished();
+                } else if (this.localCaseId) {
                     this.showToast(LBL_MSG_SUCCESS, 'Local refund request submitted.', 'success');
                     this[NavigationMixin.Navigate]({
                         type: 'standard__recordPage',
-                        attributes: { recordId: localCaseId, actionName: 'view' }
+                        attributes: { recordId: this.localCaseId, actionName: 'view' }
                     });
                     this.handleCancel();
-                } else if (result.startsWith('EXTERNAL:')) {
-                    this.correlationId = result.split(':')[1];
-                    this.checkIfFinished();
                 }
             })
             .catch((error) => {
@@ -145,7 +148,14 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     checkIfFinished() {
         if (this.correlationId && this.arrivedEventIds.has(this.correlationId)) {
             this.isWaiting = false;
-            this.showToast(LBL_MSG_SUCCESS, 'Complaint sent to partner successfully.', 'success');
+            this.showToast(LBL_MSG_SUCCESS, 'Requests processed successfully.', 'success');
+
+            if (this.localCaseId) {
+                this[NavigationMixin.Navigate]({
+                    type: 'standard__recordPage',
+                    attributes: { recordId: this.localCaseId, actionName: 'view' }
+                });
+            }
             this.handleCancel();
         }
     }

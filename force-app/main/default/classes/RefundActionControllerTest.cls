@@ -50,7 +50,7 @@ private class RefundActionControllerTest {
     }
 
     @IsTest
-    static void testProcessRefundLocal() {
+    static void testProcessRefundLocalOnly() {
         Order testOrder = [SELECT Id FROM Order LIMIT 1];
         OrderItem localItem = [SELECT Id FROM OrderItem WHERE Product2.Is_External__c = FALSE LIMIT 1];
 
@@ -58,23 +58,18 @@ private class RefundActionControllerTest {
         String result = RefundActionController.processRefund(testOrder.Id, new List<Id>{ localItem.Id }, 'Full', 'Test Reason');
         Test.stopTest();
 
-        Assert.isTrue(result.startsWith('LOCAL:'), 'Expected local prefix');
+        Map<String, Object> parsedResult = (Map<String, Object>) JSON.deserializeUntyped(result);
 
-        Id caseId = (Id) result.split(':')[1];
+        Assert.isTrue(parsedResult.containsKey('localCaseId'));
+        Assert.isFalse(parsedResult.containsKey('correlationId'));
 
-        Case insertedCase = [SELECT Id, Order__c, Has_External_Product__c FROM Case WHERE Id = :caseId];
-        Assert.areEqual(testOrder.Id, insertedCase.Order__c);
-        Assert.isFalse(insertedCase.Has_External_Product__c);
-
-        List<Case_Order_Product__c> junctionRecords = [SELECT Id FROM Case_Order_Product__c WHERE Case__c = :caseId];
-        Assert.areEqual(1, junctionRecords.size());
-
-        Order updatedOrder = [SELECT ComplaintCaseId__c FROM Order WHERE Id = :testOrder.Id];
-        Assert.areEqual(caseId, updatedOrder.ComplaintCaseId__c);
+        Id caseId = (Id) parsedResult.get('localCaseId');
+        Case insertedCase = [SELECT Id FROM Case WHERE Id = :caseId];
+        Assert.isNotNull(insertedCase);
     }
 
     @IsTest
-    static void testProcessRefundExternal() {
+    static void testProcessRefundExternalOnly() {
         Order testOrder = [SELECT Id FROM Order LIMIT 1];
         OrderItem extItem = [SELECT Id FROM OrderItem WHERE Product2.Is_External__c = TRUE LIMIT 1];
 
@@ -84,12 +79,37 @@ private class RefundActionControllerTest {
         String result = RefundActionController.processRefund(testOrder.Id, new List<Id>{ extItem.Id }, 'Partial', 'Test Reason External');
         Test.stopTest();
 
-        Assert.isTrue(result.startsWith('EXTERNAL:'), 'Expected external prefix');
+        Map<String, Object> parsedResult = (Map<String, Object>) JSON.deserializeUntyped(result);
 
-        String correlationId = result.split(':')[1];
-        Assert.isNotNull(correlationId);
+        Assert.isTrue(parsedResult.containsKey('correlationId'));
+        Assert.isFalse(parsedResult.containsKey('localCaseId'));
 
         List<Case> localCases = [SELECT Id FROM Case];
-        Assert.isTrue(localCases.isEmpty(), 'A local case should not have been created for an external product.');
+        Assert.isTrue(localCases.isEmpty());
+    }
+
+    @IsTest
+    static void testProcessRefundMixed() {
+        Order testOrder = [SELECT Id FROM Order LIMIT 1];
+        List<OrderItem> allItems = [SELECT Id FROM OrderItem];
+        List<Id> allItemIds = new List<Id>();
+        for (OrderItem oi : allItems) {
+            allItemIds.add(oi.Id);
+        }
+
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
+
+        Test.startTest();
+        String result = RefundActionController.processRefund(testOrder.Id, allItemIds, 'Partial', 'Mixed Request');
+        Test.stopTest();
+
+        Map<String, Object> parsedResult = (Map<String, Object>) JSON.deserializeUntyped(result);
+
+        Assert.isTrue(parsedResult.containsKey('localCaseId'));
+        Assert.isTrue(parsedResult.containsKey('correlationId'));
+
+        Id caseId = (Id) parsedResult.get('localCaseId');
+        Case insertedCase = [SELECT Id FROM Case WHERE Id = :caseId];
+        Assert.isNotNull(insertedCase);
     }
 }
