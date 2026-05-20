@@ -2,7 +2,7 @@ public class RefundActionController {
     @AuraEnabled(cacheable=true)
     public static List<OrderItem> getOrderItems(Id orderId) {
         return [
-            SELECT Id, Product2.Name, Product2.ProductCode, Product2.Is_External__c, Quantity, UnitPrice
+            SELECT Id, Product2Id, Product2.Name, Product2.ProductCode, Product2.Is_External__c, Quantity, UnitPrice
             FROM OrderItem
             WHERE OrderId = :orderId
         ];
@@ -11,27 +11,30 @@ public class RefundActionController {
     @AuraEnabled
     public static String processRefund(Id orderId, List<Id> orderItemIds, String refundType, String description) {
         List<OrderItem> items = [
-            SELECT Id, Product2.Name, Product2.ProductCode, Product2.Is_External__c
+            SELECT Id, Product2Id, Product2.Name, Product2.ProductCode, Product2.Is_External__c
             FROM OrderItem
             WHERE Id IN :orderItemIds
         ];
 
-        Boolean isExternal = false;
-        List<String> productIds = new List<String>();
+        List<OrderItem> localItems = new List<OrderItem>();
+        List<String> externalProductIds = new List<String>();
 
         for (OrderItem oi : items) {
-            productIds.add(oi.Product2Id);
             if (oi.Product2.Is_External__c) {
-                isExternal = true;
+                externalProductIds.add(oi.Product2Id);
+            } else {
+                localItems.add(oi);
             }
         }
 
-        if (isExternal) {
+        Map<String, String> responseMap = new Map<String, String>();
+
+        if (!externalProductIds.isEmpty()) {
             String correlationId = UUID.randomUUID().toString();
 
             String payload = JSON.serialize(
                 new Map<String, String>{
-                    'Product_Ids__c' => String.join(productIds, ','),
+                    'Product_Ids__c' => String.join(externalProductIds, ','),
                     'Reason__c' => refundType +
                     ' - ' +
                     description,
@@ -50,11 +53,13 @@ public class RefundActionController {
             HttpResponse res = http.send(req);
 
             if (res.getStatusCode() >= 200 && res.getStatusCode() < 300) {
-                return 'EXTERNAL:' + correlationId;
+                responseMap.put('correlationId', correlationId);
             } else {
                 throw new AuraHandledException('Callout failed: ' + res.getBody());
             }
-        } else {
+        }
+
+        if (!localItems.isEmpty()) {
             Case localCase = new Case(
                 Subject = 'Refund Request: ' + refundType,
                 Description = description,
@@ -66,7 +71,7 @@ public class RefundActionController {
             insert localCase;
 
             List<Case_Order_Product__c> caseOrderProducts = new List<Case_Order_Product__c>();
-            for (OrderItem oi : items) {
+            for (OrderItem oi : localItems) {
                 caseOrderProducts.add(
                     new Case_Order_Product__c(
                         Case__c = localCase.Id,
@@ -85,7 +90,9 @@ public class RefundActionController {
             request.setSubmitterId(UserInfo.getUserId());
             Approval.process(request);
 
-            return 'LOCAL:' + localCase.Id;
+            responseMap.put('localCaseId', localCase.Id);
         }
+
+        return JSON.serialize(responseMap);
     }
 }
