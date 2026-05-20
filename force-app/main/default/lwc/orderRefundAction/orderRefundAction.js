@@ -11,6 +11,7 @@ import LBL_PROCESSING from '@salesforce/label/c.RA_Processing';
 import LBL_SUBMITTING from '@salesforce/label/c.RA_Submitting';
 import LBL_REFUND_TYPE from '@salesforce/label/c.RA_Refund_Type';
 import LBL_SELECT_TYPE from '@salesforce/label/c.RA_Select_Type';
+import LBL_REFUND_AMOUNT from '@salesforce/label/c.RA_Refund_Amount';
 import LBL_REASON from '@salesforce/label/c.RA_Reason';
 import LBL_BTN_CANCEL from '@salesforce/label/c.Btn_Cancel';
 import LBL_BTN_SUBMIT from '@salesforce/label/c.Btn_Submit';
@@ -31,6 +32,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
 
     refundType = '';
     description = '';
+    refundAmount = null;
     isWaiting = false;
 
     localCaseId = null;
@@ -44,6 +46,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
         submitting: LBL_SUBMITTING,
         refundType: LBL_REFUND_TYPE,
         selectType: LBL_SELECT_TYPE,
+        refundAmount: LBL_REFUND_AMOUNT,
         reason: LBL_REASON,
         cancel: LBL_BTN_CANCEL,
         submit: LBL_BTN_SUBMIT
@@ -64,7 +67,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     }
 
     get isSubmitDisabled() {
-        return this.selectedItemIds.length === 0 || !this.refundType || !this.description;
+        return this.selectedItemIds.length === 0 || !this.refundType || !this.description || !this.refundAmount;
     }
 
     @wire(getOrderItems, { orderId: '$recordId' })
@@ -90,13 +93,22 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     }
 
     handleRowSelection(event) {
-        this.selectedItemIds = event.detail.selectedRows.map((row) => row.Id);
+        const selectedRows = event.detail.selectedRows;
+        this.selectedItemIds = selectedRows.map((row) => row.Id);
+
+        let calculatedAmount = 0;
+        selectedRows.forEach((row) => {
+            calculatedAmount += row.UnitPrice * row.Quantity;
+        });
+
+        this.refundAmount = calculatedAmount > 0 ? calculatedAmount : null;
     }
 
     handleChange(event) {
         const field = event.target.name;
         if (field === 'refundType') this.refundType = event.target.value;
         else if (field === 'description') this.description = event.target.value;
+        else if (field === 'refundAmount') this.refundAmount = event.target.value;
     }
 
     handleSubmit() {
@@ -106,7 +118,8 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
             orderId: this.recordId,
             orderItemIds: this.selectedItemIds,
             refundType: this.refundType,
-            description: this.description
+            description: this.description,
+            refundAmount: parseFloat(this.refundAmount)
         })
             .then((result) => {
                 const parsedResult = JSON.parse(result);

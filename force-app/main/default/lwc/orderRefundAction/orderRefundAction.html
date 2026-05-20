@@ -29,6 +29,20 @@
             </div>
 
             <div class="slds-m-bottom_medium">
+                <lightning-input
+                    type="number"
+                    formatter="currency"
+                    step="0.01"
+                    name="refundAmount"
+                    label={labels.refundAmount}
+                    value={refundAmount}
+                    onchange={handleChange}
+                    required
+                >
+                </lightning-input>
+            </div>
+
+            <div class="slds-m-bottom_medium">
                 <lightning-textarea name="description" label={labels.reason} value={description} onchange={handleChange} required>
                 </lightning-textarea>
             </div>

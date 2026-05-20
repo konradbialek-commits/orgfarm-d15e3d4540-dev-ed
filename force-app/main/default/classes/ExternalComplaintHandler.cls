@@ -93,11 +93,14 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                     '\nProducts: ' +
                     complaint.Product_Ids__c +
                     '\nExternal Order ID: ' +
-                    complaint.Order_id__c,
+                    complaint.Order_id__c +
+                    '\nRequested Refund Amount: ' +
+                    complaint.Refund_Amount__c,
                 Order__c = null,
                 Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
                 Requested_Refund_Type__c = requestedRefundType,
-                External_Case_Id__c = complaint.Case_Id__c
+                External_Case_Id__c = complaint.Case_Id__c,
+                Refund_Amount__c = complaint.Refund_Amount__c
             );
 
             casesToCreate.add(newComplaintCase);

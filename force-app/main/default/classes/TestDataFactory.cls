@@ -141,7 +141,19 @@ public class TestDataFactory {
         return new OrderItem(OrderId = orderId, PricebookEntryId = pricebookEntryId, Quantity = quantity, UnitPrice = unitPrice);
     }
 
-    public static External_Complaint__e createExternalComplaintEvent(String orderId, String caseId, String reason, String productIds) {
-        return new External_Complaint__e(Order_id__c = orderId, Case_Id__c = caseId, Reason__c = reason, Product_Ids__c = productIds);
+    public static External_Complaint__e createExternalComplaintEvent(
+        String orderId,
+        String caseId,
+        String reason,
+        String productIds,
+        Decimal refundAmount
+    ) {
+        return new External_Complaint__e(
+            Order_id__c = orderId,
+            Case_Id__c = caseId,
+            Reason__c = reason,
+            Product_Ids__c = productIds,
+            Refund_Amount__c = refundAmount
+        );
     }
 }
