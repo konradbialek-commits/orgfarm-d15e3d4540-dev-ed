@@ -15,14 +15,14 @@
                 <label>Pending</label>
             </value>
             <value>
-                <fullName>Full Refund</fullName>
+                <fullName>Approved Full Refund</fullName>
                 <default>false</default>
-                <label>Full Refund</label>
+                <label>Approved Full Refund</label>
             </value>
             <value>
-                <fullName>Partial Refund</fullName>
+                <fullName>Approved Partial Refund</fullName>
                 <default>false</default>
-                <label>Partial Refund</label>
+                <label>Approved Partial Refund</label>
             </value>
             <value>
                 <fullName>Rejected</fullName>
