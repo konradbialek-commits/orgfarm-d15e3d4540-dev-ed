@@ -43,7 +43,7 @@ private class ExternalComplaintHandlerTest {
         Test.stopTest();
 
         Case insertedCase = [
-            SELECT Order__c, Requested_Refund_Type__c, External_Case_Id__c, Description, Refund_Amount__c
+            SELECT Order__c, Requested_Refund_Type__c, External_Case_Id__c, Refund_Amount__c, Reason
             FROM Case
             WHERE External_Case_Id__c = '500x00000000000BBB'
             LIMIT 1
@@ -52,7 +52,7 @@ private class ExternalComplaintHandlerTest {
         Assert.isNull(insertedCase.Order__c);
         Assert.areEqual('Partial', insertedCase.Requested_Refund_Type__c);
         Assert.areEqual(45.00, insertedCase.Refund_Amount__c);
-        Assert.isTrue(insertedCase.Description.contains('801x00000000000ZZZ'));
+        Assert.areEqual('Partial - Missing parts', insertedCase.Reason);
 
         List<Case_Order_Product__c> copList = [
             SELECT Product_Name__c, Is_External__c
@@ -79,7 +79,7 @@ private class ExternalComplaintHandlerTest {
         Test.stopTest();
 
         Case insertedCase = [
-            SELECT Order__c, Requested_Refund_Type__c, External_Case_Id__c, Description, Refund_Amount__c
+            SELECT Order__c, Requested_Refund_Type__c, External_Case_Id__c, Refund_Amount__c, Reason
             FROM Case
             WHERE External_Case_Id__c = '500x00000000000CCC'
             LIMIT 1
@@ -88,7 +88,7 @@ private class ExternalComplaintHandlerTest {
         Assert.isNull(insertedCase.Order__c);
         Assert.areEqual('Full', insertedCase.Requested_Refund_Type__c);
         Assert.areEqual(100.00, insertedCase.Refund_Amount__c);
-        Assert.isTrue(insertedCase.Description.contains('INVALID_ID_FORMAT'));
+        Assert.areEqual('Full - Wrong item', insertedCase.Reason);
     }
 
     @IsTest
@@ -110,7 +110,7 @@ private class ExternalComplaintHandlerTest {
         Test.stopTest();
 
         Case insertedCase = [
-            SELECT Id, External_Case_Id__c
+            SELECT Id, External_Case_Id__c, Reason
             FROM Case
             WHERE External_Case_Id__c = '500x00000000000DDD'
             LIMIT 1
@@ -122,6 +122,7 @@ private class ExternalComplaintHandlerTest {
             WHERE Case__c = :insertedCase.Id
         ];
 
+        Assert.areEqual('Full - Broken in transit', insertedCase.Reason);
         Assert.areEqual(1, copList.size());
         Assert.areEqual(extProd.Name, copList[0].Product_Name__c);
         Assert.isTrue(copList[0].Is_External__c);
