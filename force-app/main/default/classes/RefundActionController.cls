@@ -2,7 +2,15 @@ public class RefundActionController {
     @AuraEnabled(cacheable=true)
     public static List<OrderItem> getOrderItems(Id orderId) {
         return [
-            SELECT Id, Product2Id, Product2.Name, Product2.ProductCode, Product2.Is_External__c, Quantity, UnitPrice
+            SELECT
+                Id,
+                Product2Id,
+                Product2.Name,
+                Product2.ProductCode,
+                Product2.Is_External__c,
+                Product2.External_Product_Id__c,
+                Quantity,
+                UnitPrice
             FROM OrderItem
             WHERE OrderId = :orderId
         ];
@@ -11,7 +19,7 @@ public class RefundActionController {
     @AuraEnabled
     public static String processRefund(Id orderId, List<Id> orderItemIds, String refundType, String description) {
         List<OrderItem> selectedOrderItems = [
-            SELECT Id, Product2Id, Product2.Name, Product2.ProductCode, Product2.Is_External__c
+            SELECT Id, Product2Id, Product2.Name, Product2.ProductCode, Product2.Is_External__c, Product2.External_Product_Id__c
             FROM OrderItem
             WHERE Id IN :orderItemIds
         ];
@@ -21,7 +29,10 @@ public class RefundActionController {
 
         for (OrderItem item : selectedOrderItems) {
             if (item.Product2.Is_External__c) {
-                externalProductIds.add(item.Product2Id);
+                String productIdToUse = String.isNotBlank(item.Product2.External_Product_Id__c)
+                    ? item.Product2.External_Product_Id__c
+                    : item.Product2Id;
+                externalProductIds.add(productIdToUse);
             } else {
                 localOrderItems.add(item);
             }
@@ -115,6 +126,7 @@ public class RefundActionController {
                 new Case_Order_Product__c(
                     Case__c = localRefundCase.Id,
                     Order_Product__c = localItem.Id,
+                    Name = localItem.Product2.Name,
                     Product_Name__c = localItem.Product2.Name,
                     Is_External__c = false
                 )
@@ -122,7 +134,11 @@ public class RefundActionController {
         }
         insert caseProductsToInsert;
 
-        Order relatedOrder = new Order(Id = orderId, ComplaintCaseId__c = localRefundCase.Id);
+        Order relatedOrder = new Order(
+            Id = orderId,
+            ComplaintCaseId__c = localRefundCase.Id,
+            Refund_Status__c = Util.COMPLAINT.STATUS.PENDING
+        );
         update relatedOrder;
 
         Approval.ProcessSubmitRequest approvalRequest = new Approval.ProcessSubmitRequest();

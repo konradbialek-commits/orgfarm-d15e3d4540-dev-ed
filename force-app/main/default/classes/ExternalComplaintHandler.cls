@@ -12,6 +12,7 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
             insert casesToCreate;
 
             insertCaseProducts(casesToCreate, caseIndexToComplaintMap, productByExternalOrLocalId);
+            submitCasesForApproval(casesToCreate);
             generateAndSendResponses(casesToCreate, caseIndexToComplaintMap);
         }
     }
@@ -125,6 +126,7 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                         caseProductsToInsert.add(
                             new Case_Order_Product__c(
                                 Case__c = insertedCase.Id,
+                                Name = matchedProduct.Name,
                                 Product_Name__c = matchedProduct.Name,
                                 Is_External__c = matchedProduct.Is_External__c
                             )
@@ -136,6 +138,27 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
 
         if (!caseProductsToInsert.isEmpty()) {
             insert caseProductsToInsert;
+        }
+    }
+
+    private void submitCasesForApproval(List<Case> casesToSubmit) {
+        List<User> integrationUsers = [SELECT Id FROM User WHERE Name = 'Szymon Org User' AND IsActive = TRUE LIMIT 1];
+        Id submitterId = integrationUsers.isEmpty() ? UserInfo.getUserId() : integrationUsers[0].Id;
+
+        List<Approval.ProcessSubmitRequest> approvalRequests = new List<Approval.ProcessSubmitRequest>();
+        for (Case complaintCase : casesToSubmit) {
+            Approval.ProcessSubmitRequest request = new Approval.ProcessSubmitRequest();
+            request.setObjectId(complaintCase.Id);
+            request.setSubmitterId(submitterId);
+            approvalRequests.add(request);
+        }
+
+        if (!approvalRequests.isEmpty()) {
+            try {
+                Approval.process(approvalRequests);
+            } catch (Exception approvalException) {
+                ErrorLogger.logException(approvalException, 'ExternalComplaintHandler', 'submitCasesForApproval');
+            }
         }
     }
 
