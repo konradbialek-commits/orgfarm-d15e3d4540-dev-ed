@@ -21,13 +21,13 @@ public class CaseApprovalSyncHandler implements TriggerAction.AfterUpdate {
                         newCase.Refund_Status__c == 'Approved Partial Refund' ||
                         newCase.Refund_Status__c == 'Rejected'
                     ) {
-                        Map<String, Object> responseBodyMap = new Map<String, Object>{
-                            'Case_Id__c' => newCase.External_Case_Id__c,
-                            'Status__c' => newCase.Refund_Status__c,
-                            'Final_Refund_Amount__c' => newCase.Refund_Amount__c,
-                            'Final_Refund_Type__c' => newCase.Requested_Refund_Type__c
-                        };
-                        outboundResponses.add(JSON.serialize(responseBodyMap));
+                        External_Complaint_Response__e responseEvent = new External_Complaint_Response__e(
+                            Case_Id__c = newCase.External_Case_Id__c,
+                            Status__c = newCase.Refund_Status__c,
+                            Final_Refund_Amount__c = newCase.Refund_Amount__c,
+                            Final_Refund_Type__c = newCase.Requested_Refund_Type__c
+                        );
+                        outboundResponses.add(JSON.serialize(responseEvent));
                     }
                 }
             }

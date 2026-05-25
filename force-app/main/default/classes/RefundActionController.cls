@@ -72,17 +72,15 @@ public class RefundActionController {
     ) {
         String correlationId = UUID.randomUUID().toString();
 
-        String payloadData = JSON.serialize(
-            new Map<String, Object>{
-                'Product_Ids__c' => String.join(externalProductIds, ','),
-                'Reason__c' => refundType +
-                ' - ' +
-                description,
-                'Case_Id__c' => correlationId,
-                'Order_id__c' => String.valueOf(orderId),
-                'Refund_Amount__c' => refundAmount
-            }
+        External_Complaint__e complaintEvent = new External_Complaint__e(
+            Product_Ids__c = String.join(externalProductIds, ','),
+            Reason__c = refundType + ' - ' + description,
+            Case_Id__c = correlationId,
+            Order_id__c = String.valueOf(orderId),
+            Refund_Amount__c = refundAmount
         );
+
+        String payloadData = JSON.serialize(complaintEvent);
 
         HttpRequest outboundRequest = new HttpRequest();
         outboundRequest.setEndpoint(Util.COMPLAINT.ENDPOINT_EXTERNAL_COMPLAINT);

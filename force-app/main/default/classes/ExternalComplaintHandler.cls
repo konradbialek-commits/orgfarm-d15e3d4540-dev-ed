@@ -165,12 +165,12 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
             Case insertedCase = insertedCases[i];
             External_Complaint__e originalComplaint = caseIndexToComplaintMap.get(i);
 
-            Map<String, String> responseBodyMap = new Map<String, String>{
-                'Case_Id__c' => originalComplaint.Case_Id__c,
-                'External_Case_Id__c' => String.valueOf(insertedCase.Id),
-                'Status__c' => Util.COMPLAINT.RESPONSE_STATUS.CREATED
-            };
-            responsePayloads.add(JSON.serialize(responseBodyMap));
+            External_Complaint_Response__e responseEvent = new External_Complaint_Response__e(
+                Case_Id__c = originalComplaint.Case_Id__c,
+                External_Case_Id__c = String.valueOf(insertedCase.Id),
+                Status__c = Util.COMPLAINT.RESPONSE_STATUS.CREATED
+            );
+            responsePayloads.add(JSON.serialize(responseEvent));
         }
 
         if (!responsePayloads.isEmpty() && !System.isQueueable() && !System.isBatch()) {
