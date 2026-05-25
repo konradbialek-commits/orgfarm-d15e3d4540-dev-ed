@@ -41,6 +41,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     isWaiting = false;
 
     localCaseId = null;
+    externalCaseId = null;
     correlationId = null;
     subscription = {};
     arrivedEventIds = new Set();
@@ -136,9 +137,9 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
             refundAmount: parseFloat(this.refundAmount)
         })
             .then((result) => {
-                const parsedResult = JSON.parse(result);
-                this.localCaseId = parsedResult.localCaseId;
-                this.correlationId = parsedResult.correlationId;
+                this.localCaseId = result.localCaseId;
+                this.externalCaseId = result.externalCaseId;
+                this.correlationId = result.correlationId;
 
                 if (this.correlationId) {
                     this.checkIfFinished();
@@ -184,9 +185,11 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
             this.isWaiting = false;
             this.showToast(LBL_MSG_SUCCESS, 'Requests processed successfully.', 'success');
 
-            if (this.localCaseId) {
-                this.navigateToRecord(this.localCaseId);
+            const targetRecordId = this.localCaseId || this.externalCaseId;
+            if (targetRecordId) {
+                this.navigateToRecord(targetRecordId);
             }
+
             this.handleCancel();
         }
     }

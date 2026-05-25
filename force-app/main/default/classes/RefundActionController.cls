@@ -1,4 +1,13 @@
 public class RefundActionController {
+    public class RefundResponse {
+        @AuraEnabled
+        public String correlationId;
+        @AuraEnabled
+        public Id externalCaseId;
+        @AuraEnabled
+        public Id localCaseId;
+    }
+
     @AuraEnabled(cacheable=true)
     public static List<OrderItem> getOrderItems(Id orderId) {
         return [
@@ -17,7 +26,13 @@ public class RefundActionController {
     }
 
     @AuraEnabled
-    public static String processRefund(Id orderId, List<Id> orderItemIds, String refundType, String description, Decimal refundAmount) {
+    public static RefundResponse processRefund(
+        Id orderId,
+        List<Id> orderItemIds,
+        String refundType,
+        String description,
+        Decimal refundAmount
+    ) {
         List<OrderItem> selectedOrderItems = [
             SELECT Id, Product2Id, Product2.Name, Product2.ProductCode, Product2.Is_External__c, Product2.External_Product_Id__c
             FROM OrderItem
@@ -40,10 +55,10 @@ public class RefundActionController {
             }
         }
 
-        Map<String, String> refundResponseData = new Map<String, String>();
+        RefundResponse responseData = new RefundResponse();
 
         if (!externalProductIds.isEmpty()) {
-            String externalCorrelationId = processExternalRefund(
+            RefundResponse extResult = processExternalRefund(
                 orderId,
                 externalProductIds,
                 externalOrderItems,
@@ -51,18 +66,18 @@ public class RefundActionController {
                 description,
                 refundAmount
             );
-            refundResponseData.put('correlationId', externalCorrelationId);
+            responseData.correlationId = extResult.correlationId;
+            responseData.externalCaseId = extResult.externalCaseId;
         }
 
         if (!localOrderItems.isEmpty()) {
-            Id localCaseId = processLocalRefund(orderId, localOrderItems, refundType, description, refundAmount);
-            refundResponseData.put('localCaseId', localCaseId);
+            responseData.localCaseId = processLocalRefund(orderId, localOrderItems, refundType, description, refundAmount);
         }
 
-        return JSON.serialize(refundResponseData);
+        return responseData;
     }
 
-    private static String processExternalRefund(
+    private static RefundResponse processExternalRefund(
         Id orderId,
         List<String> externalProductIds,
         List<OrderItem> externalOrderItems,
@@ -72,17 +87,15 @@ public class RefundActionController {
     ) {
         String correlationId = UUID.randomUUID().toString();
 
-        String payloadData = JSON.serialize(
-            new Map<String, Object>{
-                'Product_Ids__c' => String.join(externalProductIds, ','),
-                'Reason__c' => refundType +
-                ' - ' +
-                description,
-                'Case_Id__c' => correlationId,
-                'Order_id__c' => String.valueOf(orderId),
-                'Refund_Amount__c' => refundAmount
-            }
+        External_Complaint__e complaintEvent = new External_Complaint__e(
+            Product_Ids__c = String.join(externalProductIds, ','),
+            Reason__c = refundType + ' - ' + description,
+            Case_Id__c = correlationId,
+            Order_id__c = String.valueOf(orderId),
+            Refund_Amount__c = refundAmount
         );
+
+        String payloadData = JSON.serialize(complaintEvent);
 
         HttpRequest outboundRequest = new HttpRequest();
         outboundRequest.setEndpoint(Util.COMPLAINT.ENDPOINT_EXTERNAL_COMPLAINT);
@@ -127,7 +140,10 @@ public class RefundActionController {
                 );
                 update relatedOrder;
 
-                return correlationId;
+                RefundResponse result = new RefundResponse();
+                result.correlationId = correlationId;
+                result.externalCaseId = externalRefundCase.Id;
+                return result;
             } else {
                 throw new AuraHandledException('Callout failed: ' + calloutResponse.getBody());
             }

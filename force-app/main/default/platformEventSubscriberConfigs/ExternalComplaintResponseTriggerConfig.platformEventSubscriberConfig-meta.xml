@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <PlatformEventSubscriberConfig xmlns="http://soap.sforce.com/2006/04/metadata">
     <platformEventConsumer>ExternalComplaintResponseTrigger</platformEventConsumer>
-    <batchSize>200</batchSize>
+    <batchSize>100</batchSize>
     <masterLabel>External Complaint Response Trigger Config</masterLabel>
     <user>szymonorguser@britenet.eu</user>
     <isProtected>false</isProtected>
