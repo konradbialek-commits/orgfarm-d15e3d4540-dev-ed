@@ -22,7 +22,7 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
             ];
 
             for (Case caseRecord : casesToUpdate) {
-                External_Complaint_Response__e eventRecord = responseMap.get(c.External_Case_Id__c);
+                External_Complaint_Response__e eventRecord = responseMap.get(caseRecord.External_Case_Id__c);
                 caseRecord.Refund_Status__c = eventRecord.Status__c;
 
                 if (eventRecord.Final_Refund_Amount__c != null) {
