@@ -17,9 +17,9 @@ public class CaseApprovalSyncHandler implements TriggerAction.AfterUpdate {
 
                 if (newCase.Order__c == null && String.isNotBlank(newCase.External_Case_Id__c)) {
                     if (
-                        newCase.Refund_Status__c == 'Approved Full Refund' ||
-                        newCase.Refund_Status__c == 'Approved Partial Refund' ||
-                        newCase.Refund_Status__c == 'Rejected'
+                        newCase.Refund_Status__c == Util.COMPLAINT.STATUS.APPROVED_FULL ||
+                        newCase.Refund_Status__c == Util.COMPLAINT.StATUS.APPROVED_PARTIAL ||
+                        newCase.Refund_Status__c == Util.COMPLAINT.STATUS.REJECTED
                     ) {
                         External_Complaint_Response__e responseEvent = new External_Complaint_Response__e(
                             Case_Id__c = newCase.External_Case_Id__c,
@@ -61,7 +61,10 @@ public class CaseApprovalSyncHandler implements TriggerAction.AfterUpdate {
 
                 relOrder.Refund_Status__c = newCase.Refund_Status__c;
 
-                if (newCase.Refund_Status__c == 'Approved Full Refund' || newCase.Refund_Status__c == 'Approved Partial Refund') {
+                if (
+                    newCase.Refund_Status__c == Util.COMPLAINT.STATUS.APPROVED_FULL ||
+                    newCase.Refund_Status__c == Util.COMPLAINT.StATUS.APPROVED_PARTIAL
+                ) {
                     Decimal currentRefund = relOrder.Refunded_Amount__c != null ? relOrder.Refunded_Amount__c : 0;
                     Decimal newRefund = newCase.Refund_Amount__c != null ? newCase.Refund_Amount__c : 0;
                     relOrder.Refunded_Amount__c = currentRefund + newRefund;
