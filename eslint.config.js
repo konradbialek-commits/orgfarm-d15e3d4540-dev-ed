@@ -14,7 +14,8 @@ module.exports = defineConfig([
         files: ['**/lwc/**/*.js'],
         extends: [lwcConfig],
         rules: {
-            'no-unused-vars': 'off'
+            'no-unused-vars': 'off',
+            '@lwc/lwc/no-async-operation': 'off'
         }
     },
     {

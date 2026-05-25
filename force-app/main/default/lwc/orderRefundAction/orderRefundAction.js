@@ -44,7 +44,8 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     externalCaseId = null;
     correlationId = null;
     subscription = {};
-    arrivedEventIds = new Set();
+    timeoutId;
+    arrivedEventPayloads = new Map();
 
     labels = {
         title: LBL_TITLE,
@@ -98,12 +99,14 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
 
             if (this.isWaiting) {
                 this.isWaiting = false;
+                this.clearProcessingTimeout();
                 this.showToast(LBL_CONN_ERR_TITLE, LBL_CONN_ERR_MSG, 'error');
             }
         });
     }
 
     disconnectedCallback() {
+        this.clearProcessingTimeout();
         this.handleUnsubscribe();
     }
 
@@ -142,6 +145,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
                 this.correlationId = result.correlationId;
 
                 if (this.correlationId) {
+                    this.startProcessingTimeout();
                     this.checkIfFinished();
                 } else if (this.localCaseId) {
                     this.showToast(LBL_MSG_SUCCESS, 'Local refund request submitted.', 'success');
@@ -156,6 +160,27 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
             });
     }
 
+    startProcessingTimeout() {
+        this.clearProcessingTimeout();
+        this.timeoutId = setTimeout(() => {
+            if (this.isWaiting) {
+                this.isWaiting = false;
+                this.showToast(
+                    'Request Timed Out',
+                    'The external system took too long to respond. The request may still be processing.',
+                    'warning'
+                );
+                this.handleCancel();
+            }
+        }, 30000);
+    }
+
+    clearProcessingTimeout() {
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+        }
+    }
+
     handleCancel() {
         this.dispatchEvent(new CloseActionScreenEvent());
     }
@@ -165,7 +190,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
         subscribe(channelName, -1, (message) => {
             try {
                 const eventPayload = message.data.payload;
-                this.arrivedEventIds.add(eventPayload.Case_Id__c);
+                this.arrivedEventPayloads.set(eventPayload.Case_Id__c, eventPayload);
                 this.checkIfFinished();
             } catch (error) {
                 this.logToBackend(error, 'handleSubscribe_messageCallback');
@@ -181,16 +206,23 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     }
 
     checkIfFinished() {
-        if (this.correlationId && this.arrivedEventIds.has(this.correlationId)) {
+        if (this.correlationId && this.arrivedEventPayloads.has(this.correlationId)) {
             this.isWaiting = false;
-            this.showToast(LBL_MSG_SUCCESS, 'Requests processed successfully.', 'success');
+            this.clearProcessingTimeout();
 
-            const targetRecordId = this.localCaseId || this.externalCaseId;
-            if (targetRecordId) {
-                this.navigateToRecord(targetRecordId);
+            const payload = this.arrivedEventPayloads.get(this.correlationId);
+
+            if (payload.Status__c === 'Failed') {
+                const errorMsg = payload.Error_Message__c || 'The external system rejected the request due to an error.';
+                this.showToast('Refund Failed', errorMsg, 'error');
+            } else {
+                this.showToast(LBL_MSG_SUCCESS, 'Requests processed successfully.', 'success');
+                const targetRecordId = this.localCaseId || this.externalCaseId;
+                if (targetRecordId) {
+                    this.navigateToRecord(targetRecordId);
+                }
+                this.handleCancel();
             }
-
-            this.handleCancel();
         }
     }
 
