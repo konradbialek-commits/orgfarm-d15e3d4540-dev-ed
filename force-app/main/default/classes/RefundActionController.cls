@@ -55,147 +55,124 @@ public class RefundActionController {
             }
         }
 
-        RefundResponse responseData = new RefundResponse();
+        String correlationId = null;
 
         if (!externalProductIds.isEmpty()) {
-            RefundResponse extResult = processExternalRefund(
-                orderId,
-                externalProductIds,
-                externalOrderItems,
-                refundType,
-                description,
-                refundAmount
+            correlationId = UUID.randomUUID().toString();
+
+            External_Complaint__e complaintEvent = new External_Complaint__e(
+                Product_Ids__c = String.join(externalProductIds, ','),
+                Reason__c = refundType + ' - ' + description,
+                Case_Id__c = correlationId,
+                Order_id__c = String.valueOf(orderId),
+                Refund_Amount__c = refundAmount
             );
-            responseData.correlationId = extResult.correlationId;
-            responseData.externalCaseId = extResult.externalCaseId;
+
+            HttpRequest outboundRequest = new HttpRequest();
+            outboundRequest.setEndpoint(Util.COMPLAINT.ENDPOINT_EXTERNAL_COMPLAINT);
+            outboundRequest.setMethod('POST');
+            outboundRequest.setHeader('Content-Type', 'application/json');
+            outboundRequest.setBody(JSON.serialize(complaintEvent));
+
+            try {
+                Http httpAgent = new Http();
+                HttpResponse calloutResponse = httpAgent.send(outboundRequest);
+
+                if (calloutResponse.getStatusCode() < 200 || calloutResponse.getStatusCode() >= 300) {
+                    throw new AuraHandledException('Callout failed: ' + calloutResponse.getBody());
+                }
+            } catch (Exception calloutException) {
+                ErrorLogger.logException(calloutException, 'RefundActionController', 'processRefund');
+                throw new AuraHandledException('Callout failed: ' + calloutException.getMessage());
+            }
         }
+
+        List<Case> casesToInsert = new List<Case>();
+        Case localCase = null;
+        Case externalCase = null;
 
         if (!localOrderItems.isEmpty()) {
-            responseData.localCaseId = processLocalRefund(orderId, localOrderItems, refundType, description, refundAmount);
+            localCase = new Case(
+                Subject = Util.COMPLAINT.SUBJECT.LOCAL_REFUND + refundType,
+                Reason = refundType + ' - ' + description,
+                Order__c = orderId,
+                Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
+                Requested_Refund_Type__c = refundType,
+                Refund_Amount__c = refundAmount
+            );
+            casesToInsert.add(localCase);
         }
 
-        return responseData;
-    }
-
-    private static RefundResponse processExternalRefund(
-        Id orderId,
-        List<String> externalProductIds,
-        List<OrderItem> externalOrderItems,
-        String refundType,
-        String description,
-        Decimal refundAmount
-    ) {
-        String correlationId = UUID.randomUUID().toString();
-
-        External_Complaint__e complaintEvent = new External_Complaint__e(
-            Product_Ids__c = String.join(externalProductIds, ','),
-            Reason__c = refundType + ' - ' + description,
-            Case_Id__c = correlationId,
-            Order_id__c = String.valueOf(orderId),
-            Refund_Amount__c = refundAmount
-        );
-
-        String payloadData = JSON.serialize(complaintEvent);
-
-        HttpRequest outboundRequest = new HttpRequest();
-        outboundRequest.setEndpoint(Util.COMPLAINT.ENDPOINT_EXTERNAL_COMPLAINT);
-        outboundRequest.setMethod('POST');
-        outboundRequest.setHeader('Content-Type', 'application/json');
-        outboundRequest.setBody(payloadData);
-
-        try {
-            Http httpAgent = new Http();
-            HttpResponse calloutResponse = httpAgent.send(outboundRequest);
-
-            if (calloutResponse.getStatusCode() >= 200 && calloutResponse.getStatusCode() < 300) {
-                Case externalRefundCase = new Case(
-                    Subject = Util.COMPLAINT.SUBJECT.EXTERNAL_REFUND,
-                    Reason = refundType + ' - ' + description,
-                    Order__c = orderId,
-                    Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
-                    Requested_Refund_Type__c = refundType,
-                    Refund_Amount__c = refundAmount,
-                    External_Case_Id__c = correlationId
-                );
-                insert externalRefundCase;
-
-                List<Case_Order_Product__c> caseProductsToInsert = new List<Case_Order_Product__c>();
-                for (OrderItem extItem : externalOrderItems) {
-                    caseProductsToInsert.add(
-                        new Case_Order_Product__c(
-                            Case__c = externalRefundCase.Id,
-                            Order_Product__c = extItem.Id,
-                            Name = extItem.Product2.Name,
-                            Product_Name__c = extItem.Product2.Name,
-                            Is_External__c = true
-                        )
-                    );
-                }
-                insert caseProductsToInsert;
-
-                Order relatedOrder = new Order(
-                    Id = orderId,
-                    ComplaintCaseId__c = externalRefundCase.Id,
-                    Refund_Status__c = Util.COMPLAINT.STATUS.PENDING
-                );
-                update relatedOrder;
-
-                RefundResponse result = new RefundResponse();
-                result.correlationId = correlationId;
-                result.externalCaseId = externalRefundCase.Id;
-                return result;
-            } else {
-                throw new AuraHandledException('Callout failed: ' + calloutResponse.getBody());
-            }
-        } catch (Exception calloutException) {
-            ErrorLogger.logException(calloutException, 'RefundActionController', 'processExternalRefund');
-            throw new AuraHandledException('Callout failed: ' + calloutException.getMessage());
+        if (!externalOrderItems.isEmpty()) {
+            externalCase = new Case(
+                Subject = Util.COMPLAINT.SUBJECT.EXTERNAL_REFUND,
+                Reason = refundType + ' - ' + description,
+                Order__c = orderId,
+                Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
+                Requested_Refund_Type__c = refundType,
+                Refund_Amount__c = refundAmount,
+                External_Case_Id__c = correlationId
+            );
+            casesToInsert.add(externalCase);
         }
-    }
 
-    private static Id processLocalRefund(
-        Id orderId,
-        List<OrderItem> localOrderItems,
-        String refundType,
-        String description,
-        Decimal refundAmount
-    ) {
-        Case localRefundCase = new Case(
-            Subject = Util.COMPLAINT.SUBJECT.LOCAL_REFUND + refundType,
-            Reason = refundType + ' - ' + description,
-            Order__c = orderId,
-            Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
-            Requested_Refund_Type__c = refundType,
-            Refund_Amount__c = refundAmount
-        );
-        insert localRefundCase;
+        if (!casesToInsert.isEmpty()) {
+            insert casesToInsert;
+        }
 
         List<Case_Order_Product__c> caseProductsToInsert = new List<Case_Order_Product__c>();
-        for (OrderItem localItem : localOrderItems) {
-            caseProductsToInsert.add(
-                new Case_Order_Product__c(
-                    Case__c = localRefundCase.Id,
-                    Order_Product__c = localItem.Id,
-                    Name = localItem.Product2.Name,
-                    Product_Name__c = localItem.Product2.Name,
-                    Is_External__c = false
-                )
-            );
+
+        if (localCase != null) {
+            for (OrderItem item : localOrderItems) {
+                caseProductsToInsert.add(
+                    new Case_Order_Product__c(
+                        Case__c = localCase.Id,
+                        Order_Product__c = item.Id,
+                        Name = item.Product2.Name,
+                        Product_Name__c = item.Product2.Name,
+                        Is_External__c = false
+                    )
+                );
+            }
         }
-        insert caseProductsToInsert;
 
-        Order relatedOrder = new Order(
-            Id = orderId,
-            ComplaintCaseId__c = localRefundCase.Id,
-            Refund_Status__c = Util.COMPLAINT.STATUS.PENDING
-        );
-        update relatedOrder;
+        if (externalCase != null) {
+            for (OrderItem item : externalOrderItems) {
+                caseProductsToInsert.add(
+                    new Case_Order_Product__c(
+                        Case__c = externalCase.Id,
+                        Order_Product__c = item.Id,
+                        Name = item.Product2.Name,
+                        Product_Name__c = item.Product2.Name,
+                        Is_External__c = true
+                    )
+                );
+            }
+        }
 
-        Approval.ProcessSubmitRequest approvalRequest = new Approval.ProcessSubmitRequest();
-        approvalRequest.setObjectId(localRefundCase.Id);
-        approvalRequest.setSubmitterId(UserInfo.getUserId());
-        Approval.process(approvalRequest);
+        if (!caseProductsToInsert.isEmpty()) {
+            insert caseProductsToInsert;
+        }
 
-        return localRefundCase.Id;
+        if (localCase != null || externalCase != null) {
+            Order relatedOrder = new Order(Id = orderId, Refund_Status__c = Util.COMPLAINT.STATUS.PENDING);
+            update relatedOrder;
+        }
+
+        if (localCase != null) {
+            Approval.ProcessSubmitRequest approvalRequest = new Approval.ProcessSubmitRequest();
+            approvalRequest.setObjectId(localCase.Id);
+            approvalRequest.setSubmitterId(UserInfo.getUserId());
+            Approval.process(approvalRequest);
+        }
+
+        RefundResponse responseData = new RefundResponse();
+        responseData.correlationId = correlationId;
+        if (localCase != null)
+            responseData.localCaseId = localCase.Id;
+        if (externalCase != null)
+            responseData.externalCaseId = externalCase.Id;
+
+        return responseData;
     }
 }
