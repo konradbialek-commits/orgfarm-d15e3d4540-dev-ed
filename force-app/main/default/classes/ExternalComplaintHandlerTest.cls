@@ -82,7 +82,12 @@ private class ExternalComplaintHandlerTest {
         List<Case> insertedCases = [SELECT Id FROM Case WHERE External_Case_Id__c = 'uuid-1234'];
         Assert.areEqual(0, insertedCases.size());
 
-        Assert.areEqual(1, Limits.getQueueableJobs());
+        List<AsyncApexJob> queueableJobs = [
+            SELECT Id
+            FROM AsyncApexJob
+            WHERE JobType = 'Queueable' AND ApexClass.Name = 'ComplaintResponseQueueable'
+        ];
+        Assert.areEqual(1, queueableJobs.size());
     }
 
     @IsTest
