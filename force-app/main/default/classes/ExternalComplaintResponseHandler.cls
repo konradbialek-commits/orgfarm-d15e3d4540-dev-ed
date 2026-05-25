@@ -21,16 +21,16 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
                 WHERE External_Case_Id__c IN :responseMap.keySet()
             ];
 
-            for (Case c : casesToUpdate) {
-                External_Complaint_Response__e eventRec = responseMap.get(c.External_Case_Id__c);
-                c.Refund_Status__c = eventRec.Status__c;
+            for (Case caseRecord : casesToUpdate) {
+                External_Complaint_Response__e eventRecord = responseMap.get(c.External_Case_Id__c);
+                caseRecord.Refund_Status__c = eventRecord.Status__c;
 
-                if (eventRec.Final_Refund_Amount__c != null) {
-                    c.Refund_Amount__c = eventRec.Final_Refund_Amount__c;
+                if (eventRecord.Final_Refund_Amount__c != null) {
+                    caseRecord.Refund_Amount__c = eventRecord.Final_Refund_Amount__c;
                 }
 
-                if (String.isNotBlank(eventRec.Final_Refund_Type__c)) {
-                    c.Requested_Refund_Type__c = eventRec.Final_Refund_Type__c;
+                if (String.isNotBlank(eventRecord.Final_Refund_Type__c)) {
+                    caseRecord.Requested_Refund_Type__c = eventRecord.Final_Refund_Type__c;
                 }
             }
 
