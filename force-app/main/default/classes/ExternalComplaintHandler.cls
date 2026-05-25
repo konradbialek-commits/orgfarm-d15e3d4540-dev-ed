@@ -80,24 +80,28 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                 System.enqueueJob(new ComplaintResponseQueueable(responsePayloads));
             }
         } catch (Exception e) {
-            ErrorLogger.logException(e, 'ExternalComplaintHandler', 'afterInsert');
+            if (EventBus.TriggerContext.currentContext().retries < 3) {
+                throw new EventBus.RetryableException(e.getMessage());
+            } else {
+                ErrorLogger.logException(e, 'ExternalComplaintHandler', 'afterInsert');
 
-            List<String> responsePayloads = new List<String>();
-            String safeErrorMessage = e.getMessage().length() > 32000 ? e.getMessage().substring(0, 32000) : e.getMessage();
+                List<String> responsePayloads = new List<String>();
+                String safeErrorMessage = e.getMessage().length() > 32000 ? e.getMessage().substring(0, 32000) : e.getMessage();
 
-            for (External_Complaint__e complaint : incomingComplaints) {
-                if (String.isNotBlank(complaint.Case_Id__c)) {
-                    External_Complaint_Response__e errorResponse = new External_Complaint_Response__e(
-                        Case_Id__c = complaint.Case_Id__c,
-                        Status__c = 'Failed',
-                        Error_Message__c = safeErrorMessage
-                    );
-                    responsePayloads.add(JSON.serialize(errorResponse));
+                for (External_Complaint__e complaint : incomingComplaints) {
+                    if (String.isNotBlank(complaint.Case_Id__c)) {
+                        External_Complaint_Response__e errorResponse = new External_Complaint_Response__e(
+                            Case_Id__c = complaint.Case_Id__c,
+                            Status__c = 'Failed',
+                            Error_Message__c = 'Transaction failed after 3 retries: ' + safeErrorMessage
+                        );
+                        responsePayloads.add(JSON.serialize(errorResponse));
+                    }
                 }
-            }
 
-            if (!responsePayloads.isEmpty() && !System.isQueueable() && !System.isBatch()) {
-                System.enqueueJob(new ComplaintResponseQueueable(responsePayloads));
+                if (!responsePayloads.isEmpty() && !System.isQueueable() && !System.isBatch()) {
+                    System.enqueueJob(new ComplaintResponseQueueable(responsePayloads));
+                }
             }
         }
     }
