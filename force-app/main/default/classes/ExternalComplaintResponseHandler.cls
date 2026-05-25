@@ -16,7 +16,7 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
 
         if (!responseMap.isEmpty()) {
             List<Case> casesToUpdate = [
-                SELECT Id, External_Case_Id__c, Refund_Status__c, Refund_Amount__c, Requested_Refund_Type__c
+                SELECT Id, CaseNumber, OwnerId, External_Case_Id__c, Refund_Status__c, Refund_Amount__c, Requested_Refund_Type__c
                 FROM Case
                 WHERE External_Case_Id__c IN :responseMap.keySet()
             ];
@@ -36,6 +36,7 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
 
             if (!casesToUpdate.isEmpty()) {
                 update casesToUpdate;
+                NotificationUtil.sendStatusNotifications(casesToUpdate);
             }
         }
     }
