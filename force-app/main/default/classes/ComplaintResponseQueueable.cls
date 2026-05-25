@@ -7,7 +7,12 @@ public class ComplaintResponseQueueable implements Queueable, Database.AllowsCal
 
     public void execute(QueueableContext context) {
         Http httpAgent = new Http();
-        for (String payloadData : payloads) {
+        List<String> remainingPayloads = new List<String>();
+
+        Integer maxProcess = Math.min(this.payloads.size(), 100);
+
+        for (Integer i = 0; i < maxProcess; i++) {
+            String payloadData = this.payloads[i];
             HttpRequest request = new HttpRequest();
             request.setEndpoint(Util.COMPLAINT.ENDPOINT_COMPLAINT_RESPONSE);
             request.setMethod('POST');
@@ -24,6 +29,14 @@ public class ComplaintResponseQueueable implements Queueable, Database.AllowsCal
             } catch (Exception calloutException) {
                 ErrorLogger.logException(calloutException, 'ComplaintResponseQueueable', 'execute');
             }
+        }
+
+        for (Integer i = maxProcess; i < this.payloads.size(); i++) {
+            remainingPayloads.add(this.payloads[i]);
+        }
+
+        if (!remainingPayloads.isEmpty() && !Test.isRunningTest()) {
+            System.enqueueJob(new ComplaintResponseQueueable(remainingPayloads));
         }
     }
 }
