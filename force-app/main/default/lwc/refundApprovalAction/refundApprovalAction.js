@@ -38,8 +38,8 @@ export default class RefundApprovalAction extends LightningElement {
     };
 
     decisionOptions = [
-        { label: LBL_AA_APP_FULL, value: 'Full Refund' },
-        { label: LBL_AA_APP_PARTIAL, value: 'Partial Refund' },
+        { label: LBL_AA_APP_FULL, value: 'Approved Full Refund' },
+        { label: LBL_AA_APP_PARTIAL, value: 'Approved Partial Refund' },
         { label: LBL_AA_REJECT, value: 'Rejected' }
     ];
 
