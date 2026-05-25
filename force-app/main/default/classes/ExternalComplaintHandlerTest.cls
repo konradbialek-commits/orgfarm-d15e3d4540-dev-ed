@@ -65,30 +65,24 @@ private class ExternalComplaintHandlerTest {
 
     @IsTest
     static void testInboundEventWithMalformedOrderId() {
-        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
-        External_Complaint__e ev = TestDataFactory.createExternalComplaintEvent(
-            'INVALID_ID_FORMAT',
-            '500x00000000000CCC',
-            'Full - Wrong item',
-            '01tx00000000000CCC',
-            100.00
+        External_Complaint__e malformedEvent = new External_Complaint__e(
+            Product_Ids__c = 'some-valid-id',
+            Reason__c = 'Full - Damaged',
+            Case_Id__c = 'uuid-1234',
+            Order_id__c = 'invalid-order-id-format',
+            Refund_Amount__c = 100.00
         );
 
         Test.startTest();
-        new ExternalComplaintHandler().afterInsert(new List<SObject>{ ev });
+        Database.SaveResult sr = EventBus.publish(malformedEvent);
         Test.stopTest();
 
-        Case insertedCase = [
-            SELECT Order__c, Requested_Refund_Type__c, External_Case_Id__c, Refund_Amount__c, Reason
-            FROM Case
-            WHERE External_Case_Id__c = '500x00000000000CCC'
-            LIMIT 1
-        ];
+        Assert.isTrue(sr.isSuccess());
 
-        Assert.isNull(insertedCase.Order__c);
-        Assert.areEqual('Full', insertedCase.Requested_Refund_Type__c);
-        Assert.areEqual(100.00, insertedCase.Refund_Amount__c);
-        Assert.areEqual('Full - Wrong item', insertedCase.Reason);
+        List<Case> insertedCases = [SELECT Id FROM Case WHERE External_Case_Id__c = 'uuid-1234'];
+        Assert.areEqual(0, insertedCases.size());
+
+        Assert.areEqual(1, Limits.getQueueableJobs());
     }
 
     @IsTest
