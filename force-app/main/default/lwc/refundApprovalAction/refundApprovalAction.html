@@ -26,6 +26,21 @@
                 </lightning-combobox>
             </div>
 
+            <template if:true={isPartialRefund}>
+                <div class="slds-m-bottom_medium">
+                    <lightning-input
+                        type="number"
+                        formatter="currency"
+                        step="0.01"
+                        name="approvedAmount"
+                        label="Approved Refund Amount"
+                        value={approvedAmount}
+                        onchange={handleChange}
+                        required
+                    ></lightning-input>
+                </div>
+            </template>
+
             <div class="slds-m-bottom_medium">
                 <lightning-textarea name="comments" label={labels.comments} value={comments} onchange={handleChange}> </lightning-textarea>
             </div>

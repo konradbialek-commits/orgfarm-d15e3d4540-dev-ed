@@ -1,6 +1,6 @@
 public with sharing class RefundApprovalController {
     @AuraEnabled
-    public static void processApproval(Id caseId, String decision, String comments) {
+    public static void processApproval(Id caseId, String decision, String comments, Decimal approvedAmount) {
         try {
             ProcessInstanceWorkitem workitem = [
                 SELECT Id
@@ -18,6 +18,11 @@ public with sharing class RefundApprovalController {
             Approval.process(req);
 
             Case caseRecord = new Case(Id = caseId, Refund_Status__c = decision);
+
+            if (approvedAmount != null && decision == 'Approved Partial Refund') {
+                caseRecord.Refund_Amount__c = approvedAmount;
+            }
+
             update caseRecord;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());

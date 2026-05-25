@@ -2,18 +2,103 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
     public void afterInsert(List<SObject> newList) {
         List<External_Complaint__e> incomingComplaints = (List<External_Complaint__e>) newList;
 
-        Set<String> extractedProductIds = extractProductIds(incomingComplaints);
-        Map<String, Product2> productByExternalOrLocalId = getProductMap(extractedProductIds);
+        try {
+            Set<String> extractedProductIds = extractProductIds(incomingComplaints);
+            Map<String, Product2> productByExternalOrLocalId = getProductMap(extractedProductIds);
 
-        Map<Integer, External_Complaint__e> caseIndexToComplaintMap = new Map<Integer, External_Complaint__e>();
-        List<Case> casesToCreate = buildComplaintCases(incomingComplaints, caseIndexToComplaintMap);
+            Map<Integer, External_Complaint__e> caseIndexToComplaintMap = new Map<Integer, External_Complaint__e>();
+            List<Case> casesToCreate = new List<Case>();
+            List<String> responsePayloads = new List<String>();
 
-        if (!casesToCreate.isEmpty()) {
-            insert casesToCreate;
+            for (External_Complaint__e complaint : incomingComplaints) {
+                if (String.isBlank(complaint.Case_Id__c)) {
+                    continue;
+                }
 
-            insertCaseProducts(casesToCreate, caseIndexToComplaintMap, productByExternalOrLocalId);
-            submitCasesForApproval(casesToCreate);
-            generateAndSendResponses(casesToCreate, caseIndexToComplaintMap);
+                Boolean hasValidProducts = false;
+                if (String.isNotBlank(complaint.Product_Ids__c)) {
+                    for (String productId : complaint.Product_Ids__c.split(',')) {
+                        if (productByExternalOrLocalId.containsKey(productId.trim())) {
+                            hasValidProducts = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!hasValidProducts) {
+                    External_Complaint_Response__e errorResponse = new External_Complaint_Response__e(
+                        Case_Id__c = complaint.Case_Id__c,
+                        Status__c = 'Failed',
+                        Error_Message__c = 'Invalid or missing Product IDs provided.'
+                    );
+                    responsePayloads.add(JSON.serialize(errorResponse));
+                    continue;
+                }
+
+                String requestedRefundType = '';
+                if (String.isNotBlank(complaint.Reason__c)) {
+                    if (complaint.Reason__c.startsWith(Util.COMPLAINT.TYPE.FULL)) {
+                        requestedRefundType = Util.COMPLAINT.TYPE.FULL;
+                    } else if (complaint.Reason__c.startsWith(Util.COMPLAINT.TYPE.PARTIAL)) {
+                        requestedRefundType = Util.COMPLAINT.TYPE.PARTIAL;
+                    }
+                }
+
+                Case newComplaintCase = new Case(
+                    Subject = Util.COMPLAINT.SUBJECT.EXTERNAL_REFUND,
+                    Reason = complaint.Reason__c,
+                    Order__c = null,
+                    Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
+                    Requested_Refund_Type__c = requestedRefundType,
+                    External_Case_Id__c = complaint.Case_Id__c,
+                    Refund_Amount__c = complaint.Refund_Amount__c
+                );
+
+                casesToCreate.add(newComplaintCase);
+                caseIndexToComplaintMap.put(casesToCreate.size() - 1, complaint);
+            }
+
+            if (!casesToCreate.isEmpty()) {
+                insert casesToCreate;
+                insertCaseProducts(casesToCreate, caseIndexToComplaintMap, productByExternalOrLocalId);
+                submitCasesForApproval(casesToCreate);
+
+                for (Integer i = 0; i < casesToCreate.size(); i++) {
+                    Case insertedCase = casesToCreate[i];
+                    External_Complaint__e originalComplaint = caseIndexToComplaintMap.get(i);
+
+                    External_Complaint_Response__e responseEvent = new External_Complaint_Response__e(
+                        Case_Id__c = originalComplaint.Case_Id__c,
+                        External_Case_Id__c = String.valueOf(insertedCase.Id),
+                        Status__c = Util.COMPLAINT.RESPONSE_STATUS.CREATED
+                    );
+                    responsePayloads.add(JSON.serialize(responseEvent));
+                }
+            }
+
+            if (!responsePayloads.isEmpty() && !System.isQueueable() && !System.isBatch()) {
+                System.enqueueJob(new ComplaintResponseQueueable(responsePayloads));
+            }
+        } catch (Exception e) {
+            ErrorLogger.logException(e, 'ExternalComplaintHandler', 'afterInsert');
+
+            List<String> responsePayloads = new List<String>();
+            String safeErrorMessage = e.getMessage().length() > 32000 ? e.getMessage().substring(0, 32000) : e.getMessage();
+
+            for (External_Complaint__e complaint : incomingComplaints) {
+                if (String.isNotBlank(complaint.Case_Id__c)) {
+                    External_Complaint_Response__e errorResponse = new External_Complaint_Response__e(
+                        Case_Id__c = complaint.Case_Id__c,
+                        Status__c = 'Failed',
+                        Error_Message__c = safeErrorMessage
+                    );
+                    responsePayloads.add(JSON.serialize(errorResponse));
+                }
+            }
+
+            if (!responsePayloads.isEmpty() && !System.isQueueable() && !System.isBatch()) {
+                System.enqueueJob(new ComplaintResponseQueueable(responsePayloads));
+            }
         }
     }
 
@@ -62,45 +147,6 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
         }
 
         return productByExternalOrLocalId;
-    }
-
-    private List<Case> buildComplaintCases(
-        List<External_Complaint__e> incomingComplaints,
-        Map<Integer, External_Complaint__e> caseIndexToComplaintMap
-    ) {
-        List<Case> casesToCreate = new List<Case>();
-
-        for (External_Complaint__e complaint : incomingComplaints) {
-            ErrorLogger.logInfo(
-                'INBOUND EVENT RECEIVED | Type: External_Complaint__e | Payload: ' + JSON.serialize(complaint),
-                'ExternalComplaintHandler',
-                'buildComplaintCases'
-            );
-
-            String requestedRefundType = '';
-            if (String.isNotBlank(complaint.Reason__c)) {
-                if (complaint.Reason__c.startsWith(Util.COMPLAINT.TYPE.FULL)) {
-                    requestedRefundType = Util.COMPLAINT.TYPE.FULL;
-                } else if (complaint.Reason__c.startsWith(Util.COMPLAINT.TYPE.PARTIAL)) {
-                    requestedRefundType = Util.COMPLAINT.TYPE.PARTIAL;
-                }
-            }
-
-            Case newComplaintCase = new Case(
-                Subject = Util.COMPLAINT.SUBJECT.EXTERNAL_REFUND,
-                Reason = complaint.Reason__c,
-                Order__c = null,
-                Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
-                Requested_Refund_Type__c = requestedRefundType,
-                External_Case_Id__c = complaint.Case_Id__c,
-                Refund_Amount__c = complaint.Refund_Amount__c
-            );
-
-            casesToCreate.add(newComplaintCase);
-            caseIndexToComplaintMap.put(casesToCreate.size() - 1, complaint);
-        }
-
-        return casesToCreate;
     }
 
     private void insertCaseProducts(
@@ -155,26 +201,6 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
             } catch (Exception approvalException) {
                 ErrorLogger.logException(approvalException, 'ExternalComplaintHandler', 'submitCasesForApproval');
             }
-        }
-    }
-
-    private void generateAndSendResponses(List<Case> insertedCases, Map<Integer, External_Complaint__e> caseIndexToComplaintMap) {
-        List<String> responsePayloads = new List<String>();
-
-        for (Integer i = 0; i < insertedCases.size(); i++) {
-            Case insertedCase = insertedCases[i];
-            External_Complaint__e originalComplaint = caseIndexToComplaintMap.get(i);
-
-            External_Complaint_Response__e responseEvent = new External_Complaint_Response__e(
-                Case_Id__c = originalComplaint.Case_Id__c,
-                External_Case_Id__c = String.valueOf(insertedCase.Id),
-                Status__c = Util.COMPLAINT.RESPONSE_STATUS.CREATED
-            );
-            responsePayloads.add(JSON.serialize(responseEvent));
-        }
-
-        if (!responsePayloads.isEmpty() && !System.isQueueable() && !System.isBatch()) {
-            System.enqueueJob(new ComplaintResponseQueueable(responsePayloads));
         }
     }
 }

@@ -24,6 +24,7 @@ export default class RefundApprovalAction extends LightningElement {
 
     @track decision = '';
     @track comments = '';
+    @track approvedAmount = null;
     @track errorMessage = '';
     @track isLoading = false;
 
@@ -43,16 +44,31 @@ export default class RefundApprovalAction extends LightningElement {
         { label: LBL_AA_REJECT, value: 'Rejected' }
     ];
 
+    get isPartialRefund() {
+        return this.decision === 'Approved Partial Refund';
+    }
+
     get isSubmitDisabled() {
-        return !this.decision;
+        if (!this.decision) {
+            return true;
+        }
+        if (this.decision === 'Approved Partial Refund' && (!this.approvedAmount || this.approvedAmount <= 0)) {
+            return true;
+        }
+        return false;
     }
 
     handleChange(event) {
         const field = event.target.name;
         if (field === 'decision') {
             this.decision = event.target.value;
+            if (this.decision !== 'Approved Partial Refund') {
+                this.approvedAmount = null;
+            }
         } else if (field === 'comments') {
             this.comments = event.target.value;
+        } else if (field === 'approvedAmount') {
+            this.approvedAmount = event.target.value;
         }
     }
 
@@ -68,7 +84,8 @@ export default class RefundApprovalAction extends LightningElement {
             await processApproval({
                 caseId: this.recordId,
                 decision: this.decision,
-                comments: this.comments
+                comments: this.comments,
+                approvedAmount: this.approvedAmount ? parseFloat(this.approvedAmount) : null
             });
 
             this.dispatchEvent(
