@@ -61,9 +61,11 @@ private class RefundActionControllerTest {
 
         Assert.isNotNull(result.localCaseId);
         Assert.isNull(result.correlationId);
+        Assert.isNull(result.externalCaseId);
 
-        Case insertedCase = [SELECT Id, Refund_Amount__c, Reason FROM Case WHERE Id = :result.localCaseId];
+        Case insertedCase = [SELECT Id, Order__c, Refund_Amount__c, Reason FROM Case WHERE Id = :result.localCaseId];
         Assert.isNotNull(insertedCase);
+        Assert.areEqual(testOrder.Id, insertedCase.Order__c);
         Assert.areEqual(100.00, insertedCase.Refund_Amount__c);
         Assert.areEqual('Full - Test Reason', insertedCase.Reason);
 
@@ -92,9 +94,14 @@ private class RefundActionControllerTest {
         Assert.isNotNull(result.externalCaseId);
         Assert.isNull(result.localCaseId);
 
-        List<Case> externalCases = [SELECT Id, External_Case_Id__c, Reason FROM Case WHERE External_Case_Id__c != NULL];
-        Assert.areEqual(1, externalCases.size());
-        Assert.areEqual('Partial - Test Reason External', externalCases[0].Reason);
+        Case externalCase = [SELECT Id, Order__c, External_Case_Id__c, Reason FROM Case WHERE Id = :result.externalCaseId];
+        Assert.isNotNull(externalCase);
+        Assert.areEqual(testOrder.Id, externalCase.Order__c);
+        Assert.areEqual('Partial - Test Reason External', externalCase.Reason);
+        Assert.areEqual(result.correlationId, externalCase.External_Case_Id__c);
+
+        Order updatedOrder = [SELECT Refund_Status__c FROM Order WHERE Id = :testOrder.Id];
+        Assert.areEqual('Pending', updatedOrder.Refund_Status__c);
     }
 
     @IsTest
@@ -121,11 +128,27 @@ private class RefundActionControllerTest {
         Assert.isNotNull(result.localCaseId);
         Assert.isNotNull(result.correlationId);
         Assert.isNotNull(result.externalCaseId);
+        Assert.areNotEqual(result.localCaseId, result.externalCaseId);
 
-        Case insertedCase = [SELECT Id, Refund_Amount__c, Reason FROM Case WHERE Id = :result.localCaseId];
-        Assert.isNotNull(insertedCase);
-        Assert.areEqual(125.00, insertedCase.Refund_Amount__c);
-        Assert.areEqual('Partial - Mixed Request', insertedCase.Reason);
+        List<Case> insertedCases = [
+            SELECT Id, Order__c, Refund_Amount__c, Reason, External_Case_Id__c
+            FROM Case
+            WHERE Id IN (:result.localCaseId, :result.externalCaseId)
+        ];
+        Assert.areEqual(2, insertedCases.size());
+
+        for (Case c : insertedCases) {
+            Assert.areEqual(testOrder.Id, c.Order__c);
+            Assert.areEqual(125.00, c.Refund_Amount__c);
+            Assert.areEqual('Partial - Mixed Request', c.Reason);
+
+            if (c.Id == result.externalCaseId) {
+                Assert.isNotNull(c.External_Case_Id__c);
+                Assert.areEqual(result.correlationId, c.External_Case_Id__c);
+            } else {
+                Assert.isNull(c.External_Case_Id__c);
+            }
+        }
 
         Order updatedOrder = [SELECT Refund_Status__c FROM Order WHERE Id = :testOrder.Id];
         Assert.areEqual('Pending', updatedOrder.Refund_Status__c);
