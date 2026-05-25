@@ -50,16 +50,19 @@ private class RefundActionControllerTest {
         OrderItem localItem = [SELECT Id FROM OrderItem WHERE Product2.Is_External__c = FALSE LIMIT 1];
 
         Test.startTest();
-        String result = RefundActionController.processRefund(testOrder.Id, new List<Id>{ localItem.Id }, 'Full', 'Test Reason', 100.00);
+        RefundActionController.RefundResponse result = RefundActionController.processRefund(
+            testOrder.Id,
+            new List<Id>{ localItem.Id },
+            'Full',
+            'Test Reason',
+            100.00
+        );
         Test.stopTest();
 
-        Map<String, Object> parsedResult = (Map<String, Object>) JSON.deserializeUntyped(result);
+        Assert.isNotNull(result.localCaseId);
+        Assert.isNull(result.correlationId);
 
-        Assert.isTrue(parsedResult.containsKey('localCaseId'));
-        Assert.isFalse(parsedResult.containsKey('correlationId'));
-
-        Id caseId = (Id) parsedResult.get('localCaseId');
-        Case insertedCase = [SELECT Id, Refund_Amount__c, Reason FROM Case WHERE Id = :caseId];
+        Case insertedCase = [SELECT Id, Refund_Amount__c, Reason FROM Case WHERE Id = :result.localCaseId];
         Assert.isNotNull(insertedCase);
         Assert.areEqual(100.00, insertedCase.Refund_Amount__c);
         Assert.areEqual('Full - Test Reason', insertedCase.Reason);
@@ -76,7 +79,7 @@ private class RefundActionControllerTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
         Test.startTest();
-        String result = RefundActionController.processRefund(
+        RefundActionController.RefundResponse result = RefundActionController.processRefund(
             testOrder.Id,
             new List<Id>{ extItem.Id },
             'Partial',
@@ -85,10 +88,9 @@ private class RefundActionControllerTest {
         );
         Test.stopTest();
 
-        Map<String, Object> parsedResult = (Map<String, Object>) JSON.deserializeUntyped(result);
-
-        Assert.isTrue(parsedResult.containsKey('correlationId'));
-        Assert.isFalse(parsedResult.containsKey('localCaseId'));
+        Assert.isNotNull(result.correlationId);
+        Assert.isNotNull(result.externalCaseId);
+        Assert.isNull(result.localCaseId);
 
         List<Case> externalCases = [SELECT Id, External_Case_Id__c, Reason FROM Case WHERE External_Case_Id__c != NULL];
         Assert.areEqual(1, externalCases.size());
@@ -107,16 +109,20 @@ private class RefundActionControllerTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
         Test.startTest();
-        String result = RefundActionController.processRefund(testOrder.Id, allItemIds, 'Partial', 'Mixed Request', 125.00);
+        RefundActionController.RefundResponse result = RefundActionController.processRefund(
+            testOrder.Id,
+            allItemIds,
+            'Partial',
+            'Mixed Request',
+            125.00
+        );
         Test.stopTest();
 
-        Map<String, Object> parsedResult = (Map<String, Object>) JSON.deserializeUntyped(result);
+        Assert.isNotNull(result.localCaseId);
+        Assert.isNotNull(result.correlationId);
+        Assert.isNotNull(result.externalCaseId);
 
-        Assert.isTrue(parsedResult.containsKey('localCaseId'));
-        Assert.isTrue(parsedResult.containsKey('correlationId'));
-
-        Id caseId = (Id) parsedResult.get('localCaseId');
-        Case insertedCase = [SELECT Id, Refund_Amount__c, Reason FROM Case WHERE Id = :caseId];
+        Case insertedCase = [SELECT Id, Refund_Amount__c, Reason FROM Case WHERE Id = :result.localCaseId];
         Assert.isNotNull(insertedCase);
         Assert.areEqual(125.00, insertedCase.Refund_Amount__c);
         Assert.areEqual('Partial - Mixed Request', insertedCase.Reason);
