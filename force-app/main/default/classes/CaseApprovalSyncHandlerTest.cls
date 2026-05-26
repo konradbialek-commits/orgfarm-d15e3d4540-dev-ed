@@ -39,10 +39,15 @@ private class CaseApprovalSyncHandlerTest {
         );
         insert new List<Case_Order_Product__c>{ cop1, cop2 };
 
+        Case_Order_Product__c oldCop1 = cop1.clone(true, true, true, true);
+        Case_Order_Product__c oldCop2 = cop2.clone(true, true, true, true);
+
         Test.startTest();
         cop1.Refund_Status__c = 'Approved Full Refund';
         cop2.Refund_Status__c = 'Rejected';
         update new List<Case_Order_Product__c>{ cop1, cop2 };
+
+        new CaseProductApprovalHandler().afterUpdate(new List<SObject>{ cop1, cop2 }, new List<SObject>{ oldCop1, oldCop2 });
         Test.stopTest();
 
         Case updatedCase = [SELECT Refund_Status__c, Refund_Amount__c FROM Case WHERE Id = :testCase.Id];
@@ -75,12 +80,22 @@ private class CaseApprovalSyncHandlerTest {
         );
         insert cop1;
 
+        Case_Order_Product__c oldCop1 = cop1.clone(true, true, true, true);
+
         Test.startTest();
         cop1.Refund_Status__c = 'Approved Full Refund';
         update cop1;
+
+        new CaseProductApprovalHandler().afterUpdate(new List<SObject>{ cop1 }, new List<SObject>{ oldCop1 });
+
+        Case updatedCase = [SELECT Id, External_Case_Id__c, Refund_Status__c, Order__c FROM Case WHERE Id = :testCase.Id];
+        Case oldCase = testCase.clone(true, true, true, true);
+        oldCase.Refund_Status__c = 'Pending';
+
+        new CaseApprovalSyncHandler().afterUpdate(new List<SObject>{ updatedCase }, new List<SObject>{ oldCase });
         Test.stopTest();
 
-        Case updatedCase = [SELECT Refund_Status__c FROM Case WHERE Id = :testCase.Id];
-        Assert.areEqual('Approved Full Refund', updatedCase.Refund_Status__c);
+        Case finalCase = [SELECT Refund_Status__c FROM Case WHERE Id = :testCase.Id];
+        Assert.areEqual('Approved Full Refund', finalCase.Refund_Status__c);
     }
 }
