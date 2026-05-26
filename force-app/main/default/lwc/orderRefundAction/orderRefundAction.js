@@ -65,6 +65,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     }
 
     get isSubmitDisabled() {
+        if (this.isWaiting) return true;
         if (!this.description) return true;
         const selectedItems = this.orderItems.filter((item) => item.selected);
         if (selectedItems.length === 0) return true;

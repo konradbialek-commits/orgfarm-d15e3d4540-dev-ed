@@ -94,18 +94,6 @@ public class RefundActionService {
             }
 
             if (hasExternal) {
-                PendingComplaint pc = new PendingComplaint();
-                pc.correlationId = correlationId;
-                pc.reason = description;
-                pc.lines = pendingLines;
-
-                Order relatedOrder = new Order(
-                    Id = orderId,
-                    Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
-                    Pending_Complaint_JSON__c = JSON.serialize(pc)
-                );
-                update relatedOrder;
-
                 External_Complaint__e complaintEvent = new External_Complaint__e(
                     Case_Id__c = correlationId,
                     Order_id__c = String.valueOf(orderId),
@@ -125,6 +113,18 @@ public class RefundActionService {
                 if (calloutResponse.getStatusCode() < 200 || calloutResponse.getStatusCode() >= 300) {
                     throw new CalloutException('Callout failed: ' + calloutResponse.getBody());
                 }
+
+                PendingComplaint pc = new PendingComplaint();
+                pc.correlationId = correlationId;
+                pc.reason = description;
+                pc.lines = pendingLines;
+
+                Order relatedOrder = new Order(
+                    Id = orderId,
+                    Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
+                    Pending_Complaint_JSON__c = JSON.serialize(pc)
+                );
+                update relatedOrder;
 
                 RefundResponse res = new RefundResponse();
                 res.caseId = null;

@@ -4,7 +4,9 @@ public class RefundActionController {
         try {
             return RefundActionService.getOrderItems(orderId);
         } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
+            AuraHandledException auraEx = new AuraHandledException(e.getMessage());
+            auraEx.setMessage(e.getMessage());
+            throw auraEx;
         }
     }
 
@@ -13,7 +15,9 @@ public class RefundActionController {
         try {
             return RefundActionService.processRefund(orderId, description, refundItemsJSON);
         } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
+            AuraHandledException auraEx = new AuraHandledException(e.getMessage());
+            auraEx.setMessage(e.getMessage());
+            throw auraEx;
         }
     }
 }

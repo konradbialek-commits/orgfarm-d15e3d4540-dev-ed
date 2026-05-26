@@ -51,9 +51,8 @@ export default class RefundApprovalAction extends LightningElement {
     }
 
     get isSubmitDisabled() {
-        if (!this.decision) {
-            return true;
-        }
+        if (this.isLoading) return true;
+        if (!this.decision) return true;
         if (this.decision === 'Approved Partial Refund' && (!this.approvedAmount || this.approvedAmount <= 0)) {
             return true;
         }
