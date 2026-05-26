@@ -6,6 +6,7 @@ import { subscribe, unsubscribe, onError } from 'lightning/empApi';
 import { notifyRecordUpdateAvailable } from 'lightning/uiRecordApi';
 import getOrderItems from '@salesforce/apex/RefundActionController.getOrderItems';
 import processRefund from '@salesforce/apex/RefundActionController.processRefund';
+import getCaseIdByCorrelationId from '@salesforce/apex/RefundActionController.getCaseIdByCorrelationId';
 import logClientError from '@salesforce/apex/ErrorLogger.logClientError';
 
 import LBL_TITLE from '@salesforce/label/c.RA_Title';
@@ -233,10 +234,23 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
             if (payload.Status__c === 'Failed') {
                 const errorMsg = payload.Error_Message__c || LBL_EXT_REJECT_MSG;
                 this.showToast(LBL_REFUND_FAILED_TITLE, errorMsg, 'error');
-            } else {
-                this.showToast(LBL_MSG_SUCCESS, LBL_REQUESTS_SUCCESS, 'success');
-                notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
                 this.handleCancel();
+            } else {
+                getCaseIdByCorrelationId({ correlationId: this.correlationId })
+                    .then((retrievedCaseId) => {
+                        this.showToast(LBL_MSG_SUCCESS, LBL_REQUESTS_SUCCESS, 'success');
+                        notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+                        if (retrievedCaseId) {
+                            this.navigateToRecord(retrievedCaseId);
+                        }
+                        this.handleCancel();
+                    })
+                    .catch((error) => {
+                        this.logToBackend(error, 'checkIfFinished_fetchCaseId');
+                        this.showToast(LBL_MSG_SUCCESS, LBL_REQUESTS_SUCCESS, 'success');
+                        notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+                        this.handleCancel();
+                    });
             }
         }
     }

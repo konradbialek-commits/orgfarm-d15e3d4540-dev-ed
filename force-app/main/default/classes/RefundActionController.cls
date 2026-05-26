@@ -20,4 +20,15 @@ public class RefundActionController {
             throw auraEx;
         }
     }
+
+    @AuraEnabled
+    public static Id getCaseIdByCorrelationId(String correlationId) {
+        List<Case> matchingCases = [
+            SELECT Id
+            FROM Case
+            WHERE External_Case_Id__c = :correlationId
+            LIMIT 1
+        ];
+        return matchingCases.isEmpty() ? null : matchingCases[0].Id;
+    }
 }
