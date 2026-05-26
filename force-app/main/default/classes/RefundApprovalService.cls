@@ -132,9 +132,7 @@ public class RefundApprovalService {
             Refund_Amount__c = totalApproved
         );
 
-        TriggerBase.bypass(Schema.Case.SObjectType);
         update caseUpdate;
-        TriggerBase.clearBypass(Schema.Case.SObjectType);
 
         if (relatedCase.Order__c != null) {
             update new Order(Id = relatedCase.Order__c, Refund_Status__c = finalRefundStatus, Refunded_Amount__c = totalApproved);

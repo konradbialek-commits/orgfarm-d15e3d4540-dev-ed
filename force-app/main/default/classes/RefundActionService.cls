@@ -107,8 +107,20 @@ public class RefundActionService {
                 outboundRequest.setHeader('Content-Type', 'application/json');
                 outboundRequest.setBody(JSON.serialize(complaintEvent));
 
+                ErrorLogger.logInfo(
+                    'OUTBOUND COMPLAINT REQUEST | Payload: ' + outboundRequest.getBody(),
+                    'RefundActionService',
+                    'processRefund'
+                );
+
                 Http httpAgent = new Http();
                 HttpResponse calloutResponse = httpAgent.send(outboundRequest);
+
+                ErrorLogger.logInfo(
+                    'OUTBOUND COMPLAINT RESPONSE | Status: ' + calloutResponse.getStatusCode() + ' | Body: ' + calloutResponse.getBody(),
+                    'RefundActionService',
+                    'processRefund'
+                );
 
                 if (calloutResponse.getStatusCode() < 200 || calloutResponse.getStatusCode() >= 300) {
                     throw new CalloutException('Callout failed: ' + calloutResponse.getBody());

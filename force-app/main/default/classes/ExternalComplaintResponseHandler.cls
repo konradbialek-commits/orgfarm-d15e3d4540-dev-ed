@@ -8,6 +8,12 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
 
     public void afterInsert(List<SObject> newRecordsList) {
         try {
+            ErrorLogger.logInfo(
+                'INBOUND COMPLAINT RESPONSE | Payload: ' + JSON.serialize(newRecordsList),
+                'ExternalComplaintResponseHandler',
+                'afterInsert'
+            );
+
             List<External_Complaint_Response__e> responseEvents = (List<External_Complaint_Response__e>) newRecordsList;
             Map<String, External_Complaint_Response__e> correlationIdToResponseMap = new Map<String, External_Complaint_Response__e>();
 
