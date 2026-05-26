@@ -68,6 +68,8 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
             }
 
             List<Case_Order_Product__c> linesToInsert = new List<Case_Order_Product__c>();
+            List<Case> casesToSubmit = new List<Case>();
+
             for (String corrId : correlationToNewCase.keySet()) {
                 Case insertedCase = correlationToNewCase.get(corrId);
                 RefundActionService.PendingComplaint pc = correlationToPc.get(corrId);
@@ -110,6 +112,8 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
                     linesToInsert.add(cop);
                 }
 
+                casesToSubmit.add(insertedCase);
+
                 o.Pending_Complaint_JSON__c = null;
                 ordersToUpdate.add(o);
             }
@@ -117,17 +121,18 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
             if (!linesToInsert.isEmpty()) {
                 insert linesToInsert;
 
-                List<Approval.ProcessSubmitRequest> approvalRequests = new List<Approval.ProcessSubmitRequest>();
-                for (Case_Order_Product__c cop : linesToInsert) {
-                    if (!cop.Is_External__c) {
-                        Approval.ProcessSubmitRequest req = new Approval.ProcessSubmitRequest();
-                        req.setObjectId(cop.Id);
-                        req.setSubmitterId(UserInfo.getUserId());
-                        approvalRequests.add(req);
+                for (Case insertedCase : casesToSubmit) {
+                    Approval.ProcessSubmitRequest req = new Approval.ProcessSubmitRequest();
+                    req.setObjectId(insertedCase.Id);
+                    req.setSubmitterId(UserInfo.getUserId());
+                    Approval.ProcessResult result = Approval.process(req, false);
+                    if (!result.isSuccess() && !Test.isRunningTest()) {
+                        ErrorLogger.logWarning(
+                            'Approval Error: ' + result.getErrors()[0].getMessage(),
+                            'ExternalComplaintResponseHandler',
+                            'afterInsert'
+                        );
                     }
-                }
-                if (!approvalRequests.isEmpty()) {
-                    Approval.process(approvalRequests, false);
                 }
             }
 

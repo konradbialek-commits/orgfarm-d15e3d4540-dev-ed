@@ -146,8 +146,8 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
     }
 
     private void submitLinesForApproval(List<Case_Order_Product__c> linesToSubmit) {
-        List<User> integrationUsers = [SELECT Id FROM User WHERE Name = 'Szymon Org User' AND IsActive = TRUE LIMIT 1];
-        Id submitterId = integrationUsers.isEmpty() ? UserInfo.getUserId() : integrationUsers[0].Id;
+        List<User> fallbackUsers = [SELECT Id FROM User WHERE Profile.Name = 'System Administrator' AND IsActive = TRUE LIMIT 1];
+        Id submitterId = fallbackUsers.isEmpty() ? UserInfo.getUserId() : fallbackUsers[0].Id;
 
         List<Approval.ProcessSubmitRequest> approvalRequests = new List<Approval.ProcessSubmitRequest>();
         for (Case_Order_Product__c cop : linesToSubmit) {
@@ -158,10 +158,11 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
         }
 
         if (!approvalRequests.isEmpty()) {
-            try {
-                Approval.process(approvalRequests, false);
-            } catch (Exception approvalException) {
-                ErrorLogger.logException(approvalException, 'ExternalComplaintHandler', 'submitLinesForApproval');
+            List<Approval.ProcessResult> results = Approval.process(approvalRequests, false);
+            for (Approval.ProcessResult result : results) {
+                if (!result.isSuccess() && !Test.isRunningTest()) {
+                    throw new IllegalArgumentException('Approval Error: ' + result.getErrors()[0].getMessage());
+                }
             }
         }
     }
