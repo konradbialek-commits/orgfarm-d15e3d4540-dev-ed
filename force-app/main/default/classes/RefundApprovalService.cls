@@ -135,7 +135,12 @@ public class RefundApprovalService {
         update caseUpdate;
 
         if (relatedCase.Order__c != null) {
-            update new Order(Id = relatedCase.Order__c, Refund_Status__c = finalRefundStatus, Refunded_Amount__c = totalApproved);
+            Order relatedOrder = [SELECT Refunded_Amount__c FROM Order WHERE Id = :relatedCase.Order__c LIMIT 1];
+            Decimal existingRefundedAmount = relatedOrder.Refunded_Amount__c != null ? relatedOrder.Refunded_Amount__c : 0;
+
+            relatedOrder.Refund_Status__c = finalRefundStatus;
+            relatedOrder.Refunded_Amount__c = existingRefundedAmount + totalApproved;
+            update relatedOrder;
         }
 
         List<Case> caseDetails = [SELECT CaseNumber, OwnerId FROM Case WHERE Id = :caseId LIMIT 1];
