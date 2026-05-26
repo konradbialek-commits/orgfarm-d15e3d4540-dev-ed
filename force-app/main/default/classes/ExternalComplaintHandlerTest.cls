@@ -56,17 +56,19 @@ private class ExternalComplaintHandlerTest {
         Assert.isNull(insertedCase.Order__c);
         Assert.areEqual('Partial - Missing parts', insertedCase.Reason);
 
-        List<Case_Order_Product__c> copList = [
+        List<Case_Order_Product__c> caseProductList = [
             SELECT Product_Name__c, Is_External__c, Refund_Amount__c, Requested_Refund_Type__c
             FROM Case_Order_Product__c
             WHERE Case__c = :insertedCase.Id
         ];
 
-        Assert.areEqual(2, copList.size());
+        Assert.areEqual(2, caseProductList.size());
     }
 
     @IsTest
     static void testInboundEventWithMalformedData() {
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
+
         External_Complaint__e malformedEvent = new External_Complaint__e(
             Line_Items_JSON__c = '[{"invalid": true]',
             Reason__c = 'Damaged',
@@ -79,13 +81,20 @@ private class ExternalComplaintHandlerTest {
         Test.stopTest();
 
         List<Case> insertedCases = [SELECT Id FROM Case WHERE External_Case_Id__c = 'uuid-1234'];
-        Assert.areEqual(0, insertedCases.size());
+        Assert.areEqual(0, insertedCases.size(), 'A Case should not have been created for malformed data.');
 
-        List<AsyncApexJob> queueableJobs = [
-            SELECT Id
-            FROM AsyncApexJob
-            WHERE JobType = 'Queueable' AND ApexClass.Name = 'ComplaintResponseQueueable'
-        ];
-        Assert.areEqual(1, queueableJobs.size());
+        List<Error_Log__c> logs = [SELECT Class_Name__c FROM Error_Log__c];
+        Boolean hasHandlerLog = false;
+        Boolean hasQueueableLog = false;
+
+        for (Error_Log__c log : logs) {
+            if (log.Class_Name__c == 'ExternalComplaintHandler')
+                hasHandlerLog = true;
+            if (log.Class_Name__c == 'ComplaintResponseQueueable')
+                hasQueueableLog = true;
+        }
+
+        Assert.isTrue(hasHandlerLog, 'The Handler should have logged the JSON exception.');
+        Assert.isTrue(hasQueueableLog, 'The Queueable should have run and logged the outbound error payload request.');
     }
 }
