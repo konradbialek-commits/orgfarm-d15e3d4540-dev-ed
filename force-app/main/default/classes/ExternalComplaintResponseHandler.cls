@@ -17,13 +17,16 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
         }
 
         if (!responseMap.isEmpty()) {
-            List<Order> ordersWithPending = [SELECT Id, Pending_Complaint_JSON__c FROM Order WHERE Pending_Complaint_JSON__c != NULL];
+            List<Order> ordersWithPending = [SELECT Id, Pending_Complaint_JSON__c FROM Order WHERE Refund_Status__c = 'Pending'];
             List<Order> ordersToUpdate = new List<Order>();
             List<Case> casesToInsert = new List<Case>();
             Map<String, Order> correlationToOrder = new Map<String, Order>();
             Map<String, RefundActionService.PendingComplaint> correlationToPc = new Map<String, RefundActionService.PendingComplaint>();
 
             for (Order o : ordersWithPending) {
+                if (String.isBlank(o.Pending_Complaint_JSON__c)) {
+                    continue;
+                }
                 try {
                     RefundActionService.PendingComplaint pc = (RefundActionService.PendingComplaint) JSON.deserialize(
                         o.Pending_Complaint_JSON__c,

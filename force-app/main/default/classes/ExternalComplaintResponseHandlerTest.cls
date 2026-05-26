@@ -29,6 +29,7 @@ private class ExternalComplaintResponseHandlerTest {
         pc.lines = new List<RefundActionService.PendingLine>{ pl1, pl2 };
 
         mockOrder.Pending_Complaint_JSON__c = JSON.serialize(pc);
+        mockOrder.Refund_Status__c = 'Pending';
         update mockOrder;
 
         List<Map<String, Object>> responseLines = new List<Map<String, Object>>{
