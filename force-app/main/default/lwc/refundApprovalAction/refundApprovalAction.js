@@ -50,7 +50,8 @@ export default class RefundApprovalAction extends LightningElement {
     wiredProducts({ error, data }) {
         if (data) {
             this.lineItems = data.map((item) => {
-                let isReadOnly = item.Refund_Status__c !== 'Pending';
+                // Force external items to be read-only so local managers can't edit Szymon's stuff
+                let isReadOnly = item.Refund_Status__c !== 'Pending' || item.Is_External__c;
                 return {
                     ...item,
                     isReadOnly: isReadOnly,
@@ -70,10 +71,15 @@ export default class RefundApprovalAction extends LightningElement {
         if (this.lineItems.length === 0) return true;
 
         for (let item of this.lineItems) {
-            if (item.Refund_Status__c === 'Pending') {
+            // Ignore external items; only block submission if LOCAL items are left pending
+            if (!item.Is_External__c && item.Refund_Status__c === 'Pending') {
                 return true;
             }
-            if (item.Refund_Status__c === 'Approved Partial Refund' && (!item.approvedAmount || parseFloat(item.approvedAmount) <= 0)) {
+            if (
+                !item.Is_External__c &&
+                item.Refund_Status__c === 'Approved Partial Refund' &&
+                (!item.approvedAmount || parseFloat(item.approvedAmount) <= 0)
+            ) {
                 return true;
             }
         }
@@ -125,11 +131,7 @@ export default class RefundApprovalAction extends LightningElement {
             });
 
             this.dispatchEvent(
-                new ShowToastEvent({
-                    title: LBL_MSG_SUCCESS,
-                    message: 'The refund request has been entirely rejected.',
-                    variant: 'success'
-                })
+                new ShowToastEvent({ title: LBL_MSG_SUCCESS, message: 'Your local items have been rejected.', variant: 'success' })
             );
             this.dispatchEvent(new CloseActionScreenEvent());
             notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
@@ -144,7 +146,7 @@ export default class RefundApprovalAction extends LightningElement {
         this.errorMessage = '';
 
         const updates = this.lineItems
-            .filter((item) => !item.isReadOnly)
+            .filter((item) => !item.isReadOnly && !item.Is_External__c)
             .map((item) => ({
                 id: item.Id,
                 status: item.Refund_Status__c,

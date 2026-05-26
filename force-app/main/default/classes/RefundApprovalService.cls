@@ -18,19 +18,19 @@ public class RefundApprovalService {
 
     public static void processBulkApproval(Id caseId, String comments, String lineItemsJSON) {
         List<LineItemUpdate> updates = (List<LineItemUpdate>) JSON.deserialize(lineItemsJSON, List<LineItemUpdate>.class);
-        List<Case_Order_Product__c> copsToUpdate = new List<Case_Order_Product__c>();
+        List<Case_Order_Product__c> caseProductsToUpdate = new List<Case_Order_Product__c>();
 
         for (LineItemUpdate item : updates) {
-            Case_Order_Product__c cop = new Case_Order_Product__c(Id = item.id, Refund_Status__c = item.status);
+            Case_Order_Product__c caseProduct = new Case_Order_Product__c(Id = item.id, Refund_Status__c = item.status);
 
             if (item.status == Util.COMPLAINT.STATUS.APPROVED_PARTIAL && item.approvedAmount != null) {
-                cop.Refund_Amount__c = item.approvedAmount;
+                caseProduct.Refund_Amount__c = item.approvedAmount;
             }
-            copsToUpdate.add(cop);
+            caseProductsToUpdate.add(caseProduct);
         }
 
-        if (!copsToUpdate.isEmpty()) {
-            update copsToUpdate;
+        if (!caseProductsToUpdate.isEmpty()) {
+            update caseProductsToUpdate;
         }
 
         List<ProcessInstanceWorkitem> workitems = [
@@ -41,27 +41,29 @@ public class RefundApprovalService {
         ];
 
         if (!workitems.isEmpty()) {
-            Approval.ProcessWorkitemRequest req = new Approval.ProcessWorkitemRequest();
-            req.setWorkitemId(workitems[0].Id);
-            req.setAction(Util.COMPLAINT.ACTION.APPROVE);
-            req.setComments(comments);
-            Approval.process(req);
+            Approval.ProcessWorkitemRequest approvalRequest = new Approval.ProcessWorkitemRequest();
+            approvalRequest.setWorkitemId(workitems[0].Id);
+            approvalRequest.setAction(Util.COMPLAINT.ACTION.APPROVE);
+            approvalRequest.setComments(comments);
+            Approval.process(approvalRequest);
         }
+
+        checkAndCompleteCaseApproval(caseId);
     }
 
     public static void rejectCase(Id caseId, String comments) {
-        List<Case_Order_Product__c> copsToUpdate = new List<Case_Order_Product__c>();
-        for (Case_Order_Product__c cop : [
+        List<Case_Order_Product__c> caseProductsToUpdate = new List<Case_Order_Product__c>();
+        for (Case_Order_Product__c caseProduct : [
             SELECT Id, Refund_Status__c
             FROM Case_Order_Product__c
-            WHERE Case__c = :caseId AND Refund_Status__c = :Util.COMPLAINT.STATUS.PENDING
+            WHERE Case__c = :caseId AND Refund_Status__c = :Util.COMPLAINT.STATUS.PENDING AND Is_External__c = FALSE
         ]) {
-            cop.Refund_Status__c = Util.COMPLAINT.STATUS.REJECTED;
-            copsToUpdate.add(cop);
+            caseProduct.Refund_Status__c = Util.COMPLAINT.STATUS.REJECTED;
+            caseProductsToUpdate.add(caseProduct);
         }
 
-        if (!copsToUpdate.isEmpty()) {
-            update copsToUpdate;
+        if (!caseProductsToUpdate.isEmpty()) {
+            update caseProductsToUpdate;
         }
 
         List<ProcessInstanceWorkitem> workitems = [
@@ -72,11 +74,76 @@ public class RefundApprovalService {
         ];
 
         if (!workitems.isEmpty()) {
-            Approval.ProcessWorkitemRequest req = new Approval.ProcessWorkitemRequest();
-            req.setWorkitemId(workitems[0].Id);
-            req.setAction(Util.COMPLAINT.ACTION.REJECT);
-            req.setComments(comments);
-            Approval.process(req);
+            Approval.ProcessWorkitemRequest approvalRequest = new Approval.ProcessWorkitemRequest();
+            approvalRequest.setWorkitemId(workitems[0].Id);
+            approvalRequest.setAction(Util.COMPLAINT.ACTION.REJECT);
+            approvalRequest.setComments(comments);
+            Approval.process(approvalRequest);
+        }
+
+        checkAndCompleteCaseApproval(caseId);
+    }
+
+    public static void checkAndCompleteCaseApproval(Id caseId) {
+        List<Case_Order_Product__c> allCaseProducts = [
+            SELECT Refund_Status__c, Refund_Amount__c
+            FROM Case_Order_Product__c
+            WHERE Case__c = :caseId
+        ];
+
+        Boolean hasPending = false;
+        Boolean hasRejected = false;
+        Boolean hasPartial = false;
+        Decimal totalApproved = 0;
+
+        for (Case_Order_Product__c caseProductItem : allCaseProducts) {
+            if (caseProductItem.Refund_Status__c == Util.COMPLAINT.STATUS.PENDING) {
+                hasPending = true;
+            } else if (caseProductItem.Refund_Status__c == Util.COMPLAINT.STATUS.REJECTED || caseProductItem.Refund_Status__c == 'Failed') {
+                hasRejected = true;
+            } else if (caseProductItem.Refund_Status__c == Util.COMPLAINT.STATUS.APPROVED_PARTIAL) {
+                hasPartial = true;
+                totalApproved += (caseProductItem.Refund_Amount__c != null ? caseProductItem.Refund_Amount__c : 0);
+            } else if (
+                caseProductItem.Refund_Status__c == Util.COMPLAINT.STATUS.APPROVED_FULL ||
+                caseProductItem.Refund_Status__c == 'Approved'
+            ) {
+                totalApproved += (caseProductItem.Refund_Amount__c != null ? caseProductItem.Refund_Amount__c : 0);
+            }
+        }
+
+        if (hasPending) {
+            return;
+        }
+
+        String finalRefundStatus;
+        if (hasRejected) {
+            finalRefundStatus = Util.COMPLAINT.STATUS.REJECTED;
+            totalApproved = 0;
+        } else {
+            finalRefundStatus = hasPartial ? Util.COMPLAINT.STATUS.APPROVED_PARTIAL : Util.COMPLAINT.STATUS.APPROVED_FULL;
+        }
+
+        Case relatedCase = [SELECT Order__c FROM Case WHERE Id = :caseId LIMIT 1];
+        Case caseUpdate = new Case(Id = caseId, Status = 'Closed', Refund_Status__c = finalRefundStatus, Refund_Amount__c = totalApproved);
+
+        TriggerBase.bypass(Schema.Case.SObjectType);
+        update caseUpdate;
+        TriggerBase.clearBypass(Schema.Case.SObjectType);
+
+        if (relatedCase.Order__c != null) {
+            update new Order(Id = relatedCase.Order__c, Refund_Status__c = finalRefundStatus, Refunded_Amount__c = totalApproved);
+        }
+
+        List<Case> caseDetails = [SELECT CaseNumber, OwnerId FROM Case WHERE Id = :caseId LIMIT 1];
+        if (!caseDetails.isEmpty()) {
+            Case notifyCase = new Case(
+                Id = caseId,
+                Refund_Status__c = finalRefundStatus,
+                CaseNumber = caseDetails[0].CaseNumber,
+                OwnerId = caseDetails[0].OwnerId
+            );
+            NotificationUtil.sendStatusNotifications(new List<Case>{ notifyCase });
         }
     }
 }
