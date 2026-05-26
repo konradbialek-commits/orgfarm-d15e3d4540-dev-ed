@@ -97,18 +97,12 @@ private class RefundActionControllerTest {
         );
         Test.stopTest();
 
-        Assert.isNotNull(result.caseId);
+        Assert.isNull(result.caseId);
         Assert.isTrue(result.hasExternalItems);
         Assert.isNotNull(result.correlationId);
 
-        List<Case_Order_Product__c> cops = [
-            SELECT Refund_Amount__c, Requested_Refund_Type__c
-            FROM Case_Order_Product__c
-            WHERE Case__c = :result.caseId
-        ];
-        Assert.areEqual(1, cops.size());
-        Assert.areEqual(50.00, cops[0].Refund_Amount__c);
-        Assert.areEqual('Partial', cops[0].Requested_Refund_Type__c);
+        Order updatedOrder = [SELECT Pending_Complaint_JSON__c FROM Order WHERE Id = :testOrder.Id];
+        Assert.isNotNull(updatedOrder.Pending_Complaint_JSON__c);
     }
 
     @IsTest
@@ -137,15 +131,11 @@ private class RefundActionControllerTest {
         );
         Test.stopTest();
 
-        Assert.isNotNull(result.caseId);
+        Assert.isNull(result.caseId);
         Assert.isTrue(result.hasExternalItems);
         Assert.isNotNull(result.correlationId);
 
-        List<Case_Order_Product__c> cops = [
-            SELECT Refund_Amount__c, Requested_Refund_Type__c, Is_External__c
-            FROM Case_Order_Product__c
-            WHERE Case__c = :result.caseId
-        ];
-        Assert.areEqual(2, cops.size());
+        Order updatedOrder = [SELECT Pending_Complaint_JSON__c FROM Order WHERE Id = :testOrder.Id];
+        Assert.isNotNull(updatedOrder.Pending_Complaint_JSON__c);
     }
 }

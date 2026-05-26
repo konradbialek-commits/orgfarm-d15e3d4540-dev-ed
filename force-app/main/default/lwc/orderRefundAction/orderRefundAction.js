@@ -3,6 +3,7 @@ import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { CloseActionScreenEvent } from 'lightning/actions';
 import { subscribe, unsubscribe, onError } from 'lightning/empApi';
+import { notifyRecordUpdateAvailable } from 'lightning/uiRecordApi';
 import getOrderItems from '@salesforce/apex/RefundActionController.getOrderItems';
 import processRefund from '@salesforce/apex/RefundActionController.processRefund';
 import logClientError from '@salesforce/apex/ErrorLogger.logClientError';
@@ -233,7 +234,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
                 this.showToast(LBL_REFUND_FAILED_TITLE, errorMsg, 'error');
             } else {
                 this.showToast(LBL_MSG_SUCCESS, LBL_REQUESTS_SUCCESS, 'success');
-                this.navigateToRecord(this.caseId);
+                notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
                 this.handleCancel();
             }
         }

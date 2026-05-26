@@ -5,6 +5,21 @@ public class RefundActionController {
         public Decimal refundAmount;
     }
 
+    public class PendingComplaint {
+        public String correlationId;
+        public String reason;
+        public List<PendingLine> lines;
+    }
+
+    public class PendingLine {
+        public Id orderItemId;
+        public String productName;
+        public Boolean isExternal;
+        public String externalProductId;
+        public Decimal refundAmount;
+        public String refundType;
+    }
+
     public class RefundResponse {
         @AuraEnabled
         public Id caseId;
@@ -48,16 +63,26 @@ public class RefundActionController {
             WHERE Id IN :itemIds
         ];
 
-        List<Case_Order_Product__c> caseProductsToInsert = new List<Case_Order_Product__c>();
         List<Map<String, Object>> externalLinesPayload = new List<Map<String, Object>>();
         Boolean hasExternal = false;
         String correlationId = UUID.randomUUID().toString();
+        List<PendingLine> pendingLines = new List<PendingLine>();
 
         for (OrderItem oi : selectedOrderItems) {
             RefundItem ri = refundItemMap.get(oi.Id);
+            String extId = String.isNotBlank(oi.Product2.External_Product_Id__c) ? oi.Product2.External_Product_Id__c : oi.Product2Id;
+
+            PendingLine pl = new PendingLine();
+            pl.orderItemId = oi.Id;
+            pl.productName = oi.Product2.Name;
+            pl.isExternal = oi.Product2.Is_External__c;
+            pl.externalProductId = extId;
+            pl.refundAmount = ri.refundAmount;
+            pl.refundType = ri.refundType;
+            pendingLines.add(pl);
+
             if (oi.Product2.Is_External__c) {
                 hasExternal = true;
-                String extId = String.isNotBlank(oi.Product2.External_Product_Id__c) ? oi.Product2.External_Product_Id__c : oi.Product2Id;
                 externalLinesPayload.add(
                     new Map<String, Object>{ 'productId' => extId, 'refundAmount' => ri.refundAmount, 'refundType' => ri.refundType }
                 );
@@ -65,6 +90,18 @@ public class RefundActionController {
         }
 
         if (hasExternal) {
+            PendingComplaint pc = new PendingComplaint();
+            pc.correlationId = correlationId;
+            pc.reason = description;
+            pc.lines = pendingLines;
+
+            Order relatedOrder = new Order(
+                Id = orderId,
+                Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
+                Pending_Complaint_JSON__c = JSON.serialize(pc)
+            );
+            update relatedOrder;
+
             External_Complaint__e complaintEvent = new External_Complaint__e(
                 Case_Id__c = correlationId,
                 Order_id__c = String.valueOf(orderId),
@@ -89,48 +126,49 @@ public class RefundActionController {
                 ErrorLogger.logException(calloutException, 'RefundActionController', 'processRefund');
                 throw new AuraHandledException('Callout failed: ' + calloutException.getMessage());
             }
+
+            RefundResponse res = new RefundResponse();
+            res.caseId = null;
+            res.hasExternalItems = true;
+            res.correlationId = correlationId;
+            return res;
         }
 
         Case singleCase = new Case(
             Subject = Util.COMPLAINT.SUBJECT.LOCAL_REFUND,
             Reason = description,
             Order__c = orderId,
-            Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
-            External_Case_Id__c = hasExternal ? correlationId : null
+            Refund_Status__c = Util.COMPLAINT.STATUS.PENDING
         );
         insert singleCase;
 
-        for (OrderItem oi : selectedOrderItems) {
-            RefundItem ri = refundItemMap.get(oi.Id);
-            String extId = String.isNotBlank(oi.Product2.External_Product_Id__c) ? oi.Product2.External_Product_Id__c : oi.Product2Id;
-
+        List<Case_Order_Product__c> caseProductsToInsert = new List<Case_Order_Product__c>();
+        for (PendingLine pl : pendingLines) {
             Case_Order_Product__c cop = new Case_Order_Product__c(
                 Case__c = singleCase.Id,
-                Order_Product__c = oi.Id,
-                Name = oi.Product2.Name,
-                Product_Name__c = oi.Product2.Name,
-                Is_External__c = oi.Product2.Is_External__c,
-                Refund_Amount__c = ri.refundAmount,
-                Requested_Refund_Type__c = ri.refundType,
+                Order_Product__c = pl.orderItemId,
+                Name = pl.productName,
+                Product_Name__c = pl.productName,
+                Is_External__c = false,
+                Refund_Amount__c = pl.refundAmount,
+                Requested_Refund_Type__c = pl.refundType,
                 Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
-                External_Product_Id__c = extId
+                External_Product_Id__c = pl.externalProductId
             );
             caseProductsToInsert.add(cop);
         }
 
         insert caseProductsToInsert;
 
-        Order relatedOrder = new Order(Id = orderId, Refund_Status__c = Util.COMPLAINT.STATUS.PENDING);
-        update relatedOrder;
+        Order relatedOrderLocal = new Order(Id = orderId, Refund_Status__c = Util.COMPLAINT.STATUS.PENDING);
+        update relatedOrderLocal;
 
         List<Approval.ProcessSubmitRequest> approvalRequests = new List<Approval.ProcessSubmitRequest>();
         for (Case_Order_Product__c cop : caseProductsToInsert) {
-            if (!cop.Is_External__c) {
-                Approval.ProcessSubmitRequest req = new Approval.ProcessSubmitRequest();
-                req.setObjectId(cop.Id);
-                req.setSubmitterId(UserInfo.getUserId());
-                approvalRequests.add(req);
-            }
+            Approval.ProcessSubmitRequest req = new Approval.ProcessSubmitRequest();
+            req.setObjectId(cop.Id);
+            req.setSubmitterId(UserInfo.getUserId());
+            approvalRequests.add(req);
         }
 
         if (!approvalRequests.isEmpty()) {
@@ -139,8 +177,8 @@ public class RefundActionController {
 
         RefundResponse res = new RefundResponse();
         res.caseId = singleCase.Id;
-        res.hasExternalItems = hasExternal;
-        res.correlationId = hasExternal ? correlationId : null;
+        res.hasExternalItems = false;
+        res.correlationId = null;
         return res;
     }
 }
