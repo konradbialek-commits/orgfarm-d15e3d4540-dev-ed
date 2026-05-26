@@ -1,11 +1,11 @@
 public with sharing class RefundApprovalController {
     @AuraEnabled
-    public static void processApproval(Id caseId, String decision, String comments, Decimal approvedAmount) {
+    public static void processApproval(Id caseProductId, String decision, String comments, Decimal approvedAmount) {
         try {
             ProcessInstanceWorkitem workitem = [
                 SELECT Id
                 FROM ProcessInstanceWorkitem
-                WHERE ProcessInstance.TargetObjectId = :caseId AND ActorId = :UserInfo.getUserId()
+                WHERE ProcessInstance.TargetObjectId = :caseProductId AND ActorId = :UserInfo.getUserId()
                 LIMIT 1
             ];
 
@@ -17,13 +17,13 @@ public with sharing class RefundApprovalController {
             req.setComments(comments);
             Approval.process(req);
 
-            Case caseRecord = new Case(Id = caseId, Refund_Status__c = decision);
+            Case_Order_Product__c copRecord = new Case_Order_Product__c(Id = caseProductId, Refund_Status__c = decision);
 
             if (approvedAmount != null && decision == 'Approved Partial Refund') {
-                caseRecord.Refund_Amount__c = approvedAmount;
+                copRecord.Refund_Amount__c = approvedAmount;
             }
 
-            update caseRecord;
+            update copRecord;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }

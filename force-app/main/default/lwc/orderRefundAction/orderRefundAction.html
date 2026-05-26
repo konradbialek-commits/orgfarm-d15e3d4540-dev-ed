@@ -10,41 +10,72 @@
         </template>
 
         <template if:false={isWaiting}>
-            <div class="slds-m-bottom_medium slds-scrollable_y" style="max-height: 250px">
-                <lightning-datatable key-field="Id" data={orderItems} columns={columns} onrowselection={handleRowSelection}>
-                </lightning-datatable>
+            <div class="slds-scrollable_y slds-m-bottom_medium" style="max-height: 300px">
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th style="width: 3.25rem"></th>
+                            <th>{labels.product}</th>
+                            <th style="width: 150px">{labels.refundType}</th>
+                            <th style="width: 150px">{labels.refundAmount}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={orderItems} for:item="item">
+                            <tr key={item.Id}>
+                                <td>
+                                    <lightning-input
+                                        type="checkbox"
+                                        data-id={item.Id}
+                                        checked={item.selected}
+                                        onchange={handleRowSelection}
+                                    ></lightning-input>
+                                </td>
+                                <td>
+                                    <div class="slds-truncate">{item.ProductName}</div>
+                                    <div class="slds-text-color_weak slds-text-body_small">
+                                        Qty: {item.Quantity} |
+                                        <lightning-formatted-number
+                                            value={item.UnitPrice}
+                                            format-style="currency"
+                                        ></lightning-formatted-number>
+                                    </div>
+                                </td>
+                                <td>
+                                    <lightning-combobox
+                                        data-id={item.Id}
+                                        value={item.refundType}
+                                        options={refundOptions}
+                                        onchange={handleTypeChange}
+                                        disabled={item.disabled}
+                                        variant="label-hidden"
+                                    ></lightning-combobox>
+                                </td>
+                                <td>
+                                    <lightning-input
+                                        type="number"
+                                        data-id={item.Id}
+                                        value={item.refundAmount}
+                                        onchange={handleAmountChange}
+                                        disabled={item.disabled}
+                                        variant="label-hidden"
+                                        step="0.01"
+                                    ></lightning-input>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
             </div>
 
             <div class="slds-m-bottom_medium">
-                <lightning-combobox
-                    name="refundType"
-                    label={labels.refundType}
-                    value={refundType}
-                    placeholder={labels.selectType}
-                    options={refundOptions}
-                    onchange={handleChange}
+                <lightning-textarea
+                    name="description"
+                    label={labels.reason}
+                    value={description}
+                    onchange={handleReasonChange}
                     required
-                >
-                </lightning-combobox>
-            </div>
-
-            <div class="slds-m-bottom_medium">
-                <lightning-input
-                    type="number"
-                    formatter="currency"
-                    step="0.01"
-                    name="refundAmount"
-                    label={labels.refundAmount}
-                    value={refundAmount}
-                    onchange={handleChange}
-                    required
-                >
-                </lightning-input>
-            </div>
-
-            <div class="slds-m-bottom_medium">
-                <lightning-textarea name="description" label={labels.reason} value={description} onchange={handleChange} required>
-                </lightning-textarea>
+                ></lightning-textarea>
             </div>
         </template>
 

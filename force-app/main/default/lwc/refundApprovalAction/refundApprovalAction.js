@@ -84,7 +84,7 @@ export default class RefundApprovalAction extends LightningElement {
 
         try {
             await processApproval({
-                caseId: this.recordId,
+                caseProductId: this.recordId,
                 decision: this.decision,
                 comments: this.comments,
                 approvedAmount: this.approvedAmount ? parseFloat(this.approvedAmount) : null
