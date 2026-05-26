@@ -6,10 +6,16 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
     }
 
     public void afterInsert(List<SObject> newRecordsList) {
-        List<External_Complaint__e> complaintEvents = (List<External_Complaint__e>) newRecordsList;
-        List<String> responsePayloads = new List<String>();
-
         try {
+            ErrorLogger.logInfo(
+                'INBOUND COMPLAINT | Payload: ' + JSON.serialize(newRecordsList),
+                'ExternalComplaintHandler',
+                'afterInsert'
+            );
+
+            List<External_Complaint__e> complaintEvents = (List<External_Complaint__e>) newRecordsList;
+            List<String> responsePayloads = new List<String>();
+
             Map<Integer, List<RefundLineItem>> eventIndexToItems = new Map<Integer, List<RefundLineItem>>();
             Set<String> externalProductIds = new Set<String>();
 
@@ -86,6 +92,10 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                     responsePayloads.add(JSON.serialize(responseEvent));
                 }
             }
+
+            if (!responsePayloads.isEmpty() && !System.isQueueable() && !System.isBatch()) {
+                System.enqueueJob(new ComplaintResponseQueueable(responsePayloads));
+            }
         } catch (Exception e) {
             if (
                 !Test.isRunningTest() &&
@@ -95,24 +105,7 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                 throw new EventBus.RetryableException(e.getMessage());
             } else {
                 ErrorLogger.logException(e, 'ExternalComplaintHandler', 'afterInsert');
-                responsePayloads.clear();
-                String safeErrorMessage = e.getMessage().length() > 32000 ? e.getMessage().substring(0, 32000) : e.getMessage();
-
-                for (External_Complaint__e complaintEvent : complaintEvents) {
-                    if (String.isNotBlank(complaintEvent.Case_Id__c)) {
-                        External_Complaint_Response__e errorResponse = new External_Complaint_Response__e(
-                            Case_Id__c = complaintEvent.Case_Id__c,
-                            Status__c = Util.COMPLAINT.RESPONSE_STATUS.FAILED,
-                            Error_Message__c = 'Transaction failed after 3 retries: ' + safeErrorMessage
-                        );
-                        responsePayloads.add(JSON.serialize(errorResponse));
-                    }
-                }
             }
-        }
-
-        if (!responsePayloads.isEmpty() && !System.isQueueable() && !System.isBatch()) {
-            System.enqueueJob(new ComplaintResponseQueueable(responsePayloads));
         }
     }
 

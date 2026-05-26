@@ -20,6 +20,8 @@ public class ComplaintResponseQueueable implements Queueable, Database.AllowsCal
             request.setBody(payloadData);
 
             try {
+                ErrorLogger.logInfo('OUTBOUND RESPONSE REQUEST | Payload: ' + payloadData, 'ComplaintResponseQueueable', 'execute');
+
                 HttpResponse response = httpAgent.send(request);
                 if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
                     ErrorLogger.logInfo('OUTBOUND RESPONSE SUCCESS | ' + response.getBody(), 'ComplaintResponseQueueable', 'execute');
