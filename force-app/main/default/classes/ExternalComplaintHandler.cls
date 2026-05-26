@@ -75,7 +75,7 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
 
                 if (!caseProductsToInsert.isEmpty()) {
                     insert caseProductsToInsert;
-                    submitLinesForApproval(caseProductsToInsert);
+                    submitCasesForApproval(casesToCreate);
                 }
 
                 for (Integer index : indexToCaseMap.keySet()) {
@@ -102,7 +102,7 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                     if (String.isNotBlank(complaintEvent.Case_Id__c)) {
                         External_Complaint_Response__e errorResponse = new External_Complaint_Response__e(
                             Case_Id__c = complaintEvent.Case_Id__c,
-                            Status__c = 'Failed',
+                            Status__c = Util.COMPLAINT.RESPONSE_STATUS.FAILED,
                             Error_Message__c = 'Transaction failed after 3 retries: ' + safeErrorMessage
                         );
                         responsePayloads.add(JSON.serialize(errorResponse));
@@ -145,14 +145,14 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
         return productMap;
     }
 
-    private void submitLinesForApproval(List<Case_Order_Product__c> linesToSubmit) {
+    private void submitCasesForApproval(List<Case> casesToSubmit) {
         List<User> fallbackUsers = [SELECT Id FROM User WHERE Profile.Name = 'System Administrator' AND IsActive = TRUE LIMIT 1];
         Id submitterId = fallbackUsers.isEmpty() ? UserInfo.getUserId() : fallbackUsers[0].Id;
 
         List<Approval.ProcessSubmitRequest> approvalRequests = new List<Approval.ProcessSubmitRequest>();
-        for (Case_Order_Product__c caseProduct : linesToSubmit) {
+        for (Case submittedCase : casesToSubmit) {
             Approval.ProcessSubmitRequest approvalRequest = new Approval.ProcessSubmitRequest();
-            approvalRequest.setObjectId(caseProduct.Id);
+            approvalRequest.setObjectId(submittedCase.Id);
             approvalRequest.setSubmitterId(submitterId);
             approvalRequests.add(approvalRequest);
         }
