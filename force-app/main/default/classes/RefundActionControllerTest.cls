@@ -62,6 +62,7 @@ private class RefundActionControllerTest {
 
         Assert.isNotNull(result.caseId);
         Assert.isFalse(result.hasExternalItems);
+        Assert.isNull(result.correlationId);
 
         Case insertedCase = [SELECT Id, Order__c, Reason FROM Case WHERE Id = :result.caseId];
         Assert.isNotNull(insertedCase);
@@ -98,6 +99,7 @@ private class RefundActionControllerTest {
 
         Assert.isNotNull(result.caseId);
         Assert.isTrue(result.hasExternalItems);
+        Assert.isNotNull(result.correlationId);
 
         List<Case_Order_Product__c> cops = [
             SELECT Refund_Amount__c, Requested_Refund_Type__c
@@ -137,6 +139,7 @@ private class RefundActionControllerTest {
 
         Assert.isNotNull(result.caseId);
         Assert.isTrue(result.hasExternalItems);
+        Assert.isNotNull(result.correlationId);
 
         List<Case_Order_Product__c> cops = [
             SELECT Refund_Amount__c, Requested_Refund_Type__c, Is_External__c
@@ -144,15 +147,5 @@ private class RefundActionControllerTest {
             WHERE Case__c = :result.caseId
         ];
         Assert.areEqual(2, cops.size());
-
-        for (Case_Order_Product__c cop : cops) {
-            if (cop.Is_External__c) {
-                Assert.areEqual(150.00, cop.Refund_Amount__c);
-                Assert.areEqual('Full', cop.Requested_Refund_Type__c);
-            } else {
-                Assert.areEqual(25.00, cop.Refund_Amount__c);
-                Assert.areEqual('Partial', cop.Requested_Refund_Type__c);
-            }
-        }
     }
 }

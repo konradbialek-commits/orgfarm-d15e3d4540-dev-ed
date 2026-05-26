@@ -75,10 +75,8 @@ private class ExternalComplaintHandlerTest {
         );
 
         Test.startTest();
-        Database.SaveResult sr = EventBus.publish(malformedEvent);
+        new ExternalComplaintHandler().afterInsert(new List<SObject>{ malformedEvent });
         Test.stopTest();
-
-        Assert.isTrue(sr.isSuccess());
 
         List<Case> insertedCases = [SELECT Id FROM Case WHERE External_Case_Id__c = 'uuid-1234'];
         Assert.areEqual(0, insertedCases.size());

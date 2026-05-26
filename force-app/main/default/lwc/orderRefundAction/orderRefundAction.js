@@ -39,6 +39,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     isWaiting = false;
 
     caseId = null;
+    correlationId = null;
     subscription = {};
     timeoutId;
     arrivedEventPayloads = new Map();
@@ -164,6 +165,8 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
         })
             .then((result) => {
                 this.caseId = result.caseId;
+                this.correlationId = result.correlationId;
+
                 if (result.hasExternalItems) {
                     this.startProcessingTimeout();
                     this.checkIfFinished();
@@ -220,11 +223,11 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
     }
 
     checkIfFinished() {
-        if (this.caseId && this.arrivedEventPayloads.has(this.caseId)) {
+        if (this.correlationId && this.arrivedEventPayloads.has(this.correlationId)) {
             this.isWaiting = false;
             this.clearProcessingTimeout();
 
-            const payload = this.arrivedEventPayloads.get(this.caseId);
+            const payload = this.arrivedEventPayloads.get(this.correlationId);
             if (payload.Status__c === 'Failed') {
                 const errorMsg = payload.Error_Message__c || LBL_EXT_REJECT_MSG;
                 this.showToast(LBL_REFUND_FAILED_TITLE, errorMsg, 'error');

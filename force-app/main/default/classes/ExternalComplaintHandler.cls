@@ -87,7 +87,7 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                 }
             }
         } catch (Exception e) {
-            if (EventBus.TriggerContext.currentContext().retries < 3) {
+            if (EventBus.TriggerContext.currentContext() != null && EventBus.TriggerContext.currentContext().retries < 3) {
                 throw new EventBus.RetryableException(e.getMessage());
             } else {
                 ErrorLogger.logException(e, 'ExternalComplaintHandler', 'afterInsert');
