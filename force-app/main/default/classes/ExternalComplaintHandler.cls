@@ -5,21 +5,21 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
         public String refundType;
     }
 
-    public void afterInsert(List<SObject> newList) {
-        List<External_Complaint__e> complaints = (List<External_Complaint__e>) newList;
+    public void afterInsert(List<SObject> newRecordsList) {
+        List<External_Complaint__e> complaintEvents = (List<External_Complaint__e>) newRecordsList;
         List<String> responsePayloads = new List<String>();
 
         try {
             Map<Integer, List<RefundLineItem>> eventIndexToItems = new Map<Integer, List<RefundLineItem>>();
             Set<String> externalProductIds = new Set<String>();
 
-            for (Integer i = 0; i < complaints.size(); i++) {
-                if (String.isNotBlank(complaints[i].Line_Items_JSON__c)) {
+            for (Integer index = 0; index < complaintEvents.size(); index++) {
+                if (String.isNotBlank(complaintEvents[index].Line_Items_JSON__c)) {
                     List<RefundLineItem> items = (List<RefundLineItem>) JSON.deserialize(
-                        complaints[i].Line_Items_JSON__c,
+                        complaintEvents[index].Line_Items_JSON__c,
                         List<RefundLineItem>.class
                     );
-                    eventIndexToItems.put(i, items);
+                    eventIndexToItems.put(index, items);
                     for (RefundLineItem item : items) {
                         externalProductIds.add(item.productId);
                     }
@@ -30,39 +30,39 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
             List<Case> casesToCreate = new List<Case>();
             Map<Integer, Case> indexToCaseMap = new Map<Integer, Case>();
 
-            for (Integer i = 0; i < complaints.size(); i++) {
-                External_Complaint__e complaint = complaints[i];
-                if (String.isBlank(complaint.Case_Id__c) || !eventIndexToItems.containsKey(i))
+            for (Integer index = 0; index < complaintEvents.size(); index++) {
+                External_Complaint__e complaintEvent = complaintEvents[index];
+                if (String.isBlank(complaintEvent.Case_Id__c) || !eventIndexToItems.containsKey(index))
                     continue;
 
                 Case newCase = new Case(
                     Subject = Util.COMPLAINT.SUBJECT.EXTERNAL_REFUND,
-                    Reason = complaint.Reason__c,
+                    Reason = complaintEvent.Reason__c,
                     Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
-                    External_Case_Id__c = complaint.Case_Id__c
+                    External_Case_Id__c = complaintEvent.Case_Id__c
                 );
                 casesToCreate.add(newCase);
-                indexToCaseMap.put(i, newCase);
+                indexToCaseMap.put(index, newCase);
             }
 
             if (!casesToCreate.isEmpty()) {
                 insert casesToCreate;
 
-                List<Case_Order_Product__c> linesToInsert = new List<Case_Order_Product__c>();
+                List<Case_Order_Product__c> caseProductsToInsert = new List<Case_Order_Product__c>();
 
-                for (Integer i : indexToCaseMap.keySet()) {
-                    Case insertedCase = indexToCaseMap.get(i);
-                    List<RefundLineItem> items = eventIndexToItems.get(i);
+                for (Integer index : indexToCaseMap.keySet()) {
+                    Case insertedCase = indexToCaseMap.get(index);
+                    List<RefundLineItem> items = eventIndexToItems.get(index);
 
                     for (RefundLineItem item : items) {
                         if (productMap.containsKey(item.productId)) {
-                            Product2 prod = productMap.get(item.productId);
-                            linesToInsert.add(
+                            Product2 matchedProduct = productMap.get(item.productId);
+                            caseProductsToInsert.add(
                                 new Case_Order_Product__c(
                                     Case__c = insertedCase.Id,
-                                    Name = prod.Name,
-                                    Product_Name__c = prod.Name,
-                                    Is_External__c = prod.Is_External__c,
+                                    Name = matchedProduct.Name,
+                                    Product_Name__c = matchedProduct.Name,
+                                    Is_External__c = matchedProduct.Is_External__c,
                                     Refund_Amount__c = item.refundAmount,
                                     Requested_Refund_Type__c = item.refundType,
                                     Refund_Status__c = Util.COMPLAINT.STATUS.PENDING,
@@ -73,14 +73,14 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                     }
                 }
 
-                if (!linesToInsert.isEmpty()) {
-                    insert linesToInsert;
-                    submitLinesForApproval(linesToInsert);
+                if (!caseProductsToInsert.isEmpty()) {
+                    insert caseProductsToInsert;
+                    submitLinesForApproval(caseProductsToInsert);
                 }
 
-                for (Integer i : indexToCaseMap.keySet()) {
+                for (Integer index : indexToCaseMap.keySet()) {
                     External_Complaint_Response__e responseEvent = new External_Complaint_Response__e(
-                        Case_Id__c = complaints[i].Case_Id__c,
+                        Case_Id__c = complaintEvents[index].Case_Id__c,
                         Status__c = Util.COMPLAINT.RESPONSE_STATUS.CREATED
                     );
                     responsePayloads.add(JSON.serialize(responseEvent));
@@ -98,10 +98,10 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
                 responsePayloads.clear();
                 String safeErrorMessage = e.getMessage().length() > 32000 ? e.getMessage().substring(0, 32000) : e.getMessage();
 
-                for (External_Complaint__e complaint : complaints) {
-                    if (String.isNotBlank(complaint.Case_Id__c)) {
+                for (External_Complaint__e complaintEvent : complaintEvents) {
+                    if (String.isNotBlank(complaintEvent.Case_Id__c)) {
                         External_Complaint_Response__e errorResponse = new External_Complaint_Response__e(
-                            Case_Id__c = complaint.Case_Id__c,
+                            Case_Id__c = complaintEvent.Case_Id__c,
                             Status__c = 'Failed',
                             Error_Message__c = 'Transaction failed after 3 retries: ' + safeErrorMessage
                         );
@@ -136,10 +136,10 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
             WHERE Id IN :validSalesforceIds OR External_Product_Id__c IN :externalProductIds
         ];
 
-        for (Product2 productRecord : matchedProducts) {
-            productMap.put(productRecord.Id, productRecord);
-            if (String.isNotBlank(productRecord.External_Product_Id__c)) {
-                productMap.put(productRecord.External_Product_Id__c, productRecord);
+        for (Product2 matchedProduct : matchedProducts) {
+            productMap.put(matchedProduct.Id, matchedProduct);
+            if (String.isNotBlank(matchedProduct.External_Product_Id__c)) {
+                productMap.put(matchedProduct.External_Product_Id__c, matchedProduct);
             }
         }
         return productMap;
@@ -150,11 +150,11 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
         Id submitterId = fallbackUsers.isEmpty() ? UserInfo.getUserId() : fallbackUsers[0].Id;
 
         List<Approval.ProcessSubmitRequest> approvalRequests = new List<Approval.ProcessSubmitRequest>();
-        for (Case_Order_Product__c cop : linesToSubmit) {
-            Approval.ProcessSubmitRequest request = new Approval.ProcessSubmitRequest();
-            request.setObjectId(cop.Id);
-            request.setSubmitterId(submitterId);
-            approvalRequests.add(request);
+        for (Case_Order_Product__c caseProduct : linesToSubmit) {
+            Approval.ProcessSubmitRequest approvalRequest = new Approval.ProcessSubmitRequest();
+            approvalRequest.setObjectId(caseProduct.Id);
+            approvalRequest.setSubmitterId(submitterId);
+            approvalRequests.add(approvalRequest);
         }
 
         if (!approvalRequests.isEmpty()) {

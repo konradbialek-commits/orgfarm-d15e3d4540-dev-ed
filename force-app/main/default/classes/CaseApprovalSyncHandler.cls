@@ -6,25 +6,25 @@ public class CaseApprovalSyncHandler implements TriggerAction.AfterUpdate {
         public String refundType;
     }
 
-    public void afterUpdate(List<SObject> newList, List<SObject> oldList) {
-        List<Case> newCases = (List<Case>) newList;
-        List<Case> oldCases = (List<Case>) oldList;
+    public void afterUpdate(List<SObject> newRecordsList, List<SObject> oldRecordsList) {
+        List<Case> newCaseRecords = (List<Case>) newRecordsList;
+        List<Case> oldCaseRecords = (List<Case>) oldRecordsList;
 
         List<String> outboundResponses = new List<String>();
         Set<Id> externalCaseIds = new Set<Id>();
 
-        for (Integer i = 0; i < newCases.size(); i++) {
+        for (Integer index = 0; index < newCaseRecords.size(); index++) {
             if (
-                newCases[i].Refund_Status__c != oldCases[i].Refund_Status__c &&
-                newCases[i].Order__c == null &&
-                String.isNotBlank(newCases[i].External_Case_Id__c)
+                newCaseRecords[index].Refund_Status__c != oldCaseRecords[index].Refund_Status__c &&
+                newCaseRecords[index].Order__c == null &&
+                String.isNotBlank(newCaseRecords[index].External_Case_Id__c)
             ) {
-                externalCaseIds.add(newCases[i].Id);
+                externalCaseIds.add(newCaseRecords[index].Id);
             }
         }
 
         if (!externalCaseIds.isEmpty()) {
-            Map<Id, Case> caseWithLines = new Map<Id, Case>(
+            Map<Id, Case> casesWithLineItems = new Map<Id, Case>(
                 [
                     SELECT
                         Id,
@@ -40,25 +40,25 @@ public class CaseApprovalSyncHandler implements TriggerAction.AfterUpdate {
                 ]
             );
 
-            for (Case c : caseWithLines.values()) {
+            for (Case evaluatedCase : casesWithLineItems.values()) {
                 if (
-                    c.Refund_Status__c == 'Approved Full Refund' ||
-                    c.Refund_Status__c == 'Approved Partial Refund' ||
-                    c.Refund_Status__c == 'Rejected'
+                    evaluatedCase.Refund_Status__c == Util.COMPLAINT.STATUS.APPROVED_FULL ||
+                    evaluatedCase.Refund_Status__c == Util.COMPLAINT.STATUS.APPROVED_PARTIAL ||
+                    evaluatedCase.Refund_Status__c == Util.COMPLAINT.STATUS.REJECTED
                 ) {
                     List<RefundLineResponse> refundResponses = new List<RefundLineResponse>();
-                    for (Case_Order_Product__c line : c.Case_Order_Products__r) {
+                    for (Case_Order_Product__c caseProductItem : evaluatedCase.Case_Order_Products__r) {
                         RefundLineResponse itemResponse = new RefundLineResponse();
-                        itemResponse.productId = line.External_Product_Id__c;
-                        itemResponse.status = line.Refund_Status__c;
-                        itemResponse.refundAmount = line.Refund_Amount__c;
-                        itemResponse.refundType = line.Requested_Refund_Type__c;
+                        itemResponse.productId = caseProductItem.External_Product_Id__c;
+                        itemResponse.status = caseProductItem.Refund_Status__c;
+                        itemResponse.refundAmount = caseProductItem.Refund_Amount__c;
+                        itemResponse.refundType = caseProductItem.Requested_Refund_Type__c;
                         refundResponses.add(itemResponse);
                     }
 
                     External_Complaint_Response__e responseEvent = new External_Complaint_Response__e(
-                        Case_Id__c = c.External_Case_Id__c,
-                        Status__c = c.Refund_Status__c,
+                        Case_Id__c = evaluatedCase.External_Case_Id__c,
+                        Status__c = evaluatedCase.Refund_Status__c,
                         Line_Items_JSON__c = JSON.serialize(refundResponses)
                     );
                     outboundResponses.add(JSON.serialize(responseEvent));
