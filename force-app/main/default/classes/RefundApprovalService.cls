@@ -99,15 +99,15 @@ public class RefundApprovalService {
         for (Case_Order_Product__c caseProductItem : allCaseProducts) {
             if (caseProductItem.Refund_Status__c == Util.COMPLAINT.STATUS.PENDING) {
                 hasPending = true;
-            } else if (caseProductItem.Refund_Status__c == Util.COMPLAINT.STATUS.REJECTED || caseProductItem.Refund_Status__c == 'Failed') {
+            } else if (
+                caseProductItem.Refund_Status__c == Util.COMPLAINT.STATUS.REJECTED ||
+                caseProductItem.Refund_Status__c == Util.COMPLAINT.RESPONSE_STATUS.FAILED
+            ) {
                 hasRejected = true;
             } else if (caseProductItem.Refund_Status__c == Util.COMPLAINT.STATUS.APPROVED_PARTIAL) {
                 hasPartial = true;
                 totalApproved += (caseProductItem.Refund_Amount__c != null ? caseProductItem.Refund_Amount__c : 0);
-            } else if (
-                caseProductItem.Refund_Status__c == Util.COMPLAINT.STATUS.APPROVED_FULL ||
-                caseProductItem.Refund_Status__c == 'Approved'
-            ) {
+            } else if (caseProductItem.Refund_Status__c == Util.COMPLAINT.STATUS.APPROVED_FULL) {
                 totalApproved += (caseProductItem.Refund_Amount__c != null ? caseProductItem.Refund_Amount__c : 0);
             }
         }
@@ -125,7 +125,12 @@ public class RefundApprovalService {
         }
 
         Case relatedCase = [SELECT Order__c FROM Case WHERE Id = :caseId LIMIT 1];
-        Case caseUpdate = new Case(Id = caseId, Status = 'Closed', Refund_Status__c = finalRefundStatus, Refund_Amount__c = totalApproved);
+        Case caseUpdate = new Case(
+            Id = caseId,
+            Status = Util.COMPLAINT.CASE_STATUS.CLOSED,
+            Refund_Status__c = finalRefundStatus,
+            Refund_Amount__c = totalApproved
+        );
 
         TriggerBase.bypass(Schema.Case.SObjectType);
         update caseUpdate;
@@ -137,13 +142,8 @@ public class RefundApprovalService {
 
         List<Case> caseDetails = [SELECT CaseNumber, OwnerId FROM Case WHERE Id = :caseId LIMIT 1];
         if (!caseDetails.isEmpty()) {
-            Case notifyCase = new Case(
-                Id = caseId,
-                Refund_Status__c = finalRefundStatus,
-                CaseNumber = caseDetails[0].CaseNumber,
-                OwnerId = caseDetails[0].OwnerId
-            );
-            NotificationUtil.sendStatusNotifications(new List<Case>{ notifyCase });
+            caseDetails[0].Refund_Status__c = finalRefundStatus;
+            NotificationUtil.sendStatusNotifications(new List<Case>{ caseDetails[0] });
         }
     }
 }

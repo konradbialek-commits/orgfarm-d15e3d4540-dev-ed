@@ -66,7 +66,10 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
                     );
                     casesToInsert.add(newCase);
                     correlationToNewCase.put(pendingComplaint.correlationId, newCase);
-                } else if (responseEvent.Status__c == 'Failed' || responseEvent.Status__c == Util.COMPLAINT.STATUS.REJECTED) {
+                } else if (
+                    responseEvent.Status__c == Util.COMPLAINT.RESPONSE_STATUS.FAILED ||
+                    responseEvent.Status__c == Util.COMPLAINT.STATUS.REJECTED
+                ) {
                     pendingOrder.Pending_Complaint_JSON__c = null;
                     pendingOrder.Refund_Status__c = Util.COMPLAINT.STATUS.REJECTED;
                     ordersToUpdate.add(pendingOrder);
@@ -153,7 +156,10 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
                 for (Case existingCase : existingCases) {
                     External_Complaint_Response__e eventRecord = correlationIdToResponseMap.get(existingCase.External_Case_Id__c);
 
-                    if (eventRecord.Status__c == 'Failed' || eventRecord.Status__c == Util.COMPLAINT.STATUS.REJECTED) {
+                    if (
+                        eventRecord.Status__c == Util.COMPLAINT.RESPONSE_STATUS.FAILED ||
+                        eventRecord.Status__c == Util.COMPLAINT.STATUS.REJECTED
+                    ) {
                         for (Case_Order_Product__c caseProduct : existingCase.Case_Order_Products__r) {
                             if (caseProduct.Refund_Status__c == Util.COMPLAINT.STATUS.PENDING) {
                                 caseProduct.Refund_Status__c = Util.COMPLAINT.STATUS.REJECTED;

@@ -35,6 +35,11 @@ public class ComplaintConst {
             return new ApprovalAction();
         }
     }
+    public CaseStatus CASE_STATUS {
+        get {
+            return new CaseStatus();
+        }
+    }
 
     public class RefundStatus {
         public String PENDING {
@@ -91,6 +96,11 @@ public class ComplaintConst {
                 return 'Created';
             }
         }
+        public String FAILED {
+            get {
+                return 'Failed';
+            }
+        }
     }
 
     public class ApprovalAction {
@@ -102,6 +112,14 @@ public class ComplaintConst {
         public String REJECT {
             get {
                 return 'Reject';
+            }
+        }
+    }
+
+    public class CaseStatus {
+        public String CLOSED {
+            get {
+                return 'Closed';
             }
         }
     }
