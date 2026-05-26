@@ -49,28 +49,34 @@ private class RefundActionControllerTest {
         Order testOrder = [SELECT Id FROM Order LIMIT 1];
         OrderItem localItem = [SELECT Id FROM OrderItem WHERE Product2.Is_External__c = FALSE LIMIT 1];
 
+        List<Map<String, Object>> itemsList = new List<Map<String, Object>>();
+        itemsList.add(new Map<String, Object>{ 'orderItemId' => localItem.Id, 'refundType' => 'Full', 'refundAmount' => 100.00 });
+
         Test.startTest();
-        RefundActionController.RefundResponse result = RefundActionController.processRefund(
+        RefundActionService.RefundResponse result = RefundActionController.processRefund(
             testOrder.Id,
-            new List<Id>{ localItem.Id },
-            'Full',
             'Test Reason',
-            100.00
+            JSON.serialize(itemsList)
         );
         Test.stopTest();
 
-        Assert.isNotNull(result.localCaseId);
+        Assert.isNotNull(result.caseId);
+        Assert.isFalse(result.hasExternalItems);
         Assert.isNull(result.correlationId);
-        Assert.isNull(result.externalCaseId);
 
-        Case insertedCase = [SELECT Id, Order__c, Refund_Amount__c, Reason FROM Case WHERE Id = :result.localCaseId];
+        Case insertedCase = [SELECT Id, Order__c, Reason FROM Case WHERE Id = :result.caseId];
         Assert.isNotNull(insertedCase);
         Assert.areEqual(testOrder.Id, insertedCase.Order__c);
-        Assert.areEqual(100.00, insertedCase.Refund_Amount__c);
-        Assert.areEqual('Full - Test Reason', insertedCase.Reason);
+        Assert.areEqual('Test Reason', insertedCase.Reason);
 
-        Order updatedOrder = [SELECT Refund_Status__c FROM Order WHERE Id = :testOrder.Id];
-        Assert.areEqual('Pending', updatedOrder.Refund_Status__c);
+        List<Case_Order_Product__c> cops = [
+            SELECT Refund_Amount__c, Requested_Refund_Type__c
+            FROM Case_Order_Product__c
+            WHERE Case__c = :result.caseId
+        ];
+        Assert.areEqual(1, cops.size());
+        Assert.areEqual(100.00, cops[0].Refund_Amount__c);
+        Assert.areEqual('Full', cops[0].Requested_Refund_Type__c);
     }
 
     @IsTest
@@ -80,77 +86,56 @@ private class RefundActionControllerTest {
 
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
+        List<Map<String, Object>> itemsList = new List<Map<String, Object>>();
+        itemsList.add(new Map<String, Object>{ 'orderItemId' => extItem.Id, 'refundType' => 'Partial', 'refundAmount' => 50.00 });
+
         Test.startTest();
-        RefundActionController.RefundResponse result = RefundActionController.processRefund(
+        RefundActionService.RefundResponse result = RefundActionController.processRefund(
             testOrder.Id,
-            new List<Id>{ extItem.Id },
-            'Partial',
             'Test Reason External',
-            50.00
+            JSON.serialize(itemsList)
         );
         Test.stopTest();
 
+        Assert.isNull(result.caseId);
+        Assert.isTrue(result.hasExternalItems);
         Assert.isNotNull(result.correlationId);
-        Assert.isNotNull(result.externalCaseId);
-        Assert.isNull(result.localCaseId);
 
-        Case externalCase = [SELECT Id, Order__c, External_Case_Id__c, Reason FROM Case WHERE Id = :result.externalCaseId];
-        Assert.isNotNull(externalCase);
-        Assert.areEqual(testOrder.Id, externalCase.Order__c);
-        Assert.areEqual('Partial - Test Reason External', externalCase.Reason);
-        Assert.areEqual(result.correlationId, externalCase.External_Case_Id__c);
-
-        Order updatedOrder = [SELECT Refund_Status__c FROM Order WHERE Id = :testOrder.Id];
-        Assert.areEqual('Pending', updatedOrder.Refund_Status__c);
+        Order updatedOrder = [SELECT Pending_Complaint_JSON__c FROM Order WHERE Id = :testOrder.Id];
+        Assert.isNotNull(updatedOrder.Pending_Complaint_JSON__c);
     }
 
     @IsTest
     static void testProcessRefundMixed() {
         Order testOrder = [SELECT Id FROM Order LIMIT 1];
-        List<OrderItem> allItems = [SELECT Id FROM OrderItem];
-        List<Id> allItemIds = new List<Id>();
+        List<OrderItem> allItems = [SELECT Id, Product2.Is_External__c FROM OrderItem];
+
+        List<Map<String, Object>> itemsList = new List<Map<String, Object>>();
         for (OrderItem oi : allItems) {
-            allItemIds.add(oi.Id);
+            itemsList.add(
+                new Map<String, Object>{
+                    'orderItemId' => oi.Id,
+                    'refundType' => oi.Product2.Is_External__c ? 'Full' : 'Partial',
+                    'refundAmount' => oi.Product2.Is_External__c ? 150.00 : 25.00
+                }
+            );
         }
 
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
         Test.startTest();
-        RefundActionController.RefundResponse result = RefundActionController.processRefund(
+        RefundActionService.RefundResponse result = RefundActionController.processRefund(
             testOrder.Id,
-            allItemIds,
-            'Partial',
             'Mixed Request',
-            125.00
+            JSON.serialize(itemsList)
         );
         Test.stopTest();
 
-        Assert.isNotNull(result.localCaseId);
+        Assert.isNull(result.caseId);
+        Assert.isTrue(result.hasExternalItems);
         Assert.isNotNull(result.correlationId);
-        Assert.isNotNull(result.externalCaseId);
-        Assert.areNotEqual(result.localCaseId, result.externalCaseId);
 
-        List<Case> insertedCases = [
-            SELECT Id, Order__c, Refund_Amount__c, Reason, External_Case_Id__c
-            FROM Case
-            WHERE Id IN (:result.localCaseId, :result.externalCaseId)
-        ];
-        Assert.areEqual(2, insertedCases.size());
-
-        for (Case c : insertedCases) {
-            Assert.areEqual(testOrder.Id, c.Order__c);
-            Assert.areEqual(125.00, c.Refund_Amount__c);
-            Assert.areEqual('Partial - Mixed Request', c.Reason);
-
-            if (c.Id == result.externalCaseId) {
-                Assert.isNotNull(c.External_Case_Id__c);
-                Assert.areEqual(result.correlationId, c.External_Case_Id__c);
-            } else {
-                Assert.isNull(c.External_Case_Id__c);
-            }
-        }
-
-        Order updatedOrder = [SELECT Refund_Status__c FROM Order WHERE Id = :testOrder.Id];
-        Assert.areEqual('Pending', updatedOrder.Refund_Status__c);
+        Order updatedOrder = [SELECT Pending_Complaint_JSON__c FROM Order WHERE Id = :testOrder.Id];
+        Assert.isNotNull(updatedOrder.Pending_Complaint_JSON__c);
     }
 }

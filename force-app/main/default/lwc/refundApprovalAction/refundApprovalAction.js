@@ -18,6 +18,7 @@ import LBL_AA_APP_FULL from '@salesforce/label/c.AA_Approve_Full';
 import LBL_AA_APP_PARTIAL from '@salesforce/label/c.AA_Approve_Partial';
 import LBL_AA_REJECT from '@salesforce/label/c.AA_Reject';
 import LBL_AA_SUCCESS_MSG from '@salesforce/label/c.AA_Success_Msg';
+import LBL_APP_REFUND_AMT from '@salesforce/label/c.RA_Approved_Refund_Amount';
 
 export default class RefundApprovalAction extends LightningElement {
     @api recordId;
@@ -35,7 +36,8 @@ export default class RefundApprovalAction extends LightningElement {
         decision: LBL_AA_DECISION,
         comments: LBL_AA_COMMENTS,
         cancel: LBL_BTN_CANCEL,
-        submit: LBL_BTN_SUBMIT
+        submit: LBL_BTN_SUBMIT,
+        approvedRefundAmount: LBL_APP_REFUND_AMT
     };
 
     decisionOptions = [
@@ -49,9 +51,8 @@ export default class RefundApprovalAction extends LightningElement {
     }
 
     get isSubmitDisabled() {
-        if (!this.decision) {
-            return true;
-        }
+        if (this.isLoading) return true;
+        if (!this.decision) return true;
         if (this.decision === 'Approved Partial Refund' && (!this.approvedAmount || this.approvedAmount <= 0)) {
             return true;
         }
@@ -82,7 +83,7 @@ export default class RefundApprovalAction extends LightningElement {
 
         try {
             await processApproval({
-                caseId: this.recordId,
+                caseProductId: this.recordId,
                 decision: this.decision,
                 comments: this.comments,
                 approvedAmount: this.approvedAmount ? parseFloat(this.approvedAmount) : null
