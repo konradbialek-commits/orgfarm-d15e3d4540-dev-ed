@@ -1,29 +1,30 @@
 public with sharing class RefundApprovalController {
-    @AuraEnabled
-    public static void processApproval(Id caseProductId, String decision, String comments, Decimal approvedAmount) {
+    @AuraEnabled(cacheable=true)
+    public static List<Case_Order_Product__c> getCaseProducts(Id caseId) {
         try {
-            ProcessInstanceWorkitem workitem = [
-                SELECT Id
-                FROM ProcessInstanceWorkitem
-                WHERE ProcessInstance.TargetObjectId = :caseProductId AND ActorId = :UserInfo.getUserId()
-                LIMIT 1
-            ];
+            return RefundApprovalService.getCaseProducts(caseId);
+        } catch (Exception e) {
+            AuraHandledException auraEx = new AuraHandledException(e.getMessage());
+            auraEx.setMessage(e.getMessage());
+            throw auraEx;
+        }
+    }
 
-            String action = (decision == 'Rejected') ? 'Reject' : 'Approve';
+    @AuraEnabled
+    public static void processBulkApproval(Id caseId, String comments, String lineItemsJSON) {
+        try {
+            RefundApprovalService.processBulkApproval(caseId, comments, lineItemsJSON);
+        } catch (Exception e) {
+            AuraHandledException auraEx = new AuraHandledException(e.getMessage());
+            auraEx.setMessage(e.getMessage());
+            throw auraEx;
+        }
+    }
 
-            Approval.ProcessWorkitemRequest req = new Approval.ProcessWorkitemRequest();
-            req.setWorkitemId(workitem.Id);
-            req.setAction(action);
-            req.setComments(comments);
-            Approval.process(req);
-
-            Case_Order_Product__c copRecord = new Case_Order_Product__c(Id = caseProductId, Refund_Status__c = decision);
-
-            if (approvedAmount != null && decision == 'Approved Partial Refund') {
-                copRecord.Refund_Amount__c = approvedAmount;
-            }
-
-            update copRecord;
+    @AuraEnabled
+    public static void rejectCase(Id caseId, String comments) {
+        try {
+            RefundApprovalService.rejectCase(caseId, comments);
         } catch (Exception e) {
             AuraHandledException auraEx = new AuraHandledException(e.getMessage());
             auraEx.setMessage(e.getMessage());

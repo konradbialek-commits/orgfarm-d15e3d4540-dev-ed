@@ -50,13 +50,14 @@ private class CaseApprovalSyncHandlerTest {
         new CaseProductApprovalHandler().afterUpdate(new List<SObject>{ cop1, cop2 }, new List<SObject>{ oldCop1, oldCop2 });
         Test.stopTest();
 
-        Case updatedCase = [SELECT Refund_Status__c, Refund_Amount__c FROM Case WHERE Id = :testCase.Id];
-        Assert.areEqual('Approved Partial Refund', updatedCase.Refund_Status__c);
-        Assert.areEqual(50.00, updatedCase.Refund_Amount__c);
+        Case updatedCase = [SELECT Refund_Status__c, Refund_Amount__c, Status FROM Case WHERE Id = :testCase.Id];
+        Assert.areEqual('Rejected', updatedCase.Refund_Status__c);
+        Assert.areEqual(0, updatedCase.Refund_Amount__c);
+        Assert.areEqual('Closed', updatedCase.Status);
 
         Order updatedOrder = [SELECT Refund_Status__c, Refunded_Amount__c FROM Order WHERE Id = :testOrder.Id];
-        Assert.areEqual('Approved Partial Refund', updatedOrder.Refund_Status__c);
-        Assert.areEqual(50.00, updatedOrder.Refunded_Amount__c);
+        Assert.areEqual('Rejected', updatedOrder.Refund_Status__c);
+        Assert.areEqual(0, updatedOrder.Refunded_Amount__c);
     }
 
     @IsTest

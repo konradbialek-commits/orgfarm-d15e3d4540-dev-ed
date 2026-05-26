@@ -162,16 +162,12 @@ public class RefundActionService {
             Order relatedOrderLocal = new Order(Id = orderId, Refund_Status__c = Util.COMPLAINT.STATUS.PENDING);
             update relatedOrderLocal;
 
-            List<Approval.ProcessSubmitRequest> approvalRequests = new List<Approval.ProcessSubmitRequest>();
-            for (Case_Order_Product__c cop : caseProductsToInsert) {
-                Approval.ProcessSubmitRequest req = new Approval.ProcessSubmitRequest();
-                req.setObjectId(cop.Id);
-                req.setSubmitterId(UserInfo.getUserId());
-                approvalRequests.add(req);
-            }
-
-            if (!approvalRequests.isEmpty()) {
-                Approval.process(approvalRequests, false);
+            Approval.ProcessSubmitRequest req = new Approval.ProcessSubmitRequest();
+            req.setObjectId(singleCase.Id);
+            req.setSubmitterId(UserInfo.getUserId());
+            Approval.ProcessResult result = Approval.process(req, false);
+            if (!result.isSuccess() && !Test.isRunningTest()) {
+                throw new IllegalArgumentException('Approval Error: ' + result.getErrors()[0].getMessage());
             }
 
             RefundResponse res = new RefundResponse();

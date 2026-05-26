@@ -30,6 +30,11 @@ public class ComplaintConst {
             return new ResponseStatus();
         }
     }
+    public ApprovalAction ACTION {
+        get {
+            return new ApprovalAction();
+        }
+    }
 
     public class RefundStatus {
         public String PENDING {
@@ -37,19 +42,16 @@ public class ComplaintConst {
                 return 'Pending';
             }
         }
-
         public String REJECTED {
             get {
                 return 'Rejected';
             }
         }
-
         public String APPROVED_FULL {
             get {
                 return 'Approved Full Refund';
             }
         }
-
         public String APPROVED_PARTIAL {
             get {
                 return 'Approved Partial Refund';
@@ -87,6 +89,19 @@ public class ComplaintConst {
         public String CREATED {
             get {
                 return 'Created';
+            }
+        }
+    }
+
+    public class ApprovalAction {
+        public String APPROVE {
+            get {
+                return 'Approve';
+            }
+        }
+        public String REJECT {
+            get {
+                return 'Reject';
             }
         }
     }
