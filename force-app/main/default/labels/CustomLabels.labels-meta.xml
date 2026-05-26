@@ -898,4 +898,60 @@
         <shortDescription>RA Subscription Error Msg</shortDescription>
         <value>Could not connect to event stream.</value>
     </labels>
+    <labels>
+        <fullName>RA_Approved_Refund_Amount</fullName>
+        <categories>Refund Approval</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Approved Refund Amount</shortDescription>
+        <value>Approved Refund Amount</value>
+    </labels>
+    <labels>
+        <fullName>RA_Local_Success_Msg</fullName>
+        <categories>Order Refund</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Local refund request submitted.</shortDescription>
+        <value>Local refund request submitted.</value>
+    </labels>
+    <labels>
+        <fullName>RA_Timeout_Title</fullName>
+        <categories>Order Refund</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Request Timed Out Title</shortDescription>
+        <value>Request Timed Out</value>
+    </labels>
+    <labels>
+        <fullName>RA_Timeout_Msg</fullName>
+        <categories>Order Refund</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Request Timed Out Message</shortDescription>
+        <value>The external system took too long to respond. The request may still be processing.</value>
+    </labels>
+    <labels>
+        <fullName>RA_Ext_Reject_Msg</fullName>
+        <categories>Order Refund</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>External Reject Message</shortDescription>
+        <value>The external system rejected the request due to an error.</value>
+    </labels>
+    <labels>
+        <fullName>RA_Refund_Failed_Title</fullName>
+        <categories>Order Refund</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Refund Failed Title</shortDescription>
+        <value>Refund Failed</value>
+    </labels>
+    <labels>
+        <fullName>RA_Requests_Success_Msg</fullName>
+        <categories>Order Refund</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Requests processed successfully message</shortDescription>
+        <value>Requests processed successfully.</value>
+    </labels>
 </CustomLabels>

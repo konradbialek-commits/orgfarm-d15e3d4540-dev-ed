@@ -29,6 +29,12 @@ import LBL_CONN_ERR_TITLE from '@salesforce/label/c.RA_Connection_Error_Title';
 import LBL_CONN_ERR_MSG from '@salesforce/label/c.RA_Connection_Error_Msg';
 import LBL_SUB_ERR_TITLE from '@salesforce/label/c.RA_Subscription_Error_Title';
 import LBL_SUB_ERR_MSG from '@salesforce/label/c.RA_Subscription_Error_Msg';
+import LBL_LOCAL_SUCCESS from '@salesforce/label/c.RA_Local_Success_Msg';
+import LBL_TIMEOUT_TITLE from '@salesforce/label/c.RA_Timeout_Title';
+import LBL_TIMEOUT_MSG from '@salesforce/label/c.RA_Timeout_Msg';
+import LBL_EXT_REJECT_MSG from '@salesforce/label/c.RA_Ext_Reject_Msg';
+import LBL_REFUND_FAILED_TITLE from '@salesforce/label/c.RA_Refund_Failed_Title';
+import LBL_REQUESTS_SUCCESS from '@salesforce/label/c.RA_Requests_Success_Msg';
 
 export default class OrderRefundAction extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -148,7 +154,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
                     this.startProcessingTimeout();
                     this.checkIfFinished();
                 } else if (this.localCaseId) {
-                    this.showToast(LBL_MSG_SUCCESS, 'Local refund request submitted.', 'success');
+                    this.showToast(LBL_MSG_SUCCESS, LBL_LOCAL_SUCCESS, 'success');
                     this.navigateToRecord(this.localCaseId);
                     this.handleCancel();
                 }
@@ -165,11 +171,7 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
         this.timeoutId = setTimeout(() => {
             if (this.isWaiting) {
                 this.isWaiting = false;
-                this.showToast(
-                    'Request Timed Out',
-                    'The external system took too long to respond. The request may still be processing.',
-                    'warning'
-                );
+                this.showToast(LBL_TIMEOUT_TITLE, LBL_TIMEOUT_MSG, 'warning');
                 this.handleCancel();
             }
         }, 30000);
@@ -213,10 +215,10 @@ export default class OrderRefundAction extends NavigationMixin(LightningElement)
             const payload = this.arrivedEventPayloads.get(this.correlationId);
 
             if (payload.Status__c === 'Failed') {
-                const errorMsg = payload.Error_Message__c || 'The external system rejected the request due to an error.';
-                this.showToast('Refund Failed', errorMsg, 'error');
+                const errorMsg = payload.Error_Message__c || LBL_EXT_REJECT_MSG;
+                this.showToast(LBL_REFUND_FAILED_TITLE, errorMsg, 'error');
             } else {
-                this.showToast(LBL_MSG_SUCCESS, 'Requests processed successfully.', 'success');
+                this.showToast(LBL_MSG_SUCCESS, LBL_REQUESTS_SUCCESS, 'success');
                 const targetRecordId = this.localCaseId || this.externalCaseId;
                 if (targetRecordId) {
                     this.navigateToRecord(targetRecordId);
