@@ -1,5 +1,5 @@
 public class CaseApprovalSyncHandler implements TriggerAction.AfterUpdate {
-    public class ResponseLineDTO {
+    public class RefundLineResponse {
         public String productId;
         public String status;
         public Decimal refundAmount;
@@ -46,20 +46,20 @@ public class CaseApprovalSyncHandler implements TriggerAction.AfterUpdate {
                     c.Refund_Status__c == 'Approved Partial Refund' ||
                     c.Refund_Status__c == 'Rejected'
                 ) {
-                    List<ResponseLineDTO> dtos = new List<ResponseLineDTO>();
+                    List<RefundLineResponse> refundResponses = new List<RefundLineResponse>();
                     for (Case_Order_Product__c line : c.Case_Order_Products__r) {
-                        ResponseLineDTO dto = new ResponseLineDTO();
-                        dto.productId = line.External_Product_Id__c;
-                        dto.status = line.Refund_Status__c;
-                        dto.refundAmount = line.Refund_Amount__c;
-                        dto.refundType = line.Requested_Refund_Type__c;
-                        dtos.add(dto);
+                        RefundLineResponse itemResponse = new RefundLineResponse();
+                        itemResponse.productId = line.External_Product_Id__c;
+                        itemResponse.status = line.Refund_Status__c;
+                        itemResponse.refundAmount = line.Refund_Amount__c;
+                        itemResponse.refundType = line.Requested_Refund_Type__c;
+                        refundResponses.add(itemResponse);
                     }
 
                     External_Complaint_Response__e responseEvent = new External_Complaint_Response__e(
                         Case_Id__c = c.External_Case_Id__c,
                         Status__c = c.Refund_Status__c,
-                        Line_Items_JSON__c = JSON.serialize(dtos)
+                        Line_Items_JSON__c = JSON.serialize(refundResponses)
                     );
                     outboundResponses.add(JSON.serialize(responseEvent));
                 }

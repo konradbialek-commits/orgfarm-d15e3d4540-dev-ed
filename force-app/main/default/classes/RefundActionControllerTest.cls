@@ -53,7 +53,7 @@ private class RefundActionControllerTest {
         itemsList.add(new Map<String, Object>{ 'orderItemId' => localItem.Id, 'refundType' => 'Full', 'refundAmount' => 100.00 });
 
         Test.startTest();
-        RefundActionController.RefundResponse result = RefundActionController.processRefund(
+        RefundActionService.RefundResponse result = RefundActionController.processRefund(
             testOrder.Id,
             'Test Reason',
             JSON.serialize(itemsList)
@@ -90,7 +90,7 @@ private class RefundActionControllerTest {
         itemsList.add(new Map<String, Object>{ 'orderItemId' => extItem.Id, 'refundType' => 'Partial', 'refundAmount' => 50.00 });
 
         Test.startTest();
-        RefundActionController.RefundResponse result = RefundActionController.processRefund(
+        RefundActionService.RefundResponse result = RefundActionController.processRefund(
             testOrder.Id,
             'Test Reason External',
             JSON.serialize(itemsList)
@@ -124,7 +124,7 @@ private class RefundActionControllerTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
         Test.startTest();
-        RefundActionController.RefundResponse result = RefundActionController.processRefund(
+        RefundActionService.RefundResponse result = RefundActionController.processRefund(
             testOrder.Id,
             'Mixed Request',
             JSON.serialize(itemsList)

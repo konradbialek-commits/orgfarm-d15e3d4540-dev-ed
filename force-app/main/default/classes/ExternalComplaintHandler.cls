@@ -1,5 +1,5 @@
 public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
-    public class LineItemDTO {
+    public class RefundLineItem {
         public String productId;
         public Decimal refundAmount;
         public String refundType;
@@ -10,17 +10,17 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
         List<String> responsePayloads = new List<String>();
 
         try {
-            Map<Integer, List<LineItemDTO>> eventIndexToItems = new Map<Integer, List<LineItemDTO>>();
+            Map<Integer, List<RefundLineItem>> eventIndexToItems = new Map<Integer, List<RefundLineItem>>();
             Set<String> externalProductIds = new Set<String>();
 
             for (Integer i = 0; i < complaints.size(); i++) {
                 if (String.isNotBlank(complaints[i].Line_Items_JSON__c)) {
-                    List<LineItemDTO> items = (List<LineItemDTO>) JSON.deserialize(
+                    List<RefundLineItem> items = (List<RefundLineItem>) JSON.deserialize(
                         complaints[i].Line_Items_JSON__c,
-                        List<LineItemDTO>.class
+                        List<RefundLineItem>.class
                     );
                     eventIndexToItems.put(i, items);
-                    for (LineItemDTO item : items) {
+                    for (RefundLineItem item : items) {
                         externalProductIds.add(item.productId);
                     }
                 }
@@ -52,9 +52,9 @@ public class ExternalComplaintHandler implements TriggerAction.AfterInsert {
 
                 for (Integer i : indexToCaseMap.keySet()) {
                     Case insertedCase = indexToCaseMap.get(i);
-                    List<LineItemDTO> items = eventIndexToItems.get(i);
+                    List<RefundLineItem> items = eventIndexToItems.get(i);
 
-                    for (LineItemDTO item : items) {
+                    for (RefundLineItem item : items) {
                         if (productMap.containsKey(item.productId)) {
                             Product2 prod = productMap.get(item.productId);
                             linesToInsert.add(

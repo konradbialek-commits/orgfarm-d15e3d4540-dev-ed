@@ -1,5 +1,5 @@
 public class ExternalComplaintResponseHandler implements TriggerAction.AfterInsert {
-    public class ResponseLineDTO {
+    public class RefundLineResponse {
         public String productId;
         public String status;
         public Decimal refundAmount;
@@ -21,13 +21,13 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
             List<Order> ordersToUpdate = new List<Order>();
             List<Case> casesToInsert = new List<Case>();
             Map<String, Order> correlationToOrder = new Map<String, Order>();
-            Map<String, RefundActionController.PendingComplaint> correlationToPc = new Map<String, RefundActionController.PendingComplaint>();
+            Map<String, RefundActionService.PendingComplaint> correlationToPc = new Map<String, RefundActionService.PendingComplaint>();
 
             for (Order o : ordersWithPending) {
                 try {
-                    RefundActionController.PendingComplaint pc = (RefundActionController.PendingComplaint) JSON.deserialize(
+                    RefundActionService.PendingComplaint pc = (RefundActionService.PendingComplaint) JSON.deserialize(
                         o.Pending_Complaint_JSON__c,
-                        RefundActionController.PendingComplaint.class
+                        RefundActionService.PendingComplaint.class
                     );
                     if (String.isNotBlank(pc.correlationId) && responseMap.containsKey(pc.correlationId)) {
                         correlationToOrder.put(pc.correlationId, o);
@@ -41,7 +41,7 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
             for (String corrId : correlationToOrder.keySet()) {
                 External_Complaint_Response__e resp = responseMap.get(corrId);
                 Order o = correlationToOrder.get(corrId);
-                RefundActionController.PendingComplaint pc = correlationToPc.get(corrId);
+                RefundActionService.PendingComplaint pc = correlationToPc.get(corrId);
 
                 if (resp.Status__c == 'Failed') {
                     o.Pending_Complaint_JSON__c = null;
@@ -67,22 +67,22 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
             List<Case_Order_Product__c> linesToInsert = new List<Case_Order_Product__c>();
             for (String corrId : correlationToNewCase.keySet()) {
                 Case insertedCase = correlationToNewCase.get(corrId);
-                RefundActionController.PendingComplaint pc = correlationToPc.get(corrId);
+                RefundActionService.PendingComplaint pc = correlationToPc.get(corrId);
                 External_Complaint_Response__e resp = responseMap.get(corrId);
                 Order o = correlationToOrder.get(corrId);
 
-                Map<String, ResponseLineDTO> extIdToDto = new Map<String, ResponseLineDTO>();
+                Map<String, RefundLineResponse> extIdToResponse = new Map<String, RefundLineResponse>();
                 if (String.isNotBlank(resp.Line_Items_JSON__c)) {
-                    List<ResponseLineDTO> respLines = (List<ResponseLineDTO>) JSON.deserialize(
+                    List<RefundLineResponse> respLines = (List<RefundLineResponse>) JSON.deserialize(
                         resp.Line_Items_JSON__c,
-                        List<ResponseLineDTO>.class
+                        List<RefundLineResponse>.class
                     );
-                    for (ResponseLineDTO rl : respLines) {
-                        extIdToDto.put(rl.productId, rl);
+                    for (RefundLineResponse rl : respLines) {
+                        extIdToResponse.put(rl.productId, rl);
                     }
                 }
 
-                for (RefundActionController.PendingLine pl : pc.lines) {
+                for (RefundActionService.PendingLine pl : pc.lines) {
                     Case_Order_Product__c cop = new Case_Order_Product__c(
                         Case__c = insertedCase.Id,
                         Order_Product__c = pl.orderItemId,
@@ -95,13 +95,13 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
                         Refund_Status__c = Util.COMPLAINT.STATUS.PENDING
                     );
 
-                    if (pl.isExternal && String.isNotBlank(pl.externalProductId) && extIdToDto.containsKey(pl.externalProductId)) {
-                        ResponseLineDTO dto = extIdToDto.get(pl.externalProductId);
-                        cop.Refund_Status__c = dto.status;
-                        if (dto.refundAmount != null)
-                            cop.Refund_Amount__c = dto.refundAmount;
-                        if (String.isNotBlank(dto.refundType))
-                            cop.Requested_Refund_Type__c = dto.refundType;
+                    if (pl.isExternal && String.isNotBlank(pl.externalProductId) && extIdToResponse.containsKey(pl.externalProductId)) {
+                        RefundLineResponse itemResponse = extIdToResponse.get(pl.externalProductId);
+                        cop.Refund_Status__c = itemResponse.status;
+                        if (itemResponse.refundAmount != null)
+                            cop.Refund_Amount__c = itemResponse.refundAmount;
+                        if (String.isNotBlank(itemResponse.refundType))
+                            cop.Requested_Refund_Type__c = itemResponse.refundType;
                     }
 
                     linesToInsert.add(cop);
@@ -148,23 +148,23 @@ public class ExternalComplaintResponseHandler implements TriggerAction.AfterInse
                 }
 
                 if (String.isNotBlank(eventRec.Line_Items_JSON__c)) {
-                    List<ResponseLineDTO> items = (List<ResponseLineDTO>) JSON.deserialize(
+                    List<RefundLineResponse> items = (List<RefundLineResponse>) JSON.deserialize(
                         eventRec.Line_Items_JSON__c,
-                        List<ResponseLineDTO>.class
+                        List<RefundLineResponse>.class
                     );
-                    Map<String, ResponseLineDTO> extIdToDto = new Map<String, ResponseLineDTO>();
-                    for (ResponseLineDTO item : items) {
-                        extIdToDto.put(item.productId, item);
+                    Map<String, RefundLineResponse> extIdToResponse = new Map<String, RefundLineResponse>();
+                    for (RefundLineResponse item : items) {
+                        extIdToResponse.put(item.productId, item);
                     }
 
                     for (Case_Order_Product__c line : c.Case_Order_Products__r) {
-                        if (String.isNotBlank(line.External_Product_Id__c) && extIdToDto.containsKey(line.External_Product_Id__c)) {
-                            ResponseLineDTO dto = extIdToDto.get(line.External_Product_Id__c);
-                            line.Refund_Status__c = dto.status;
-                            if (dto.refundAmount != null)
-                                line.Refund_Amount__c = dto.refundAmount;
-                            if (String.isNotBlank(dto.refundType))
-                                line.Requested_Refund_Type__c = dto.refundType;
+                        if (String.isNotBlank(line.External_Product_Id__c) && extIdToResponse.containsKey(line.External_Product_Id__c)) {
+                            RefundLineResponse itemResponse = extIdToResponse.get(line.External_Product_Id__c);
+                            line.Refund_Status__c = itemResponse.status;
+                            if (itemResponse.refundAmount != null)
+                                line.Refund_Amount__c = itemResponse.refundAmount;
+                            if (String.isNotBlank(itemResponse.refundType))
+                                line.Requested_Refund_Type__c = itemResponse.refundType;
                             linesToUpdate.add(line);
                         }
                     }
